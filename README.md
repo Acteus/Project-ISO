@@ -2,6 +2,102 @@
 
 A comprehensive backend system for collecting and analyzing student survey responses, built with PHP and Laravel. This system provides secure data collection, AI-powered analytics, and comprehensive reporting capabilities.
 
+## Architecture Overview
+
+This project follows a monolithic architecture with clear separation of concerns within a single repository:
+
+### Backend (Laravel API)
+- **Technology**: PHP 8.1+ with Laravel 12
+- **Location**: Root directory (`/`)
+- **Responsibilities**:
+  - API development and management
+  - Database operations and data persistence
+  - Business logic and validation
+  - Security and authentication
+  - AI/ML processing
+  - Data analytics and reporting
+
+### Frontend (React Application)
+- **Technology**: React (handled by frontend team)
+- **Location**: `/frontend` directory (planned)
+- **Responsibilities**:
+  - User interface and user experience
+  - Survey form presentation
+  - Admin dashboard and analytics visualization
+  - Data visualization rendering
+  - User authentication flows
+  - Report generation and export handling
+
+### Communication
+The backend provides RESTful APIs that the frontend consumes. All data exchange happens through JSON over HTTP, ensuring clean separation between presentation and business logic layers within the same repository.
+
+## Project Structure
+
+```
+student-survey-system/
+├── app/                          # Laravel backend application code
+├── bootstrap/                    # Laravel bootstrap files
+├── config/                       # Laravel configuration files
+├── database/                     # Database migrations and seeders
+├── public/                       # Laravel public assets
+├── resources/                    # Laravel resources
+├── routes/                       # API routes
+├── storage/                      # Laravel storage
+├── tests/                        # Backend tests
+├── vendor/                       # Composer dependencies
+├── frontend/                     # React frontend (to be created)
+│   ├── public/
+│   ├── src/
+│   ├── package.json
+│   └── ...
+├── docker-compose.yml            # Docker configuration (optional)
+├── Dockerfile                    # Docker configuration (optional)
+├── composer.json                 # PHP dependencies
+├── phpunit.xml                   # Test configuration
+└── README.md                     # This file
+```
+
+## Frontend Development Plan
+
+The frontend application will be developed by the frontend team in the `/frontend` directory of this repository using React and will include:
+
+### Student Survey Interface
+- Clean, responsive survey forms
+- Real-time validation and error handling
+- Progress indicators for multi-step surveys
+- Mobile-friendly design
+- Accessibility compliance
+
+### Admin Dashboard
+- Analytics visualization using Chart.js or D3.js
+- Interactive charts and graphs
+- Data filtering and search capabilities
+- Export functionality integration
+- User management interface
+
+### Key Features for Frontend Team
+- **Survey Builder**: Dynamic form generation based on backend configuration
+- **Data Visualization**: Consume chart data from `/api/visualizations/*` endpoints
+- **Authentication UI**: Login/logout flows using Sanctum tokens
+- **Report Generation**: PDF and Excel export handling
+- **Real-time Analytics**: Live dashboard updates
+- **Responsive Design**: Mobile and desktop compatibility
+
+### Integration Points
+The frontend will integrate with these backend endpoints:
+- Authentication: `/api/admin/login`, `/api/admin/logout`, `/api/admin/me`
+- Survey Management: `/api/survey/*`
+- Analytics: `/api/survey/analytics`
+- AI Features: `/api/ai/*`
+- Visualizations: `/api/visualizations/*`
+- Exports: `/api/export/*`
+
+### Development Timeline
+- **Backend**: Complete (root directory)
+- **Frontend**: In development by frontend team (`/frontend` directory)
+- **Integration**: Joint testing within same repository
+- **Deployment**: Unified application deployment
+
 ## Features
 
 ### Core Functionality
