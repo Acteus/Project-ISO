@@ -2,6 +2,8 @@
 
 A comprehensive backend system for collecting and analyzing student survey responses, built with PHP and Laravel. This system provides secure data collection, AI-powered analytics, and comprehensive reporting capabilities.
 
+> **Frontend Documentation**: For detailed frontend development documentation, see [`frontend-docs.md`](frontend-docs.md).
+
 ## Architecture Overview
 
 This project follows a monolithic architecture with clear separation of concerns within a single repository:
