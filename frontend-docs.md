@@ -351,11 +351,6 @@ test('login function works correctly', async () => {
    - Admin dashboard
    - Data visualization components
 
-3. **Progressive Web App (PWA):**
-   - Offline functionality
-   - Push notifications
-   - App-like experience
-
 ### Migration Path
 
 1. **Phase 1:** Enhance current setup with more components
