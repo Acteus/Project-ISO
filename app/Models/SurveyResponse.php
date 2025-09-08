@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Log;
 
 class SurveyResponse extends Model
 {
@@ -99,78 +100,67 @@ class SurveyResponse extends Model
         'ip_address',
     ];
 
-    // Encrypt sensitive data before saving
-    protected static function boot()
+    // Mutators for encryption
+    public function setStudentIdAttribute($value)
     {
-        parent::boot();
-
-        static::creating(function ($model) {
-            if ($model->student_id) {
-                $model->student_id = Crypt::encryptString($model->student_id);
-            }
-            if ($model->positive_aspects) {
-                $model->positive_aspects = Crypt::encryptString($model->positive_aspects);
-            }
-            if ($model->improvement_suggestions) {
-                $model->improvement_suggestions = Crypt::encryptString($model->improvement_suggestions);
-            }
-            if ($model->additional_comments) {
-                $model->additional_comments = Crypt::encryptString($model->additional_comments);
-            }
-        });
-
-        static::updating(function ($model) {
-            if ($model->isDirty('student_id')) {
-                $model->student_id = Crypt::encryptString($model->student_id);
-            }
-            if ($model->isDirty('positive_aspects')) {
-                $model->positive_aspects = Crypt::encryptString($model->positive_aspects);
-            }
-            if ($model->isDirty('improvement_suggestions')) {
-                $model->improvement_suggestions = Crypt::encryptString($model->improvement_suggestions);
-            }
-            if ($model->isDirty('additional_comments')) {
-                $model->additional_comments = Crypt::encryptString($model->additional_comments);
-            }
-        });
+        $this->attributes['student_id'] = !empty($value) ? Crypt::encryptString($value) : $value;
     }
 
-    // Decrypt sensitive data when retrieving
+    public function setPositiveAspectsAttribute($value)
+    {
+        $this->attributes['positive_aspects'] = !empty($value) ? Crypt::encryptString($value) : $value;
+    }
+
+    public function setImprovementSuggestionsAttribute($value)
+    {
+        $this->attributes['improvement_suggestions'] = !empty($value) ? Crypt::encryptString($value) : $value;
+    }
+
+    public function setAdditionalCommentsAttribute($value)
+    {
+        $this->attributes['additional_comments'] = !empty($value) ? Crypt::encryptString($value) : $value;
+    }
+
+    // Accessors for decryption with logging
     public function getStudentIdAttribute($value)
     {
         try {
-            return Crypt::decryptString($value);
+            return !empty($value) ? Crypt::decryptString($value) : null;
         } catch (\Exception $e) {
+            Log::error('Failed to decrypt student_id: ' . $e->getMessage());
             return null;
         }
     }
 
     public function getPositiveAspectsAttribute($value)
     {
-        if (!$value) return null;
+        if (empty($value)) return null;
         try {
             return Crypt::decryptString($value);
         } catch (\Exception $e) {
+            Log::error('Failed to decrypt positive_aspects: ' . $e->getMessage());
             return null;
         }
     }
 
     public function getImprovementSuggestionsAttribute($value)
     {
-        if (!$value) return null;
+        if (empty($value)) return null;
         try {
             return Crypt::decryptString($value);
         } catch (\Exception $e) {
+            Log::error('Failed to decrypt improvement_suggestions: ' . $e->getMessage());
             return null;
         }
     }
 
     public function getAdditionalCommentsAttribute($value)
     {
-        if (!$value) return null;
+        if (empty($value)) return null;
         try {
             return Crypt::decryptString($value);
         } catch (\Exception $e) {
+            Log::error('Failed to decrypt additional_comments: ' . $e->getMessage());
             return null;
         }
     }

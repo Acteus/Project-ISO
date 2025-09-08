@@ -36,7 +36,7 @@ class ExportController extends Controller
         // Log the export activity (ISO 21001:8.2.4 - Traceability)
         if (Auth::check() && Auth::user()->role === 'admin') {
             AuditLog::create([
-                'admin_id' => Auth::id(),
+                'user_id' => Auth::id(),
                 'action' => 'export_excel',
                 'description' => "Exported ISO 21001 survey responses to Excel (Track: " . ($track ?: 'All') . ", Grade: " . ($gradeLevel ?: 'All') . ", Year: " . ($academicYear ?: 'All') . ", Semester: " . ($semester ?: 'All') . ")",
                 'ip_address' => $request->ip(),
@@ -64,7 +64,7 @@ class ExportController extends Controller
         // Log the export activity (ISO 21001:8.2.4 - Traceability)
         if (Auth::check() && Auth::user()->role === 'admin') {
             AuditLog::create([
-                'admin_id' => Auth::id(),
+                'user_id' => Auth::id(),
                 'action' => 'export_csv',
                 'description' => "Exported ISO 21001 survey responses to CSV (Track: " . ($track ?: 'All') . ", Grade: " . ($gradeLevel ?: 'All') . ", Year: " . ($academicYear ?: 'All') . ", Semester: " . ($semester ?: 'All') . ")",
                 'ip_address' => $request->ip(),
@@ -127,7 +127,7 @@ class ExportController extends Controller
         // Log the export activity (ISO 21001:8.2.4 - Traceability)
         if (Auth::check() && Auth::user()->role === 'admin') {
             AuditLog::create([
-                'admin_id' => Auth::id(),
+                'user_id' => Auth::id(),
                 'action' => 'export_pdf',
                 'description' => "Exported ISO 21001 survey report to PDF (Track: " . ($track ?: 'All') . ", Grade: " . ($gradeLevel ?: 'All') . ", Year: " . ($academicYear ?: 'All') . ", Semester: " . ($semester ?: 'All') . ")",
                 'ip_address' => $request->ip(),
@@ -196,7 +196,7 @@ class ExportController extends Controller
             // Log the export activity (ISO 21001:8.2.4 - Traceability)
             if (Auth::check() && Auth::user()->role === 'admin') {
                 AuditLog::create([
-                    'admin_id' => Auth::id(),
+                    'user_id' => Auth::id(),
                     'action' => 'export_analytics_pdf',
                     'description' => "Exported ISO 21001 analytics report to PDF (Track: " . ($track ?: 'All') . ", Grade: " . ($gradeLevel ?: 'All') . ", Year: " . ($academicYear ?: 'All') . ", Semester: " . ($semester ?: 'All') . ")",
                     'ip_address' => $request->ip(),
