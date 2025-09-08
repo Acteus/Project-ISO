@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 
 class SurveyController extends Controller
 {
@@ -74,16 +75,38 @@ class SurveyController extends Controller
         }
 
         $data = $request->all();
+
+        // Let model mutators handle encryption - don't encrypt in controller to avoid double encryption
         $data['ip_address'] = $request->ip();
 
         $response = SurveyResponse::create($data);
 
         // Log successful submission for audit trail (ISO 21001:8.2.4)
+        if (Auth::check() && Auth::user()->role === 'admin') {
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'submit_survey_response',
+                'description' => 'Processed ISO 21001 survey response submission',
+                'ip_address' => $request->ip(),
+                'new_values' => ['response_id' => $response->id],
+            ]);
+        } else {
+            // Log anonymous submission
+            AuditLog::create([
+                'user_id' => null,
+                'action' => 'submit_survey_response',
+                'description' => 'Submitted ISO 21001 survey response (anonymous)',
+                'ip_address' => $request->ip(),
+                'new_values' => ['response_id' => $response->id],
+            ]);
+        }
+
+        // Log successful submission for audit trail (ISO 21001:8.2.4)
         AuditLog::create([
+            'user_id' => Auth::check() ? Auth::id() : null,
             'action' => 'submit_survey_response',
-            'description' => 'Submitted ISO 21001 survey response (anonymous)',
+            'description' => 'Submitted ISO 21001 survey response' . (Auth::check() ? ' (authenticated user)' : ' (anonymous)'),
             'ip_address' => $request->ip(),
-            'user_id' => Auth::id() ?? null,
             'new_values' => ['response_id' => $response->id],
         ]);
 
@@ -101,13 +124,15 @@ class SurveyController extends Controller
         $semester = $request->query('semester');
 
         // Log analytics access for audit (ISO 21001:8.2.4 - Data access traceability)
-        AuditLog::create([
-            'action' => 'view_analytics',
-            'description' => 'Accessed ISO 21001 analytics dashboard',
-            'ip_address' => $request->ip(),
-            'user_id' => Auth::id() ?? null,
-            'query_params' => $request->query(),
-        ]);
+        if (Auth::check() && Auth::user()->role === 'admin') {
+            AuditLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'view_analytics',
+                'description' => 'Accessed ISO 21001 analytics dashboard',
+                'ip_address' => $request->ip(),
+                'new_values' => ['query_params' => $request->query()],
+            ]);
+        }
 
         $query = SurveyResponse::query();
 
@@ -259,9 +284,13 @@ class SurveyController extends Controller
     {
         $response = SurveyResponse::findOrFail($id);
 
+        // Ensure sensitive fields are hidden and add anonymous_id
+        $sanitizedResponse = $response->makeHidden(['student_id', 'positive_aspects', 'improvement_suggestions', 'additional_comments', 'ip_address']);
+        $sanitizedResponse->anonymous_id = $response->anonymous_id;
+
         return response()->json([
             'message' => 'Survey response retrieved successfully',
-            'data' => $response
+            'data' => $sanitizedResponse
         ]);
     }
 
