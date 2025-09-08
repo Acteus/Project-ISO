@@ -78,14 +78,16 @@ class SurveyController extends Controller
 
         $response = SurveyResponse::create($data);
 
-        // Log successful submission for audit trail (ISO 21001:8.2.4)
-        AuditLog::create([
-            'action' => 'submit_survey_response',
-            'description' => 'Submitted ISO 21001 survey response (anonymous)',
-            'ip_address' => $request->ip(),
-            'user_id' => Auth::id() ?? null,
-            'new_values' => ['response_id' => $response->id],
-        ]);
+        // Log successful submission for audit trail (ISO 21001:8.2.4) only if admin is authenticated
+        if (Auth::check() && Auth::user()->role === 'admin') {
+            AuditLog::create([
+                'admin_id' => Auth::id(),
+                'action' => 'submit_survey_response',
+                'description' => 'Processed ISO 21001 survey response submission',
+                'ip_address' => $request->ip(),
+                'new_values' => ['response_id' => $response->id],
+            ]);
+        }
 
         return response()->json([
             'message' => 'Survey response submitted successfully',
@@ -101,13 +103,15 @@ class SurveyController extends Controller
         $semester = $request->query('semester');
 
         // Log analytics access for audit (ISO 21001:8.2.4 - Data access traceability)
-        AuditLog::create([
-            'action' => 'view_analytics',
-            'description' => 'Accessed ISO 21001 analytics dashboard',
-            'ip_address' => $request->ip(),
-            'user_id' => Auth::id() ?? null,
-            'query_params' => $request->query(),
-        ]);
+        if (Auth::check() && Auth::user()->role === 'admin') {
+            AuditLog::create([
+                'admin_id' => Auth::id(),
+                'action' => 'view_analytics',
+                'description' => 'Accessed ISO 21001 analytics dashboard',
+                'ip_address' => $request->ip(),
+                'new_values' => ['query_params' => $request->query()],
+            ]);
+        }
 
         $query = SurveyResponse::query();
 
