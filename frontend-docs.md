@@ -1,38 +1,39 @@
-# Frontend Documentation - Student Survey System
+# Frontend Documentation - ISO 21001 Student Survey System
 
 ## Overview
 
-This document provides comprehensive guidance for frontend developers working on the Student Survey System. The system is built using Laravel's asset compilation system with modern frontend tools for optimal development experience.
+This document provides guidance for the frontend aspects of the ISO 21001 Student Survey System, a Laravel-based backend application with minimal frontend components. The system focuses on survey management, AI compliance analysis, data visualization, and exports, primarily served through backend-rendered Blade views.
 
 ## Architecture Overview
 
-The frontend is integrated within the Laravel backend repository and uses Laravel's asset compilation system. The current setup is minimal and serves as a foundation for building the complete frontend application.
+The application is primarily backend-driven with basic frontend assets compiled via Vite. There are no complex JavaScript frameworks or single-page application features; the UI consists of simple Blade templates for admin dashboards and forms.
 
 ### Technology Stack
 
-- **Build Tool**: Vite (fast, modern bundler)
-- **CSS Framework**: TailwindCSS v4 (utility-first CSS framework)
-- **JavaScript**: ES6+ modules
-- **HTTP Client**: Axios (for API communication)
-- **Backend Integration**: Laravel Sanctum (token-based authentication)
+- **Build Tool**: Vite (for asset compilation)
+- **CSS**: Basic TailwindCSS setup (minimal usage)
+- **JavaScript**: Vanilla JS with Axios for API calls (if needed)
+- **Templates**: Laravel Blade for server-rendered views
+- **Backend Integration**: Laravel Sanctum for API authentication
 
 ### Current State
 
-The frontend is currently in its initial setup phase with:
-- Basic Vite configuration
-- TailwindCSS integration
-- Axios setup for API calls
-- Minimal JavaScript structure
+The frontend assets are minimal:
+- Vite configuration for building CSS/JS
+- Basic TailwindCSS imports (not heavily used)
+- Axios configured for potential API interactions
+- No complex components or routing
 
 ## Project Structure
 
 ```
 resources/
 ├── js/
-│   ├── app.js          # Main JavaScript entry point
-│   └── bootstrap.js    # Axios configuration and global setup
+│   ├── app.js          # Main entry point (imports bootstrap)
+│   ├── bootstrap.js    # Axios setup
+│   └── app.js          # Basic JS (no advanced features)
 └── css/
-    └── app.css         # Main CSS entry point with TailwindCSS
+    └── app.css         # TailwindCSS imports and basic styles
 ```
 
 ### Key Files
@@ -41,9 +42,9 @@ resources/
 ```javascript
 import './bootstrap';
 ```
-- Main entry point for JavaScript
-- Currently only imports the bootstrap file
-- This is where you would import additional JavaScript modules
+- Simple entry point
+- Imports bootstrap.js
+- No additional modules currently
 
 #### `resources/js/bootstrap.js`
 ```javascript
@@ -52,9 +53,9 @@ window.axios = axios;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 ```
-- Configures Axios globally
-- Sets up CSRF token headers for Laravel
-- Makes Axios available as `window.axios`
+- Basic Axios configuration
+- Available globally for API calls from JS
+- CSRF headers for Laravel compatibility
 
 #### `resources/css/app.css`
 ```css
@@ -70,78 +71,89 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 ```
-- Imports TailwindCSS
-- Configures source paths for TailwindCSS purging
-- Sets custom font stack
+- Basic TailwindCSS import
+- Source paths for purging unused styles
+- Custom font configuration (minimal usage in views)
 
 ## Development Setup
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
+- Node.js (v18+ recommended)
 - npm or yarn
-- PHP 8.1+ (for Laravel backend)
+- PHP 8.2+ (for Laravel 11)
 - Composer
+- MySQL or compatible database
 
 ### Installation
 
-1. **Install Node dependencies:**
+1. **Install PHP dependencies:**
+   ```bash
+   composer install
+   ```
+
+2. **Install Node dependencies:**
    ```bash
    npm install
    ```
 
-2. **Start development server:**
+3. **Copy environment file and generate key:**
    ```bash
-   npm run dev
+   cp .env.example .env
+   php artisan key:generate
    ```
-   This will start Vite's development server with hot module replacement.
 
-3. **Build for production:**
+4. **Run migrations and seed:**
+   ```bash
+   php artisan migrate --seed
+   ```
+
+5. **Build assets:**
    ```bash
    npm run build
    ```
-   This compiles and minifies assets for production.
 
 ### Development Workflow
 
-1. **Start the Laravel backend:**
+1. **Start the Laravel server:**
    ```bash
    php artisan serve
    ```
 
-2. **Start the frontend development server:**
+2. **Build assets (for production) or run dev server:**
    ```bash
-   npm run dev
+   npm run dev  # Development with HMR
+   # or
+   npm run build  # Production build
    ```
 
 3. **Access the application:**
-   - Frontend assets will be served via Vite at `http://localhost:5173` (or configured port)
-   - Laravel backend at `http://localhost:8000`
+   - Application at `http://localhost:8000`
+   - Assets served from Laravel public directory
 
 ## Backend Integration
 
-The frontend communicates with the Laravel backend through RESTful APIs. All API endpoints require authentication using Laravel Sanctum tokens.
+The application uses server-rendered Blade views for the UI. API endpoints are available for programmatic access or potential AJAX calls, protected by Laravel Sanctum.
 
 ### Authentication Flow
 
-1. **Login:**
+1. **Admin Login (API):**
    ```javascript
    const response = await axios.post('/api/admin/login', {
        email: 'admin@example.com',
        password: 'password'
    });
    const token = response.data.token;
-   // Store token in localStorage or secure storage
    localStorage.setItem('auth_token', token);
    ```
 
-2. **Authenticated Requests:**
+2. **Set Authorization Header:**
    ```javascript
    const token = localStorage.getItem('auth_token');
    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
    ```
 
-3. **Logout:**
+3. **Logout (API):**
    ```javascript
    await axios.post('/api/admin/logout');
    localStorage.removeItem('auth_token');
@@ -156,115 +168,79 @@ The frontend communicates with the Laravel backend through RESTful APIs. All API
 
 #### Survey Management
 - `POST /api/survey/submit` - Submit survey response
+- `GET /api/survey/responses` - Get survey responses
 - `GET /api/survey/analytics` - Get survey analytics
 
-#### AI Features
-- `POST /api/ai/compliance-predict` - Compliance prediction
-- `GET /api/ai/cluster-responses` - Cluster analysis
-- `GET /api/ai/sentiment-analysis` - Sentiment analysis
+#### AI Features (ISO 21001 Compliance)
+- `POST /api/ai/compliance-check` - Check ISO 21001 compliance
+- `POST /api/ai/generate-report` - Generate compliance report
+- `GET /api/ai/insights` - Get AI-generated insights
 
 #### Data Visualization
-- `GET /api/visualizations/bar-chart` - Bar chart data
-- `GET /api/visualizations/pie-chart` - Pie chart data
-- `GET /api/visualizations/word-cloud` - Word cloud data
+- `GET /api/visualizations/survey-data` - Survey data for charts
+- `GET /api/visualizations/compliance-metrics` - Compliance visualization data
+- `GET /api/visualizations/trends` - Survey trends over time
 
-#### Export
-- `GET /api/export/excel` - Export to Excel
-- `GET /api/export/csv` - Export to CSV
-- `GET /api/export/pdf` - Export to PDF
+#### Exports
+- `GET /api/export/survey-responses` - Export survey responses (Excel/CSV)
+- `GET /api/export/compliance-report` - Export compliance report (PDF/Excel)
 
 ## Frontend Development Guidelines
 
-### JavaScript Best Practices
+### Basic JavaScript Usage
 
-1. **Use ES6+ features:**
+For any AJAX calls in Blade views:
+
+1. **Simple API Call:**
    ```javascript
-   // Use arrow functions
    const fetchData = async () => {
        try {
-           const response = await axios.get('/api/data');
-           return response.data;
+           const response = await window.axios.get('/api/survey/responses');
+           // Handle response
        } catch (error) {
-           console.error('Error fetching data:', error);
+           console.error('Error:', error);
        }
    };
    ```
 
-2. **Organize code into modules:**
+2. **Error Handling:**
    ```javascript
-   // auth.js
-   export const login = async (credentials) => {
-       // login logic
-   };
-
-   export const logout = async () => {
-       // logout logic
-   };
-
-   // app.js
-   import { login, logout } from './auth';
-   ```
-
-3. **Handle errors gracefully:**
-   ```javascript
-   try {
-       const result = await apiCall();
-       // handle success
-   } catch (error) {
-       if (error.response?.status === 401) {
-           // redirect to login
-       } else {
-           // show error message
+   window.axios.interceptors.response.use(
+       response => response,
+       error => {
+           if (error.response.status === 401) {
+               window.location.href = '/login';
+           }
+           return Promise.reject(error);
        }
-   }
+   );
    ```
 
-### CSS/Styling Guidelines
+### Styling Guidelines
 
-1. **Use TailwindCSS utility classes:**
-   ```html
-   <div class="bg-blue-500 text-white p-4 rounded-lg shadow-md">
-       <!-- content -->
+1. **Blade View Styling:**
+   Use Tailwind classes directly in Blade templates:
+   ```blade
+   <div class="container mx-auto p-6">
+       <h1 class="text-2xl font-bold mb-4">Survey Dashboard</h1>
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+           <!-- content -->
+       </div>
    </div>
    ```
 
-2. **Custom CSS when needed:**
-   ```css
-   /* In app.css or separate component files */
-   .custom-button {
-       @apply bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded;
-   }
-   ```
+2. **Custom CSS:**
+   Add to `resources/css/app.css` if needed, but prefer Tailwind utilities.
 
-3. **Responsive design:**
-   ```html
-   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-       <!-- responsive grid -->
-   </div>
-   ```
+### Blade Views Structure
 
-### Component Structure
-
-As the frontend grows, organize components logically:
-
+Current views are minimal. Key locations:
 ```
-resources/js/
-├── components/
-│   ├── auth/
-│   │   ├── LoginForm.js
-│   │   └── LogoutButton.js
-│   ├── survey/
-│   │   ├── SurveyForm.js
-│   │   └── SurveyList.js
-│   └── dashboard/
-│       ├── AnalyticsChart.js
-│       └── ExportButton.js
-├── services/
-│   ├── api.js
-│   └── auth.js
-├── utils/
-│   └── helpers.js
-└── app.js
+resources/views/
+├── welcome.blade.php     # Landing page
+├── admin/                # Admin dashboard views (to be created)
+├── surveys/              # Survey forms and lists
+└── layouts/              # Base layouts (app.blade.php)
 ```
 
 ## Security Considerations
@@ -304,101 +280,95 @@ resources/js/
 
 ## Testing
 
-### Unit Testing
-```javascript
-// Example test with Jest
-import { login } from './auth';
+### Frontend Testing
 
-test('login function works correctly', async () => {
-    const credentials = { email: 'test@example.com', password: 'password' };
-    const result = await login(credentials);
-    expect(result.token).toBeDefined();
-});
-```
+Minimal JS means limited frontend testing. Focus on:
 
-### Integration Testing
-- Test API integrations
-- Test authentication flows
-- Test form submissions
+1. **Browser Testing:** Manual verification of Blade views and forms.
+
+2. **API Testing:** Use tools like Postman to test endpoints.
+
+For backend tests, see `tests/Feature/` (e.g., ISO21001ComplianceTest.php).
 
 ## Deployment
 
-1. **Build assets:**
+1. **Set up production environment:**
+   ```bash
+   cp .env.example .env
+   # Configure .env (DB, APP_KEY, etc.)
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache
+   ```
+
+2. **Build assets:**
    ```bash
    npm run build
    ```
 
-2. **Laravel Mix will compile assets automatically**
-   - Assets are compiled to `public/build/`
-   - Laravel serves compiled assets
+3. **Run migrations:**
+   ```bash
+   php artisan migrate --force
+   ```
 
-3. **Environment-specific builds:**
-   - Development: `npm run dev`
-   - Production: `npm run build`
+4. **Assets served from:** `public/build/` directory.
 
 ## Future Development
 
-### Planned Features
+### Current Features
 
-1. **React Integration:**
-   - Migrate to React for better component management
-   - Implement state management (Redux/Zustand)
-   - Add routing (React Router)
+The system supports:
+- Admin authentication
+- Survey response submission and management
+- ISO 21001 compliance analysis via AI
+- Data visualization (charts, metrics)
+- Exports (Excel, CSV for survey responses)
+- Audit logging for actions
 
-2. **Enhanced UI Components:**
-   - Survey form builder
-   - Interactive charts (Chart.js/D3.js)
-   - Admin dashboard
-   - Data visualization components
-
-### Migration Path
-
-1. **Phase 1:** Enhance current setup with more components
-2. **Phase 2:** Integrate React incrementally
-3. **Phase 3:** Full React migration with modern tooling
+For UI enhancements, extend Blade views or integrate JS libraries as needed.
 
 ## Troubleshooting
 
 ### Common Issues
 
 1. **Assets not loading:**
-   - Ensure Vite dev server is running
-   - Check browser console for errors
-   - Verify file paths in `vite.config.js`
-
-2. **API authentication errors:**
-   - Check if Sanctum token is set correctly
-   - Verify CSRF token configuration
-   - Check network tab for request details
-
-3. **Styling issues:**
+   - Run `npm run build` for production
+   - Check `vite.config.js` paths
    - Clear browser cache
-   - Rebuild assets: `npm run build`
-   - Check TailwindCSS configuration
+
+2. **Authentication errors:**
+   - Verify Sanctum middleware in routes/api.php
+   - Check .env for SESSION_DOMAIN if needed
+   - Ensure `php artisan sanctum:publish` if customizing
+
+3. **Database/Backend issues:**
+   - Run `php artisan migrate`
+   - Check `storage/logs/laravel.log`
+   - Verify .env database config
 
 ### Debug Tips
 
-- Use browser developer tools
-- Check Laravel logs: `storage/logs/laravel.log`
-- Use `console.log()` for debugging
-- Test API endpoints with tools like Postman
+- Browser dev tools for views/styling
+- Laravel logs: `tail -f storage/logs/laravel.log`
+- API testing: Postman or `php artisan tinker`
+- Database: `php artisan db:show` or phpMyAdmin
 
 ## Resources
 
-- [Laravel Documentation](https://laravel.com/docs)
+- [Laravel Documentation](https://laravel.com/docs/11.x)
 - [Vite Documentation](https://vitejs.dev/)
-- [TailwindCSS Documentation](https://tailwindcss.com/)
-- [Axios Documentation](https://axios-http.com/)
-- [Laravel Sanctum Documentation](https://laravel.com/docs/sanctum)
+- [TailwindCSS Documentation](https://tailwindcss.com/docs)
+- [Laravel Sanctum](https://laravel.com/docs/11.x/sanctum)
+- [ISO 21001 Standard](https://www.iso.org/standard/63087.html) (for compliance context)
 
 ## Contributing
 
-1. Follow the established coding standards
-2. Write clear, concise commit messages
-3. Test your changes thoroughly
-4. Update documentation as needed
-5. Create pull requests for review
+1. Follow Laravel coding standards
+2. Use descriptive commit messages
+3. Run tests: `php artisan test`
+4. Update docs for new views/endpoints
+5. Submit PRs with changes
 
 ---
 
-This documentation will be updated as the frontend evolves. Please check back regularly for the latest information.
+Documentation reflects the current backend-focused application state as of September 2025.
