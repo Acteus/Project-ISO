@@ -101,15 +101,6 @@ class SurveyController extends Controller
             ]);
         }
 
-        // Log successful submission for audit trail (ISO 21001:8.2.4)
-        AuditLog::create([
-            'user_id' => Auth::check() ? Auth::id() : null,
-            'action' => 'submit_survey_response',
-            'description' => 'Submitted ISO 21001 survey response' . (Auth::check() ? ' (authenticated user)' : ' (anonymous)'),
-            'ip_address' => $request->ip(),
-            'new_values' => ['response_id' => $response->id],
-        ]);
-
         return response()->json([
             'message' => 'Survey response submitted successfully',
             'data' => $response->makeHidden(['student_id', 'positive_aspects', 'improvement_suggestions', 'additional_comments', 'ip_address'])
