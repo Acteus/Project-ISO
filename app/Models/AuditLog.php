@@ -11,7 +11,7 @@ class AuditLog extends Model
     use HasFactory;
 
     protected $fillable = [
-        'admin_id',
+        'user_id',
         'action',
         'description',
         'ip_address',
@@ -24,8 +24,8 @@ class AuditLog extends Model
         'new_values' => 'array',
     ];
 
-    public function admin(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Admin::class);
+        return $this->belongsTo(User::class);
     }
 }
