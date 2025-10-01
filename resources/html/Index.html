@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Kwadra</title>
+  <title>Jose Rizal University</title>
   <!-- Google Fonts: Montserrat + Poppins -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
   <style>
@@ -23,34 +23,40 @@
 
     .overlay {
       background: rgba(0, 0, 0, 0.55);
-      padding: 60px 70px;
-      border-radius: 20px;
+      padding: 50px 40px 56px 40px;
+      border-radius: 24px;
       box-shadow: 0 10px 35px rgba(0,0,0,0.3);
       backdrop-filter: blur(6px);
+      min-width: 380px;
+      max-width: 95vw;
     }
 
     h1 {
       font-family: 'Montserrat', sans-serif;
-      font-size: 70px;
+      font-size: 48px;
       font-weight: 700;
-      letter-spacing: 3px;
-      margin-bottom: 15px;
-      background: linear-gradient(90deg, #FFD700, #ffffff);
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #FFD700 60%, #ffffff 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
-      text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      text-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      text-transform: uppercase;
     }
 
     .desc {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 400;
-      margin-bottom: 40px;
-      color: #f0f0f0;
-      letter-spacing: 1px;
-      text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      margin-bottom: 36px;
+      color: #FFD700;
+      letter-spacing: 1.5px;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      font-family: 'Montserrat', sans-serif;
+      text-transform: uppercase;
     }
 
-.btn {
+    .btn {
       padding: 16px 42px;
       font-size: 20px;
       border: none;
@@ -61,13 +67,15 @@
       text-decoration: none;
       font-family: 'Montserrat', sans-serif;
       font-weight: 600;
-      transition: 
-        transform 0.2s ease, 
+      transition:
+        transform 0.2s ease,
         box-shadow 0.2s ease,
         background 0.2s ease,
         color 0.2s ease;
       box-shadow: 0 4px 12px rgba(66,133,244,0.4);
       display: inline-block;
+      margin-top: 10px;
+      letter-spacing: 1px;
     }
 
     .btn:hover {
@@ -80,9 +88,9 @@
 </head>
 <body>
   <div class="overlay">
-    <h1>Kwadra</h1>
+    <h1>Jose Rizal University</h1>
     <div class="desc">Validation System</div>
-    <a href="Login.php" class="btn">Enter</a>
+    <a href="Login.html" class="btn">Enter</a>
   </div>
 </body>
 </html>
