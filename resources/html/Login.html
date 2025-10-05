@@ -6,6 +6,30 @@
   <!-- Google Fonts: Montserrat + Poppins -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="functions.css">
+  <script src="Socmedlinks.js"></script>
+  
+  <style>
+    /* Page entrance animation */
+    .page-entrance {
+      animation: pageEnter 0.8s ease forwards;
+    }
+    
+    @keyframes pageEnter {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    
+    /* Smooth entrance for container */
+    .container {
+      opacity: 0;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -91,6 +115,19 @@
       });
 
       if (!valid) e.preventDefault();
+    });
+    
+    // Page entrance animation
+    document.addEventListener('DOMContentLoaded', function() {
+      const container = document.querySelector('.container');
+      
+      // Add entrance animation
+      setTimeout(() => {
+        container.classList.add('page-entrance');
+        container.style.opacity = '1';
+      }, 100);
+      
+      console.log('Login page loaded with entrance animation');
     });
   </script>
 </body>
