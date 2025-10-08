@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Registration</title>
+  <!-- Google Fonts: Montserrat + Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="functions.css">
+  <script src="Socmedlinks.js"></script>
+  
+  <style>
+    /* Page entrance animation */
+    .page-entrance {
+      animation: pageEnter 0.8s ease forwards;
+    }
+    
+    @keyframes pageEnter {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    
+    /* Smooth entrance for container */
+    .container {
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Sign Up</h2>
+    <div class="form-content">
+      <form id="studentForm" method="post" action="student_register">
+        <label>First Name</label>
+        <input type="text" name="firstname" required placeholder="Enter your first name">
+        <div class="error">This is required</div>
+
+        <label>Last Name</label>
+        <input type="text" name="lastname" required placeholder="Enter your last name">
+        <div class="error">This is required</div>
+
+        <label>Year Level</label>
+        <div class="year-check">
+          <label><input type="radio" name="year" value="11" onclick="updateSections()"> Grade 11</label>
+          <label><input type="radio" name="year" value="12" onclick="updateSections()"> Grade 12</label>
+        </div>
+        <div class="error">This is required</div>
+
+        <label>Section</label>
+        <select name="section" id="section" required>
+          <option value="">-- Select Year First --</option>
+        </select>
+        <div class="error">This is required</div>
+
+        <label>Student ID</label>
+        <input type="text" name="studentid" required placeholder="Enter your student ID">
+        <div class="error">This is required</div>
+
+        <div class="acknowledge">
+          <input type="checkbox" name="acknowledge" required>
+          <span>I have read and understood the acknowledgement letter.</span>
+        </div>
+        <div class="error">This is required</div>
+
+        <button type="button" class="google-btn">Sign up with Google</button>
+        <button type="submit" class="continue-btn">Continue</button>
+      </form>
+    </div>
+    <a href="Login.php" class="btn">Enter</a>
+  </div>
+
+  <script>
+    function updateSections() {
+      let year = document.querySelector('input[name="year"]:checked').value;
+      let sectionDropdown = document.getElementById("section");
+      sectionDropdown.innerHTML = ""; // clear old options
+
+      if (year === "11") {
+        ["C11a", "C11b", "C11c"].forEach(sec => {
+          let option = document.createElement("option");
+          option.value = sec;
+          option.textContent = sec;
+          sectionDropdown.appendChild(option);
+        });
+      } else if (year === "12") {
+        ["C12a", "C12b", "C12c"].forEach(sec => {
+          let option = document.createElement("option");
+          option.value = sec;
+          option.textContent = sec;
+          sectionDropdown.appendChild(option);
+        });
+      }
+    }
+
+    // Show custom "This is required" messages
+    document.getElementById("studentForm").addEventListener("submit", function(e) {
+      let valid = true;
+      const fields = this.querySelectorAll("input[required], select[required]");
+      const errors = this.querySelectorAll(".error");
+
+      errors.forEach(err => err.style.display = "none"); // reset
+
+      fields.forEach((field, i) => {
+        if ((field.type === "radio" && !document.querySelector('input[name="year"]:checked')) ||
+            (field.type === "checkbox" && !field.checked) ||
+            (field.type !== "radio" && field.type !== "checkbox" && !field.value.trim())) {
+          errors[i].style.display = "block";
+          valid = false;
+        }
+      });
+
+      if (!valid) e.preventDefault();
+    });
+    
+    // Page entrance animation
+    document.addEventListener('DOMContentLoaded', function() {
+      const container = document.querySelector('.container');
+      
+      // Add entrance animation
+      setTimeout(() => {
+        container.classList.add('page-entrance');
+        container.style.opacity = '1';
+      }, 100);
+      
+      console.log('Login page loaded with entrance animation');
+    });
+  </script>
+</body>
+</html>

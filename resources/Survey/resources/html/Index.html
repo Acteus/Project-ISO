@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Jose Rizal University</title>
+  <!-- Google Fonts: Montserrat + Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: 
+        linear-gradient(135deg, rgba(66,133,244,0.45), rgba(255,215,0,0.35)),
+        url('JoseRizalUniversityy.jpg') no-repeat center center/cover;
+      font-family: 'Poppins', Arial, sans-serif;
+      color: white;
+      text-align: center;
+    }
+
+    .overlay {
+      background: rgba(0, 0, 0, 0.55);
+      padding: 50px 40px 56px 40px;
+      border-radius: 24px;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.3);
+      backdrop-filter: blur(6px);
+      min-width: 380px;
+      max-width: 95vw;
+    }
+
+    h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #FFD700 60%, #ffffff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      text-transform: uppercase;
+    }
+
+    .desc {
+      font-size: 22px;
+      font-weight: 400;
+      margin-bottom: 36px;
+      color: #FFD700;
+      letter-spacing: 1.5px;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      font-family: 'Montserrat', sans-serif;
+      text-transform: uppercase;
+    }
+
+    .btn {
+      padding: 16px 42px;
+      font-size: 20px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #C0C0C0, #E0E0E0); /* Silver gradient */
+      color: #222;
+      cursor: pointer;
+      text-decoration: none;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease,
+        color 0.2s ease;
+      box-shadow: 0 4px 12px rgba(66,133,244,0.4);
+      display: inline-block;
+      margin-top: 10px;
+      letter-spacing: 1px;
+    }
+
+    .btn:hover {
+      background: linear-gradient(90deg, #4285F4, #2c6cd6); /* Blue gradient */
+      color: #fff;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(66,133,244,0.6);
+    }
+
+    /* Page Transition Styles */
+    .page-transition {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(66,133,244,0.9), rgba(255,215,0,0.8));
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.5s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .page-transition.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid #FFD700;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    /* Fade out animation for main content */
+    .fade-out {
+      animation: fadeOut 0.5s ease forwards;
+    }
+
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+        transform: scale(1);
+      }
+      to {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="main-content">
+    <h1>Jose Rizal University</h1>
+    <div class="desc">Validation System</div>
+    <a href="Login.html" class="btn" id="enter-btn">Enter</a>
+  </div>
+
+  <!-- Page Transition Overlay -->
+  <div class="page-transition" id="page-transition">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading Registration...</div>
+  </div>
+
+  <script>
+    // Smooth page transition functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const enterBtn = document.getElementById('enter-btn');
+      const pageTransition = document.getElementById('page-transition');
+      const mainContent = document.getElementById('main-content');
+      
+      // Handle Enter button click
+      enterBtn.addEventListener('click', function(e) {
+        e.preventDefault(); // Prevent immediate navigation
+        
+        // Start transition animation
+        startPageTransition();
+        
+        // Navigate to Login page after animation
+        setTimeout(() => {
+          window.location.href = 'Login.html';
+        }, 800); // 800ms delay for smooth transition
+      });
+      
+      // Function to start page transition
+      function startPageTransition() {
+        // Fade out main content
+        mainContent.classList.add('fade-out');
+        
+        // Show transition overlay
+        setTimeout(() => {
+          pageTransition.classList.add('active');
+        }, 200);
+        
+        // Add click feedback to button
+        enterBtn.style.transform = 'translateY(-3px) scale(0.95)';
+      }
+      
+      // Add entrance animation on page load
+      setTimeout(() => {
+        mainContent.style.animation = 'fadeIn 1s ease forwards';
+      }, 100);
+      
+      // Add fadeIn animation
+      const fadeInStyle = document.createElement('style');
+      fadeInStyle.textContent = `
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+      `;
+      document.head.appendChild(fadeInStyle);
+      
+      console.log('Page transition system initialized');
+    });
+  </script>
+</body>
+</html>
+
