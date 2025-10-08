@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You - ISO Quality Education</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <a href="index.html">ISO Quality Education</a>
+                </div>
+                
+                <!-- Mobile menu button -->
+                <div class="mobile-menu-btn">
+                    <button onclick="toggleMobileMenu()" class="menu-toggle">
+                        <span class="hamburger"></span>
+                        <span class="hamburger"></span>
+                        <span class="hamburger"></span>
+                    </button>
+                </div>
+                
+                <!-- Desktop navigation -->
+                <nav class="desktop-nav">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="survey.html" class="nav-link">Survey</a>
+                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                </nav>
+            </div>
+            
+            <!-- Mobile navigation -->
+            <nav class="mobile-nav" id="mobileNav">
+                <a href="index.html" class="mobile-nav-link">Home</a>
+                <a href="survey.html" class="mobile-nav-link">Survey</a>
+                <a href="dashboard.html" class="mobile-nav-link">Dashboard</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="thank-you-main">
+        <div class="container thank-you-container">
+            <div class="thank-you-card">
+                <div class="thank-you-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                
+                <h1 class="thank-you-title">Thank You!</h1>
+                <p class="thank-you-description">
+                    Your feedback has been submitted successfully. Your responses help us improve the CSS Strand experience.
+                </p>
+                
+                <div class="thank-you-footer">
+                    <p class="thank-you-message">
+                        We appreciate your time and valuable input. Your feedback will be used to enhance our educational programs.
+                    </p>
+                    <a href="index.html" class="btn btn-secondary">
+                        <svg class="btn-icon btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                        </svg>
+                        Return to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-main">
+                    <h3 class="footer-title">ISO Learner-Centric Quality Education</h3>
+                    <p class="footer-description">
+                        Empowering CSS Strand Students through Learner-Centric Quality Education
+                    </p>
+                </div>
+                <div class="footer-links">
+                    <h4 class="footer-links-title">Quick Links</h4>
+                    <ul class="footer-links-list">
+                        <li><a href="index.html" class="footer-link">About this Survey</a></li>
+                        <li><a href="index.html" class="footer-link">Privacy Policy</a></li>
+                        <li><a href="index.html" class="footer-link">Contact Academic Affairs</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="footer-copyright">
+                    © <span id="currentYear"></span> JRU Senior High School. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
+</body>
+</html>

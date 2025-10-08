@@ -13,7 +13,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: 
+      background:
         linear-gradient(135deg, rgba(66,133,244,0.45), rgba(255,215,0,0.35)),
         url('JoseRizalUniversityy.jpg') no-repeat center center/cover;
       font-family: 'Poppins', Arial, sans-serif;
@@ -167,39 +167,39 @@
       const enterBtn = document.getElementById('enter-btn');
       const pageTransition = document.getElementById('page-transition');
       const mainContent = document.getElementById('main-content');
-      
+
       // Handle Enter button click
       enterBtn.addEventListener('click', function(e) {
         e.preventDefault(); // Prevent immediate navigation
-        
+
         // Start transition animation
         startPageTransition();
-        
+
         // Navigate to Login page after animation
         setTimeout(() => {
           window.location.href = 'Login.html';
         }, 800); // 800ms delay for smooth transition
       });
-      
+
       // Function to start page transition
       function startPageTransition() {
         // Fade out main content
         mainContent.classList.add('fade-out');
-        
+
         // Show transition overlay
         setTimeout(() => {
           pageTransition.classList.add('active');
         }, 200);
-        
+
         // Add click feedback to button
         enterBtn.style.transform = 'translateY(-3px) scale(0.95)';
       }
-      
+
       // Add entrance animation on page load
       setTimeout(() => {
         mainContent.style.animation = 'fadeIn 1s ease forwards';
       }, 100);
-      
+
       // Add fadeIn animation
       const fadeInStyle = document.createElement('style');
       fadeInStyle.textContent = `
@@ -215,10 +215,9 @@
         }
       `;
       document.head.appendChild(fadeInStyle);
-      
+
       console.log('Page transition system initialized');
     });
   </script>
 </body>
 </html>
-
