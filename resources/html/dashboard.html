@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ISO Quality Education</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <a href="index.html">ISO Quality Education</a>
+                </div>
+                
+                <!-- Mobile menu button -->
+                <div class="mobile-menu-btn">
+                    <button onclick="toggleMobileMenu()" class="menu-toggle">
+                        <span class="hamburger"></span>
+                        <span class="hamburger"></span>
+                        <span class="hamburger"></span>
+                    </button>
+                </div>
+                
+                <!-- Desktop navigation -->
+                <nav class="desktop-nav">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="survey.html" class="nav-link">Survey</a>
+                    <a href="dashboard.html" class="nav-link active">Dashboard</a>
+                </nav>
+            </div>
+            
+            <!-- Mobile navigation -->
+            <nav class="mobile-nav" id="mobileNav">
+                <a href="index.html" class="mobile-nav-link">Home</a>
+                <a href="survey.html" class="mobile-nav-link">Survey</a>
+                <a href="dashboard.html" class="mobile-nav-link active">Dashboard</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <div class="container">
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <div class="dashboard-header-overlay"></div>
+                <h1 class="dashboard-header-title">Key Performance Metrics</h1>
+            </div>
+
+            <!-- Metric Cards -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-icon trending-up">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                    </div>
+                    <div class="metric-content">
+                        <h3 class="metric-title">Overall Passing Rate</h3>
+                        <div class="metric-value">87.5%</div>
+                        <div class="metric-comparison trend-up">+2.1% from last year</div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon trending-down">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+                        </svg>
+                    </div>
+                    <div class="metric-content">
+                        <h3 class="metric-title">Overall Drop Rate</h3>
+                        <div class="metric-value">4.2%</div>
+                        <div class="metric-comparison trend-up">-1.3% from last year</div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-icon users">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="metric-content">
+                        <h3 class="metric-title">Total Enrolled Students</h3>
+                        <div class="metric-value">342</div>
+                        <div class="metric-comparison trend-up">+28 from last year</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Section -->
+            <div class="analytics-section">
+                <div class="analytics-header">
+                    <h2 class="analytics-title">
+                        <svg class="analytics-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                        </svg>
+                        Analytics Filters
+                    </h2>
+                    <div class="analytics-filters">
+                        <div class="filter-group">
+                            <label class="filter-label">Academic Year</label>
+                            <select class="filter-select" id="yearFilter" onchange="updateAnalytics()">
+                                <option value="2023">2023-2024</option>
+                                <option value="2022">2022-2023</option>
+                                <option value="2021">2021-2022</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Grade Level</label>
+                            <select class="filter-select" id="gradeFilter" onchange="updateAnalytics()">
+                                <option value="all">All Grades</option>
+                                <option value="11">Grade 11</option>
+                                <option value="12">Grade 12</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="analytics-tabs">
+                    <button class="tab-button active" onclick="switchTab('trends')">Trends</button>
+                    <button class="tab-button" onclick="switchTab('subjects')">Subjects</button>
+                    <button class="tab-button" onclick="switchTab('distributions')">Distributions</button>
+                    <button class="tab-button" onclick="switchTab('details')">Details</button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content active" id="trends">
+                    <div class="chart-container" id="trendsChart">
+                        <!-- Response Trends Chart will be inserted here -->
+                    </div>
+                </div>
+
+                <div class="tab-content" id="subjects">
+                    <div class="chart-container" id="subjectsChart">
+                        <!-- Subject Performance Chart will be inserted here -->
+                    </div>
+                </div>
+
+                <div class="tab-content" id="distributions">
+                    <div class="chart-container" id="distributionsChart">
+                        <!-- Grade Distribution Chart will be inserted here -->
+                    </div>
+                </div>
+
+                <div class="tab-content" id="details">
+                    <div class="chart-container" id="detailsChart">
+                        <!-- Satisfaction Details Chart will be inserted here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Insights Section -->
+            <div class="additional-insights-section">
+                <h2 class="insights-title">Additional Insights</h2>
+                
+                <!-- Insight Metrics Row -->
+                <div class="insight-metrics-row">
+                    <div class="insight-metric-card">
+                        <div class="metric-icon-container green">
+                            <svg class="metric-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                        <div class="metric-content">
+                            <span class="metric-label">Monthly Improvement</span>
+                            <span class="metric-value">+1.2%</span>
+                        </div>
+                    </div>
+
+                    <div class="insight-metric-card">
+                        <div class="metric-icon-container blue">
+                            <svg class="metric-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                        </div>
+                        <div class="metric-content">
+                            <span class="metric-label">Attendance Rate</span>
+                            <span class="metric-value">94.8%</span>
+                        </div>
+                    </div>
+
+                    <div class="insight-metric-card">
+                        <div class="metric-icon-container purple">
+                            <svg class="metric-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="metric-content">
+                            <span class="metric-label">Teacher-Student Ratio</span>
+                            <span class="metric-value">1:18</span>
+                        </div>
+                    </div>
+
+                    <div class="insight-metric-card">
+                        <div class="metric-icon-container violet">
+                            <svg class="metric-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <div class="metric-content">
+                            <span class="metric-label">Survey Response Rate</span>
+                            <span class="metric-value">87%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Survey Response Summary Section -->
+                <div class="survey-response-summary">
+                    <div class="summary-columns">
+                        <!-- Top Strengths Column -->
+                        <div class="summary-column">
+                            <h3 class="summary-header">Top Strengths (Based on Survey)</h3>
+                            <div class="summary-list">
+                                <div class="summary-item strength">
+                                    <div class="rating-bubble green">4.8</div>
+                                    <span class="summary-text">Quality of teaching and instructor expertise</span>
+                                </div>
+                                <div class="summary-item strength">
+                                    <div class="rating-bubble green">4.6</div>
+                                    <span class="summary-text">Relevance of curriculum to industry needs</span>
+                                </div>
+                                <div class="summary-item strength">
+                                    <div class="rating-bubble green">4.5</div>
+                                    <span class="summary-text">Practical application of concepts</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Areas for Improvement Column -->
+                        <div class="summary-column">
+                            <h3 class="summary-header">Areas for Improvement</h3>
+                            <div class="summary-list">
+                                <div class="summary-item improvement">
+                                    <div class="rating-bubble orange">3.2</div>
+                                    <span class="summary-text">Access to up-to-date technology resources</span>
+                                </div>
+                                <div class="summary-item improvement">
+                                    <div class="rating-bubble orange">3.4</div>
+                                    <span class="summary-text">Feedback turnaround time</span>
+                                </div>
+                                <div class="summary-item improvement">
+                                    <div class="rating-bubble orange">3.5</div>
+                                    <span class="summary-text">Industry exposure and internship opportunities</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-main">
+                    <h3 class="footer-title">ISO Learner-Centric Quality Education</h3>
+                    <p class="footer-description">
+                        Empowering CSS Strand Students through Learner-Centric Quality Education
+                    </p>
+                </div>
+                <div class="footer-links">
+                    <h4 class="footer-links-title">Quick Links</h4>
+                    <ul class="footer-links-list">
+                        <li><a href="index.html" class="footer-link">About this Survey</a></li>
+                        <li><a href="index.html" class="footer-link">Privacy Policy</a></li>
+                        <li><a href="index.html" class="footer-link">Contact Academic Affairs</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="footer-copyright">
+                    © <span id="currentYear"></span> JRU Senior High School. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>
