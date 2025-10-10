@@ -12,7 +12,7 @@ Route::get('/', function () {
     return response()->file(public_path('Index.html'));
 });
 
-// Serve other static HTML pages
+// Serve specific static HTML pages
 Route::get('/survey.html', function () {
     return response()->file(public_path('survey.html'));
 });
@@ -24,6 +24,71 @@ Route::get('/dashboard.html', function () {
 Route::get('/thank-you.html', function () {
     return response()->file(public_path('thank-you.html'));
 });
+
+Route::get('/Login.html', function () {
+    return response()->file(public_path('Login.html'));
+});
+
+// Catch-all route for any HTML files in public directory
+Route::get('/{filename}.html', function ($filename) {
+    $filePath = public_path($filename . '.html');
+
+    if (file_exists($filePath)) {
+        return response()->file($filePath);
+    }
+
+    abort(404);
+})->where('filename', '.*');
+
+// Serve static assets (CSS, JS, images)
+Route::get('/{filename}.css', function ($filename) {
+    $filePath = public_path($filename . '.css');
+
+    if (file_exists($filePath)) {
+        return response()->file($filePath, [
+            'Content-Type' => 'text/css'
+        ]);
+    }
+
+    abort(404);
+})->where('filename', '.*');
+
+Route::get('/{filename}.js', function ($filename) {
+    $filePath = public_path($filename . '.js');
+
+    if (file_exists($filePath)) {
+        return response()->file($filePath, [
+            'Content-Type' => 'application/javascript'
+        ]);
+    }
+
+    abort(404);
+})->where('filename', '.*');
+
+// Serve images
+Route::get('/{filename}.jpg', function ($filename) {
+    $filePath = public_path($filename . '.jpg');
+
+    if (file_exists($filePath)) {
+        return response()->file($filePath, [
+            'Content-Type' => 'image/jpeg'
+        ]);
+    }
+
+    abort(404);
+})->where('filename', '.*');
+
+Route::get('/{filename}.png', function ($filename) {
+    $filePath = public_path($filename . '.png');
+
+    if (file_exists($filePath)) {
+        return response()->file($filePath, [
+            'Content-Type' => 'image/png'
+        ]);
+    }
+
+    abort(404);
+})->where('filename', '.*');
 
 // API Routes for Survey functionality
 Route::prefix('api')->group(function () {
