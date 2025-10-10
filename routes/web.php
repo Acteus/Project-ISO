@@ -1,48 +1,41 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AIController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\SurveyController;
+use App\Http\Controllers\StudentController;
 use App\Http\Controllers\VisualizationController;
 
-// Serve the custom homepage
+// Public routes
 Route::get('/', function () {
-    return response()->file(public_path('Index.html'));
+    return view('welcome');
+})->name('home');
+
+// Student authentication routes
+Route::prefix('student')->name('student.')->group(function () {
+    Route::get('/register', [StudentController::class, 'showRegistrationForm'])->name('register');
+    Route::post('/register', [StudentController::class, 'register'])->name('register.post');
+    Route::get('/login', [StudentController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [StudentController::class, 'login'])->name('login.post');
+    Route::post('/logout', [StudentController::class, 'logout'])->name('logout');
+    Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
 });
 
-// Serve specific static HTML pages
-Route::get('/survey.html', function () {
-    return response()->file(public_path('survey.html'));
-});
+// Survey routes
+Route::get('/survey', function () {
+    return view('survey.form');
+})->name('survey.form');
 
-Route::get('/dashboard.html', function () {
-    return response()->file(public_path('dashboard.html'));
-});
+Route::get('/thank-you', function () {
+    return view('survey.thankyou');
+})->name('survey.thankyou');
 
-Route::get('/thank-you.html', function () {
-    return response()->file(public_path('thank-you.html'));
-});
-
-Route::get('/Login.html', function () {
-    return response()->file(public_path('Login.html'));
-});
-
-// Catch-all route for any HTML files in public directory
-Route::get('/{filename}.html', function ($filename) {
-    $filePath = public_path($filename . '.html');
-
-    if (file_exists($filePath)) {
-        return response()->file($filePath);
-    }
-
-    abort(404);
-})->where('filename', '.*');
-
-// Serve static assets (CSS, JS, images)
-Route::get('/{filename}.css', function ($filename) {
-    $filePath = public_path($filename . '.css');
+// Serve static assets from public directory
+Route::get('/css/{filename}', function ($filename) {
+    $filePath = public_path('css/' . $filename);
 
     if (file_exists($filePath)) {
         return response()->file($filePath, [
@@ -53,8 +46,8 @@ Route::get('/{filename}.css', function ($filename) {
     abort(404);
 })->where('filename', '.*');
 
-Route::get('/{filename}.js', function ($filename) {
-    $filePath = public_path($filename . '.js');
+Route::get('/js/{filename}', function ($filename) {
+    $filePath = public_path('js/' . $filename);
 
     if (file_exists($filePath)) {
         return response()->file($filePath, [
@@ -65,35 +58,64 @@ Route::get('/{filename}.js', function ($filename) {
     abort(404);
 })->where('filename', '.*');
 
-// Serve images
-Route::get('/{filename}.jpg', function ($filename) {
-    $filePath = public_path($filename . '.jpg');
+// Serve images from public directory
+Route::get('/images/{filename}', function ($filename) {
+    $filePath = public_path('images/' . $filename);
 
     if (file_exists($filePath)) {
+        $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+        $mimeTypes = [
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'svg' => 'image/svg+xml',
+        ];
+
         return response()->file($filePath, [
-            'Content-Type' => 'image/jpeg'
+            'Content-Type' => $mimeTypes[$extension] ?? 'application/octet-stream'
         ]);
     }
 
     abort(404);
 })->where('filename', '.*');
 
-Route::get('/{filename}.png', function ($filename) {
-    $filePath = public_path($filename . '.png');
+// Redirect old static HTML URLs to new Laravel routes
+Route::get('/Login.html', function () {
+    return redirect()->route('student.login');
+});
 
-    if (file_exists($filePath)) {
-        return response()->file($filePath, [
-            'Content-Type' => 'image/png'
-        ]);
-    }
+Route::get('/Index.html', function () {
+    return redirect()->route('home');
+});
 
-    abort(404);
-})->where('filename', '.*');
+Route::get('/survey.html', function () {
+    return redirect()->route('survey.form');
+});
+
+Route::get('/dashboard.html', function () {
+    return redirect()->route('student.dashboard');
+});
+
+Route::get('/thank-you.html', function () {
+    return redirect()->route('survey.thankyou');
+});
+
+// Debug logging for troubleshooting
+Route::get('/debug-login', function () {
+    Log::info('Login debug route accessed', [
+        'url' => request()->url(),
+        'full_url' => request()->fullUrl(),
+        'method' => request()->method(),
+        'user_agent' => request()->userAgent()
+    ]);
+    return response()->json(['message' => 'Debug route working']);
+});
 
 // API Routes for Survey functionality
 Route::prefix('api')->group(function () {
     // Survey routes
-    Route::post('/survey/submit', [SurveyController::class, 'submitResponse']);
+    Route::post('/survey/submit', [SurveyController::class, 'submitResponse'])->name('survey.submit');
     Route::get('/survey/analytics', [SurveyController::class, 'getAnalytics']);
     Route::get('/survey/responses', [SurveyController::class, 'getAllResponses']);
     Route::get('/survey/responses/{id}', [SurveyController::class, 'getResponse']);
