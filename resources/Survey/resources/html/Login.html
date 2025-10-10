@@ -7,13 +7,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="functions.css">
   <script src="Socmedlinks.js"></script>
-  
+
   <style>
     /* Page entrance animation */
     .page-entrance {
       animation: pageEnter 0.8s ease forwards;
     }
-    
+
     @keyframes pageEnter {
       from {
         opacity: 0;
@@ -24,10 +24,39 @@
         transform: translateY(0) scale(1);
       }
     }
-    
+
     /* Smooth entrance for container */
     .container {
       opacity: 0;
+    }
+
+    /* Survey section styles */
+    .survey-section {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .survey-btn {
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      text-decoration: none;
+      display: inline-block;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .survey-btn:hover {
+      background: linear-gradient(135deg, #0056b3, #004085);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+      color: white;
+      text-decoration: none;
     }
   </style>
 </head>
@@ -71,6 +100,19 @@
         <button type="submit" class="continue-btn">Continue</button>
       </form>
     </div>
+
+    <!-- Survey Access Section -->
+    <div class="survey-section" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+      <h3 style="color: #333; margin-bottom: 15px; font-size: 18px;">Quality Improvement Survey</h3>
+      <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+        Help us improve our CSS program by participating in our ISO 21001 Quality Education Survey.
+      </p>
+      <a href="../survey.html" class="survey-btn" onclick="prepareSurveyAccess()">
+        Take Quality Survey
+      </a>
+      <div id="surveyStatus" style="margin-top: 10px; font-size: 12px; color: #888;"></div>
+    </div>
+
     <a href="Login.php" class="btn">Enter</a>
   </div>
 
@@ -116,18 +158,92 @@
 
       if (!valid) e.preventDefault();
     });
-    
+
     // Page entrance animation
     document.addEventListener('DOMContentLoaded', function() {
       const container = document.querySelector('.container');
-      
+
       // Add entrance animation
       setTimeout(() => {
         container.classList.add('page-entrance');
         container.style.opacity = '1';
       }, 100);
-      
+
       console.log('Login page loaded with entrance animation');
+
+      // Load saved student data for survey access
+      loadStudentData();
+    });
+
+    // Prepare survey access with student data
+    function prepareSurveyAccess() {
+      const studentData = getStudentData();
+
+      if (studentData && studentData.student_id) {
+        // Store student data for survey use
+        sessionStorage.setItem('surveyStudentData', JSON.stringify(studentData));
+
+        // Update survey status
+        document.getElementById('surveyStatus').innerHTML =
+          '✅ Student ID: ' + studentData.student_id + ' | Ready for survey';
+
+        // Redirect to survey after a brief delay
+        setTimeout(() => {
+          window.location.href = '../survey.html';
+        }, 1000);
+      } else {
+        document.getElementById('surveyStatus').innerHTML =
+          '⚠️ Please complete registration first to access the survey';
+      }
+    }
+
+    // Get student data from form
+    function getStudentData() {
+      const form = document.getElementById('studentForm');
+      if (!form) return null;
+
+      const firstname = form.querySelector('input[name="firstname"]').value;
+      const lastname = form.querySelector('input[name="lastname"]').value;
+      const studentid = form.querySelector('input[name="studentid"]').value;
+      const year = form.querySelector('input[name="year"]:checked')?.value;
+      const section = form.querySelector('select[name="section"]').value;
+
+      if (firstname && lastname && studentid && year && section) {
+        return {
+          student_id: studentid,
+          firstname: firstname,
+          lastname: lastname,
+          year_level: year,
+          section: section,
+          full_name: `${firstname} ${lastname}`
+        };
+      }
+
+      return null;
+    }
+
+    // Load previously saved student data
+    function loadStudentData() {
+      const savedData = sessionStorage.getItem('surveyStudentData');
+      if (savedData) {
+        try {
+          const studentData = JSON.parse(savedData);
+          document.getElementById('surveyStatus').innerHTML =
+            '✅ Welcome back, ' + studentData.firstname + '! Ready to take the survey?';
+        } catch (e) {
+          console.log('Error loading saved student data:', e);
+        }
+      }
+    }
+
+    // Save student data when form is submitted
+    document.getElementById('studentForm')?.addEventListener('submit', function(e) {
+      const studentData = getStudentData();
+      if (studentData) {
+        sessionStorage.setItem('surveyStudentData', JSON.stringify(studentData));
+        document.getElementById('surveyStatus').innerHTML =
+          '✅ Registration saved! Click "Take Quality Survey" to continue.';
+      }
     });
   </script>
 </body>
