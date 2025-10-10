@@ -1,5 +1,5 @@
 // Survey functionality for Laravel
-
+// TODO: Bug on survey submission - sometimes doesn't submit, check console for errors, possibly CSRF token issue, survey questions not popping up and dashboard has routing issues, also find html file for Home
 let currentStep = 0;
 let surveyData = {};
 
