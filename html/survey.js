@@ -1,9 +1,7 @@
-// Survey functionality for Laravel
+// Survey functionality
 
 let currentStep = 0;
 let surveyData = {};
-
-// Laravel-specific functions
 
 // Survey sections data
 const surveySections = [
@@ -630,131 +628,9 @@ document.addEventListener('keydown', function(event) {
 
 // Prevent accidental navigation away
 window.addEventListener('beforeunload', function(event) {
-    if (Object.keys(surveyData).length > 0) {
+    if (window.location.pathname.includes('survey.html') && Object.keys(surveyData).length > 0) {
         event.preventDefault();
         event.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
         return event.returnValue;
     }
 });
-
-// Laravel-specific functions
-async function submitSurveyLaravel(event) {
-    event.preventDefault();
-
-    if (!validateCurrentSection()) {
-        return;
-    }
-
-    const submitBtn = document.getElementById('submitBtn');
-    showLoading(submitBtn);
-
-    try {
-        // Prepare data for submission - collect all form data
-        const submissionData = { ...surveyData };
-
-        // Get hidden form fields
-        const studentIdField = document.querySelector('input[name="student_id"]');
-        const gradeLevelField = document.querySelector('input[name="grade_level"]');
-
-        // Map to Laravel API format with actual form data
-        const laravelData = {
-            // Student information from Laravel auth
-            student_id: studentIdField ? studentIdField.value : '',
-            track: 'STEM', // CSS strand maps to STEM track
-            grade_level: gradeLevelField ? parseInt(gradeLevelField.value) : 11,
-            academic_year: new Date().getFullYear().toString(),
-            semester: getCurrentSemester(),
-
-            // Map survey questions to ISO 21001 fields
-            // Learner Needs & Expectations (q1-q3)
-            curriculum_relevance_rating: parseInt(submissionData.q1) || 1,
-            learning_pace_appropriateness: parseInt(submissionData.q2) || 1,
-            individual_support_availability: parseInt(submissionData.q3) || 1,
-            learning_style_accommodation: parseInt(submissionData.q1) || 1,
-
-            // Teaching & Learning Quality (q4-q6)
-            teaching_quality_rating: parseInt(submissionData.q4) || 1,
-            learning_environment_rating: parseInt(submissionData.q5) || 1,
-            peer_interaction_satisfaction: parseInt(submissionData.q6) || 1,
-            extracurricular_satisfaction: parseInt(submissionData.q4) || 1,
-
-            // Assessments & Outcomes (q7-q9)
-            academic_progress_rating: parseInt(submissionData.q7) || 1,
-            skill_development_rating: parseInt(submissionData.q8) || 1,
-            critical_thinking_improvement: parseInt(submissionData.q9) || 1,
-            problem_solving_confidence: parseInt(submissionData.q7) || 1,
-
-            // Support & Resources (q10-q12)
-            physical_safety_rating: parseInt(submissionData.q10) || 1,
-            psychological_safety_rating: parseInt(submissionData.q11) || 1,
-            bullying_prevention_effectiveness: parseInt(submissionData.q12) || 1,
-            emergency_preparedness_rating: parseInt(submissionData.q10) || 1,
-
-            // Environment & Inclusivity (q13-q15)
-            mental_health_support_rating: parseInt(submissionData.q13) || 1,
-            stress_management_support: parseInt(submissionData.q14) || 1,
-            physical_health_support: parseInt(submissionData.q15) || 1,
-            overall_wellbeing_rating: parseInt(submissionData.q13) || 1,
-
-            // Overall Satisfaction (q19-q21)
-            overall_satisfaction: parseInt(submissionData.q19) || 1,
-
-            // Map open feedback to appropriate fields
-            positive_aspects: extractPositiveAspects(submissionData.open_feedback),
-            improvement_suggestions: extractImprovementSuggestions(submissionData.open_feedback),
-            additional_comments: submissionData.open_feedback || '',
-
-            // Demographics
-            gender: submissionData.gender || 'Prefer not to say',
-
-            // Consent and privacy
-            consent_given: true,
-
-            // Indirect metrics (optional)
-            attendance_rate: null,
-            grade_average: null,
-            participation_score: null,
-            extracurricular_hours: null,
-            counseling_sessions: null
-        };
-
-        console.log('Submitting survey data:', laravelData);
-
-        // Submit to Laravel API backend
-        const response = await fetch('/api/survey/submit', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(laravelData)
-        });
-
-        const data = await response.json();
-        console.log('Response:', response.status, data);
-
-        if (response.ok && data.message) {
-            // Clear saved progress
-            removeFromLocalStorage('surveyProgress');
-
-            // Show success message and redirect
-            alert(data.message);
-            window.location.href = '/thank-you';
-        } else {
-            throw new Error(data.message || 'Submission failed');
-        }
-
-    } catch (error) {
-        console.error('Survey submission error:', error);
-        alert('There was an error submitting your survey. Please try again.');
-    } finally {
-        hideLoading(submitBtn);
-    }
-}
-
-// Override the submitSurvey function for Laravel
-function submitSurvey(event) {
-    submitSurveyLaravel(event);
-}

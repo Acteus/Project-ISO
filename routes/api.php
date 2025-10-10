@@ -17,8 +17,8 @@ Route::post('/admin/login', [AdminAuthController::class, 'login']);
 Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::get('/admin/me', [AdminAuthController::class, 'me'])->middleware('auth:sanctum');
 
-// Survey Routes
-Route::post('/survey/submit', [SurveyController::class, 'submitResponse']);
+// Survey Routes (public routes that don't require authentication or CSRF)
+Route::post('/survey/submit', [SurveyController::class, 'submitResponse'])->withoutMiddleware(['throttle', 'verifyCsrfToken']);
 
 // Protected Admin Routes
 Route::middleware('auth:sanctum')->group(function () {

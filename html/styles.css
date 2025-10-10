@@ -292,7 +292,7 @@ body {
 
 /* Survey Styles */
 .survey-main {
-    background-image: url('../images/SurveyBG.png');
+    background-image: url('SurveyBG.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -846,7 +846,7 @@ body {
     .analytics-filters {
         flex-direction: row;
     }
-
+    
     .filter-group {
         min-width: 150px;
     }
@@ -856,38 +856,38 @@ body {
     .desktop-nav {
         display: flex;
     }
-
+    
     .mobile-menu-btn {
         display: none;
     }
-
+    
     .info-grid {
         grid-template-columns: repeat(3, 1fr);
     }
-
+    
     .metrics-grid {
         grid-template-columns: repeat(3, 1fr);
     }
-
+    
     .insights-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-
+    
     .footer-content {
         flex-direction: row;
         justify-content: space-between;
     }
-
+    
     .analytics-header {
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
     }
-
+    
     .hero-title {
         font-size: 4rem;
     }
-
+    
     .survey-card {
         padding: 3rem 2rem;
     }
@@ -897,7 +897,7 @@ body {
     .container {
         padding: 0 2rem;
     }
-
+    
     .insights-grid {
         grid-template-columns: repeat(3, 1fr);
     }
@@ -907,42 +907,42 @@ body {
     .hero-title {
         font-size: 2rem;
     }
-
+    
     .hero-description {
         font-size: 1rem;
     }
-
+    
     .section-title {
         font-size: 1.5rem;
     }
-
+    
     .dashboard-header-title {
         font-size: 1.75rem;
     }
-
+    
     .rating-scale {
         justify-content: center;
         gap: 0.5rem;
     }
-
+    
     .rating-option {
         min-width: 50px;
     }
-
+    
     .rating-label {
         width: 2rem;
         height: 2rem;
         font-size: 0.875rem;
     }
-
+    
     .rating-text {
         font-size: 0.625rem;
     }
-
+    
     .chart-canvas svg {
         height: 250px;
     }
-
+    
     .chart-legend {
         flex-direction: column;
         align-items: center;
@@ -1072,7 +1072,7 @@ body {
         grid-template-columns: 1fr;
         gap: 1.5rem;
     }
-
+    
     .chart-canvas svg {
         height: 200px;
     }
@@ -1262,7 +1262,7 @@ body {
     .insight-metrics-row {
         grid-template-columns: repeat(2, 1fr);
     }
-
+    
     .summary-columns {
         grid-template-columns: 1fr;
         gap: 2rem;
@@ -1273,44 +1273,44 @@ body {
     .additional-insights-section {
         padding: 2rem 0;
     }
-
+    
     .additional-insights-section .insights-title {
         font-size: 1.75rem;
         margin-bottom: 2rem;
     }
-
+    
     .insight-metrics-row {
         grid-template-columns: 1fr;
         gap: 1rem;
         margin-bottom: 2rem;
     }
-
+    
     .insight-metric-card {
         padding: 1rem;
     }
-
+    
     .metric-value {
         font-size: 1.25rem;
     }
-
+    
     .summary-columns {
         padding: 1.5rem;
     }
-
+    
     .summary-header {
         font-size: 1.125rem;
     }
-
+    
     .summary-item {
         padding: 0.5rem;
     }
-
+    
     .rating-bubble {
         width: 2rem;
         height: 2rem;
         font-size: 0.75rem;
     }
-
+    
     .summary-text {
         font-size: 0.8125rem;
     }
