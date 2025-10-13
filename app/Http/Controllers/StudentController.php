@@ -67,7 +67,7 @@ class StudentController extends Controller
 
         return response()->json([
             'message' => 'Registration successful! Welcome to the ISO 21001 Survey System.',
-            'redirect' => route('survey.form'),
+            'redirect' => route('survey.landing'),
             'user' => [
                 'name' => $user->name,
                 'student_id' => $user->student_id,
@@ -114,7 +114,7 @@ class StudentController extends Controller
 
             return response()->json([
                 'message' => 'Login successful! Welcome back.',
-                'redirect' => route('survey.form'),
+                'redirect' => route('survey.landing'),
                 'user' => [
                     'name' => $user->name,
                     'student_id' => $user->student_id,

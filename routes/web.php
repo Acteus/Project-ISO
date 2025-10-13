@@ -29,6 +29,10 @@ Route::get('/survey', function () {
     return view('survey.form');
 })->name('survey.form');
 
+Route::get('/survey/landing', function () {
+    return view('survey.landing');
+})->name('survey.landing');
+
 Route::get('/thank-you', function () {
     return view('survey.thankyou');
 })->name('survey.thankyou');
