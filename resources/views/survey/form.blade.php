@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Survey - ISO Quality Education</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
     <!-- Header -->
@@ -12,32 +13,24 @@
         <div class="container">
             <div class="nav-wrapper">
                 <div class="logo">
-                    <a href="index.html">ISO Quality Education</a>
+                    <a href="{{ route('home') }}">ISO Quality Education</a>
                 </div>
-                
-                <!-- Mobile menu button -->
-                <div class="mobile-menu-btn">
-                    <button onclick="toggleMobileMenu()" class="menu-toggle">
-                        <span class="hamburger"></span>
-                        <span class="hamburger"></span>
-                        <span class="hamburger"></span>
-                    </button>
-                </div>
-                
+
                 <!-- Desktop navigation -->
                 <nav class="desktop-nav">
-                    <a href="index.html" class="nav-link">Home</a>
-                    <a href="survey.html" class="nav-link active">Survey</a>
-                    <a href="dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="{{ route('home') }}" class="nav-link">Home</a>
+                    <a href="{{ route('survey.form') }}" class="nav-link active">Survey</a>
+                    <a href="{{ route('student.dashboard') }}" class="nav-link">Dashboard</a>
+                    @auth
+                        <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
+                            @csrf
+                            <button type="submit" class="nav-link" style="background: none; border: none; color: inherit; cursor: pointer;">
+                                Logout ({{ Auth::user()->name }})
+                            </button>
+                        </form>
+                    @endauth
                 </nav>
             </div>
-            
-            <!-- Mobile navigation -->
-            <nav class="mobile-nav" id="mobileNav">
-                <a href="index.html" class="mobile-nav-link">Home</a>
-                <a href="survey.html" class="mobile-nav-link active">Survey</a>
-                <a href="dashboard.html" class="mobile-nav-link">Dashboard</a>
-            </nav>
         </div>
     </header>
 
@@ -48,6 +41,13 @@
                 <p class="survey-subtitle">
                     Your feedback helps us improve the quality of education for CSS Strand students.
                 </p>
+
+                @auth
+                    <div class="student-info" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <p><strong>Welcome, {{ Auth::user()->name }}!</strong></p>
+                        <p>Student ID: {{ Auth::user()->student_id }} | Year: {{ Auth::user()->year_level }} | Section: {{ Auth::user()->section }}</p>
+                    </div>
+                @endauth
 
                 <!-- Progress bar -->
                 <div class="progress-section">
@@ -61,6 +61,15 @@
                 </div>
 
                 <form id="surveyForm" onsubmit="submitSurvey(event)">
+                    @csrf
+                    <!-- Hidden fields for student info -->
+                    @auth
+                        <input type="hidden" name="student_id" value="{{ Auth::user()->student_id }}">
+                        <input type="hidden" name="track" value="STEM">
+                        <input type="hidden" name="grade_level" value="{{ Auth::user()->year_level }}">
+                        <input type="hidden" name="year_level" value="{{ Auth::user()->year_level === 11 ? 'Grade 11' : 'Grade 12' }}">
+                    @endauth
+
                     <!-- Survey sections will be dynamically loaded here -->
                     <div id="surveySection">
                         <!-- Content will be loaded by JavaScript -->
@@ -105,9 +114,9 @@
                 <div class="footer-links">
                     <h4 class="footer-links-title">Quick Links</h4>
                     <ul class="footer-links-list">
-                        <li><a href="index.html" class="footer-link">About this Survey</a></li>
-                        <li><a href="index.html" class="footer-link">Privacy Policy</a></li>
-                        <li><a href="index.html" class="footer-link">Contact Academic Affairs</a></li>
+                        <li><a href="{{ route('home') }}" class="footer-link">About this Survey</a></li>
+                        <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                        <li><a href="#" class="footer-link">Contact Academic Affairs</a></li>
                     </ul>
                 </div>
             </div>
@@ -119,7 +128,7 @@
         </div>
     </footer>
 
-    <script src="main.js"></script>
-    <script src="survey.js"></script>
+    <script src="{{ asset('js/main.js') }}"></script>
+    <script src="{{ asset('js/survey.js') }}"></script>
 </body>
 </html>

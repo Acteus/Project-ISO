@@ -7,9 +7,9 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: 
+  background:
     linear-gradient(135deg, rgba(66,133,244,0.45), rgba(255,215,0,0.35)),
-    url('JoseRizalUniversityy.jpg') no-repeat center center fixed;
+    url('../images/JoseRizalUniversityy.jpg') no-repeat center center fixed;
   background-size: cover;
   font-family: 'Poppins', Arial, sans-serif;
   color: white;
