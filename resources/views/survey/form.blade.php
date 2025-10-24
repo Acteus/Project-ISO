@@ -20,7 +20,6 @@
                 <nav class="desktop-nav">
                     <a href="{{ route('home') }}" class="nav-link">Home</a>
                     <a href="{{ route('survey.form') }}" class="nav-link active">Survey</a>
-                    <a href="{{ route('student.dashboard') }}" class="nav-link">Dashboard</a>
                     @auth
                         <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                             @csrf
@@ -53,10 +52,10 @@
                 <div class="progress-section">
                     <div class="progress-header">
                         <span class="progress-label">Progress</span>
-                        <span class="progress-percentage" id="progressPercentage">13%</span>
+                        <span class="progress-percentage" id="progressPercentage">0%</span>
                     </div>
                     <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill" style="width: 13%"></div>
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                     </div>
                 </div>
 
@@ -72,7 +71,616 @@
 
                     <!-- Survey sections will be dynamically loaded here -->
                     <div id="surveySection">
-                        <!-- Content will be loaded by JavaScript -->
+                        <!-- Section 1: Learner Needs & Expectations -->
+                        <div class="survey-step" data-step="1">
+                            <h2 class="section-title">Learner Needs & Expectations</h2>
+
+                            <div class="question-group">
+                                <label class="question-label">1. The CSS program curriculum meets my educational goals and expectations.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q1" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q1" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q1" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q1" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q1" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="question-group">
+                                <label class="question-label">2. My learning preferences and needs are considered in the teaching approach.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q2" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q2" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q2" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q2" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q2" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="question-group">
+                                <label class="question-label">3. I feel the program is preparing me adequately for my future career goals.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q3" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q3" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q3" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q3" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q3" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Teaching & Learning Quality -->
+                        <div class="survey-step" data-step="2" style="display: none;">
+                            <h2 class="section-title">Teaching & Learning Quality</h2>
+
+                            <div class="question-group">
+                                <label class="question-label">4. The teaching methods used are effective for my learning style.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q4" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q4" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q4" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q4" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q4" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="question-group">
+                                <label class="question-label">5. Instructors demonstrate expertise in their subject areas.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q5" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q5" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q5" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q5" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q5" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="question-group">
+                                <label class="question-label">6. Class activities and discussions enhance my understanding of the topics.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q6" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q6" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q6" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q6" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q6" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Assessments & Outcomes -->
+                        <div class="survey-step" data-step="3" style="display: none;">
+                            <h2 class="section-title">Assessments & Outcomes</h2>
+
+                            <div class="question-group">
+                                <label class="question-label">7. Assessments fairly evaluate my understanding of the course material.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q7" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q7" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q7" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q7" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q7" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="question-group">
+                                <label class="question-label">8. I receive timely and constructive feedback on my work.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q8" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q8" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q8" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q8" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q8" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="question-group">
+                                <label class="question-label">9. The grading system accurately reflects my level of achievement.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q9" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q9" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q9" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q9" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q9" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 4: Support & Resources -->
+                        <div class="survey-step" data-step="4" style="display: none;">
+                            <h2 class="section-title">Support & Resources</h2>
+
+                            <div class="question-group">
+                                <label class="question-label">10. I have access to adequate learning resources (books, online materials, etc.).</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q10" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q10" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q10" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q10" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q10" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="question-group">
+                                <label class="question-label">11. Technical support is available when I encounter problems.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q11" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q11" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q11" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q11" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q11" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="question-group">
+                                <label class="question-label">12. Academic advisors are helpful when I need guidance.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q12" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q12" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q12" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q12" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q12" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 5: Environment & Inclusivity -->
+                        <div class="survey-step" data-step="5" style="display: none;">
+                            <h2 class="section-title">Environment & Inclusivity</h2>
+
+                            <div class="question-group">
+                                <label class="question-label">13. The learning environment is inclusive and respectful of diversity.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q13" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q13" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q13" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q13" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q13" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="question-group">
+                                <label class="question-label">14. I feel comfortable participating in class discussions.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q14" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q14" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q14" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q14" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q14" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="question-group">
+                                <label class="question-label">15. The physical/virtual classroom environment supports my learning.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q15" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q15" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q15" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q15" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q15" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 6: Feedback & Responsiveness -->
+                        <div class="survey-step" data-step="6" style="display: none;">
+                            <h2 class="section-title">Feedback & Responsiveness</h2>
+
+                            <div class="question-group">
+                                <label class="question-label">16. My feedback about courses is taken seriously.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q16" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q16" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q16" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q16" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q16" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="question-group">
+                                <label class="question-label">17. The school responds effectively to student concerns.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q17" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q17" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q17" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q17" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q17" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="question-group">
+                                <label class="question-label">18. I can see improvements based on previous student feedback.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q18" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q18" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q18" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q18" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q18" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 7: Overall Satisfaction -->
+                        <div class="survey-step" data-step="7" style="display: none;">
+                            <h2 class="section-title">Overall Satisfaction</h2>
+
+                            <div class="question-group">
+                                <label class="question-label">19. Overall, I am satisfied with the quality of education in the CSS strand.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q19" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q19" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q19" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q19" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q19" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="question-group">
+                                <label class="question-label">20. I would recommend this program to other students.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q20" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q20" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q20" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q20" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q20" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="question-group">
+                                <label class="question-label">21. I feel confident about my future prospects after completing this program.</label>
+                                <div class="likert-scale">
+                                    <label class="likert-option">
+                                        <input type="radio" name="q21" value="1" required>
+                                        <span class="likert-label">1<br><small>Strongly Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q21" value="2" required>
+                                        <span class="likert-label">2<br><small>Disagree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q21" value="3" required>
+                                        <span class="likert-label">3<br><small>Neutral</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q21" value="4" required>
+                                        <span class="likert-label">4<br><small>Agree</small></span>
+                                    </label>
+                                    <label class="likert-option">
+                                        <input type="radio" name="q21" value="5" required>
+                                        <span class="likert-label">5<br><small>Strongly Agree</small></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 8: Demographics & Open-ended Questions -->
+                        <div class="survey-step" data-step="8" style="display: none;">
+                            <h2 class="section-title">Demographics & Open-ended Questions</h2>
+
+                            <div class="question-group">
+                                <label class="question-label">What is your current year level? <span class="required">*</span></label>
+                                <select name="demographics_year_level" class="form-select" required>
+                                    <option value="">Select your year level</option>
+                                    <option value="Grade 11">Grade 11</option>
+                                    <option value="Grade 12">Grade 12</option>
+                                </select>
+                            </div>
+
+                            <div class="question-group">
+                                <label class="question-label">Gender <span class="required">*</span></label>
+                                <select name="gender" class="form-select" required>
+                                    <option value="">Select your gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Non-binary">Non-binary</option>
+                                    <option value="Prefer not to say">Prefer not to say</option>
+                                </select>
+                            </div>
+
+                            <div class="question-group">
+                                <label class="question-label">Do you have any additional feedback or suggestions for improving the CSS strand program? <span class="required">*</span></label>
+                                <textarea name="additional_feedback" class="form-textarea" rows="6" placeholder="Please share your thoughts and suggestions here..." required></textarea>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Navigation buttons -->

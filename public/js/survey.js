@@ -1,6 +1,6 @@
-// Survey functionality for Laravel
-// TODO: Bug on survey submission - sometimes doesn't submit, check console for errors, possibly CSRF token issue, survey questions not popping up and dashboard has routing issues, also find html file for Home
-let currentStep = 0;
+// Survey functionality for Laravel with static HTML structure
+let currentStep = 1;
+let totalSteps = 8;
 let surveyData = {};
 
 // Laravel-specific functions
@@ -757,4 +757,142 @@ async function submitSurveyLaravel(event) {
 // Override the submitSurvey function for Laravel
 function submitSurvey(event) {
     submitSurveyLaravel(event);
+}
+
+// ====== NEW FUNCTIONS FOR STATIC HTML STRUCTURE ======
+
+// Initialize survey on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if we're on the survey form page
+    if (document.getElementById('surveyForm')) {
+        initializeStaticSurvey();
+    }
+});
+
+function initializeStaticSurvey() {
+    // Show first step
+    showStep(1);
+    updateProgressBar();
+    updateNavigationButtons();
+
+    // Set current year in footer
+    const yearElement = document.getElementById('currentYear');
+    if (yearElement) {
+        yearElement.textContent = new Date().getFullYear();
+    }
+}
+
+function showStep(step) {
+    // Hide all steps
+    document.querySelectorAll('.survey-step').forEach(stepElement => {
+        stepElement.style.display = 'none';
+    });
+
+    // Show current step
+    const currentStepElement = document.querySelector(`.survey-step[data-step="${step}"]`);
+    if (currentStepElement) {
+        currentStepElement.style.display = 'block';
+    }
+
+    currentStep = step;
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function nextStep() {
+    // Validate current step
+    if (!validateCurrentStep()) {
+        return;
+    }
+
+    // Move to next step
+    if (currentStep < totalSteps) {
+        showStep(currentStep + 1);
+        updateProgressBar();
+        updateNavigationButtons();
+    }
+}
+
+function previousStep() {
+    // Move to previous step
+    if (currentStep > 1) {
+        showStep(currentStep - 1);
+        updateProgressBar();
+        updateNavigationButtons();
+    }
+}
+
+function validateCurrentStep() {
+    const currentStepElement = document.querySelector(`.survey-step[data-step="${currentStep}"]`);
+    if (!currentStepElement) return true;
+
+    // Get all required inputs in current step
+    const requiredInputs = currentStepElement.querySelectorAll('[required]');
+    let isValid = true;
+
+    requiredInputs.forEach(input => {
+        if (input.type === 'radio') {
+            // Check if at least one radio button with this name is checked
+            const radioName = input.getAttribute('name');
+            const checkedRadio = currentStepElement.querySelector(`input[name="${radioName}"]:checked`);
+            if (!checkedRadio) {
+                isValid = false;
+                // Highlight the question group
+                const questionGroup = input.closest('.question-group');
+                if (questionGroup) {
+                    questionGroup.style.border = '2px solid #dc2626';
+                    setTimeout(() => {
+                        questionGroup.style.border = '';
+                    }, 2000);
+                }
+            }
+        } else if (input.value.trim() === '') {
+            isValid = false;
+            input.style.borderColor = '#dc2626';
+            setTimeout(() => {
+                input.style.borderColor = '';
+            }, 2000);
+        }
+    });
+
+    if (!isValid) {
+        alert('Please answer all required questions before proceeding.');
+    }
+
+    return isValid;
+}
+
+function updateProgressBar() {
+    const progressPercentage = Math.round((currentStep / totalSteps) * 100);
+    const progressFill = document.getElementById('progressFill');
+    const progressPercentageElement = document.getElementById('progressPercentage');
+
+    if (progressFill) {
+        progressFill.style.width = `${progressPercentage}%`;
+    }
+
+    if (progressPercentageElement) {
+        progressPercentageElement.textContent = `${progressPercentage}%`;
+    }
+}
+
+function updateNavigationButtons() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Disable/enable previous button
+    if (prevBtn) {
+        prevBtn.disabled = currentStep === 1;
+    }
+
+    // Show/hide next and submit buttons
+    if (currentStep === totalSteps) {
+        if (nextBtn) nextBtn.style.display = 'none';
+        if (submitBtn) submitBtn.style.display = 'inline-flex';
+    } else {
+        if (nextBtn) nextBtn.style.display = 'inline-flex';
+        if (submitBtn) submitBtn.style.display = 'none';
+    }
 }

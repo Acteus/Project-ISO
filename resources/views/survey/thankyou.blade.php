@@ -118,7 +118,6 @@
                     <a href="{{ route('welcome') }}" class="nav-link">Home</a>
                     <a href="{{ route('survey.form') }}" class="nav-link">Survey</a>
                     @auth
-                        <a href="{{ route('student.dashboard') }}" class="nav-link">Dashboard</a>
                         <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                             @csrf
                             <button type="submit" class="nav-link" style="background: none; border: none; color: inherit; cursor: pointer;">
@@ -146,7 +145,7 @@
 
                 <div class="thank-you-actions">
                     <a href="{{ route('survey.form') }}" class="btn-primary">Submit Another Response</a>
-                    <a href="{{ route('student.dashboard') }}" class="btn-secondary">View Dashboard</a>
+                    <a href="{{ route('welcome') }}" class="btn-secondary">Back to Home</a>
                 </div>
 
                 <div class="survey-info">

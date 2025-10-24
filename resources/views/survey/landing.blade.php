@@ -28,7 +28,6 @@
                 <nav class="desktop-nav">
                     <a href="{{ route('home') }}" class="nav-link active">Home</a>
                     <a href="{{ route('survey.form') }}" class="nav-link">Survey</a>
-                    <a href="{{ route('student.dashboard') }}" class="nav-link">Dashboard</a>
                 </nav>
             </div>
 
@@ -36,14 +35,13 @@
             <nav class="mobile-nav" id="mobileNav">
                 <a href="{{ route('home') }}" class="mobile-nav-link active">Home</a>
                 <a href="{{ route('survey.form') }}" class="mobile-nav-link">Survey</a>
-                <a href="{{ route('student.dashboard') }}" class="mobile-nav-link">Dashboard</a>
             </nav>
         </div>
     </header>
 
     <main class="main">
         <!-- Hero Section -->
-        <section class="hero-section">
+        <section class="hero-section" style="background-image: url('{{ asset('images/HomeBG.jpg') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
             <div class="hero-overlay"></div>
             <div class="container hero-content">
                 <h2 class="hero-subtitle">Sustaining Quality Education</h2>

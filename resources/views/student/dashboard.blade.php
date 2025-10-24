@@ -208,7 +208,6 @@
                 <nav class="desktop-nav">
                     <a href="{{ route('welcome') }}" class="nav-link">Home</a>
                     <a href="{{ route('survey.form') }}" class="nav-link">Survey</a>
-                    <a href="{{ route('student.dashboard') }}" class="nav-link active">Dashboard</a>
                     <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                         @csrf
                         <button type="submit" class="nav-link" style="background: none; border: none; color: inherit; cursor: pointer;">

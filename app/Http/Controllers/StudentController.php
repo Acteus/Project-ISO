@@ -25,6 +25,7 @@ class StudentController extends Controller
             'year' => 'required|in:11,12',
             'section' => 'required|string|max:10',
             'studentid' => 'required|string|unique:users,student_id',
+            'password' => 'required|string|min:6|confirmed',
             'acknowledge' => 'required|accepted',
         ]);
 
@@ -39,7 +40,7 @@ class StudentController extends Controller
         $user = User::create([
             'name' => $request->firstname . ' ' . $request->lastname,
             'email' => $request->studentid . '@student.jru.edu', // Generate student email
-            'password' => Hash::make($request->studentid), // Use student ID as password
+            'password' => Hash::make($request->password), // Use provided password
             'role' => 'student',
             'student_id' => $request->studentid,
             'first_name' => $request->firstname,
