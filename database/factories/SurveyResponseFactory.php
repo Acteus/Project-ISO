@@ -31,6 +31,7 @@ class SurveyResponseFactory extends Factory
             'grade_level' => $gradeLevel,
             'academic_year' => $academicYear,
             'semester' => fake()->randomElement(['1st', '2nd']),
+            'gender' => fake()->randomElement(['Male', 'Female', 'Non-binary', 'Prefer not to say']),
 
             // Section 1: Learner Needs & Expectations (q1-q3)
             'curriculum_relevance_rating' => $generateRating(), // q1: Curriculum meets goals

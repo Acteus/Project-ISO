@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     yearElements.forEach(element => {
         element.textContent = currentYear;
     });
-    
+
     // Initialize mobile menu
     initMobileMenu();
 });
@@ -17,7 +17,10 @@ document.addEventListener('DOMContentLoaded', function() {
 function toggleMobileMenu() {
     const mobileNav = document.getElementById('mobileNav');
     const menuToggle = document.querySelector('.menu-toggle');
-    
+
+    // Only proceed if elements exist
+    if (!mobileNav || !menuToggle) return;
+
     if (mobileNav.classList.contains('show')) {
         mobileNav.classList.remove('show');
         menuToggle.classList.remove('active');
@@ -28,14 +31,20 @@ function toggleMobileMenu() {
 }
 
 function initMobileMenu() {
+    // Check if mobile nav exists on this page
+    const mobileNav = document.getElementById('mobileNav');
+    if (!mobileNav) return;
+
     // Close mobile menu when clicking on a link
     const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
     mobileNavLinks.forEach(link => {
         link.addEventListener('click', () => {
             const mobileNav = document.getElementById('mobileNav');
             const menuToggle = document.querySelector('.menu-toggle');
-            mobileNav.classList.remove('show');
-            menuToggle.classList.remove('active');
+            if (mobileNav && menuToggle) {
+                mobileNav.classList.remove('show');
+                menuToggle.classList.remove('active');
+            }
         });
     });
 
@@ -44,8 +53,9 @@ function initMobileMenu() {
         const mobileNav = document.getElementById('mobileNav');
         const menuToggle = document.querySelector('.menu-toggle');
         const header = document.querySelector('.header');
-        
-        if (!header.contains(event.target) && mobileNav.classList.contains('show')) {
+
+        // Only proceed if all elements exist
+        if (mobileNav && menuToggle && header && !header.contains(event.target) && mobileNav.classList.contains('show')) {
             mobileNav.classList.remove('show');
             menuToggle.classList.remove('active');
         }
@@ -63,7 +73,7 @@ function showNotification(message, type = 'info') {
             <button class="notification-close" onclick="closeNotification(this)">×</button>
         </div>
     `;
-    
+
     // Add styles if not already present
     if (!document.querySelector('#notification-styles')) {
         const styles = document.createElement('style');
@@ -82,37 +92,37 @@ function showNotification(message, type = 'info') {
                 border-left: 4px solid;
                 animation: slideIn 0.3s ease-out;
             }
-            
+
             .notification-info {
                 border-left-color: #3b82f6;
             }
-            
+
             .notification-success {
                 border-left-color: #10b981;
             }
-            
+
             .notification-error {
                 border-left-color: #ef4444;
             }
-            
+
             .notification-warning {
                 border-left-color: #f59e0b;
             }
-            
+
             .notification-content {
                 display: flex;
                 justify-content: space-between;
                 align-items: flex-start;
                 gap: 1rem;
             }
-            
+
             .notification-message {
                 flex-grow: 1;
                 color: #374151;
                 font-size: 0.875rem;
                 line-height: 1.5;
             }
-            
+
             .notification-close {
                 background: none;
                 border: none;
@@ -122,11 +132,11 @@ function showNotification(message, type = 'info') {
                 padding: 0;
                 line-height: 1;
             }
-            
+
             .notification-close:hover {
                 color: #374151;
             }
-            
+
             @keyframes slideIn {
                 from {
                     transform: translateX(100%);
@@ -137,7 +147,7 @@ function showNotification(message, type = 'info') {
                     opacity: 1;
                 }
             }
-            
+
             @keyframes slideOut {
                 from {
                     transform: translateX(0);
@@ -151,10 +161,10 @@ function showNotification(message, type = 'info') {
         `;
         document.head.appendChild(styles);
     }
-    
+
     // Add to page
     document.body.appendChild(notification);
-    
+
     // Auto remove after 5 seconds
     setTimeout(() => {
         if (notification.parentNode) {
@@ -222,7 +232,7 @@ async function makeApiRequest(url, options = {}) {
                 'Content-Type': 'application/json',
             },
         };
-        
+
         const mergedOptions = {
             ...defaultOptions,
             ...options,
@@ -231,14 +241,14 @@ async function makeApiRequest(url, options = {}) {
                 ...options.headers,
             },
         };
-        
+
         const response = await fetch(url, mergedOptions);
         const data = await response.json();
-        
+
         if (!response.ok) {
             throw new Error(data.message || 'Request failed');
         }
-        
+
         return data;
     } catch (error) {
         console.error('API request error:', error);

@@ -166,8 +166,9 @@ class StudentController extends Controller
     public function logout(Request $request)
     {
         $user = Auth::user();
+        $admin = session('admin');
 
-        // Log logout for audit trail
+        // Log logout for audit trail for students
         if ($user) {
             AuditLog::create([
                 'user_id' => $user->id,
@@ -177,8 +178,29 @@ class StudentController extends Controller
             ]);
         }
 
+        // Log logout for audit trail for admins
+        if ($admin) {
+            AuditLog::create([
+                'admin_id' => $admin->id,
+                'action' => 'admin_logout',
+                'description' => 'Admin logged out of ISO 21001 survey system',
+                'ip_address' => $request->ip(),
+            ]);
+        }
+
+        // Clear both student and admin sessions
         Auth::logout();
-        return response()->json(['message' => 'Logged out successfully']);
+        $request->session()->forget('admin');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        // If it's an AJAX request, return JSON
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['message' => 'Logged out successfully']);
+        }
+
+        // Otherwise, show the beautiful logout page
+        return view('logout');
     }
 
     public function dashboard()
@@ -255,5 +277,51 @@ class StudentController extends Controller
         ]);
 
         return view('admin.all-responses', compact('admin', 'responses'));
+    }
+
+    public function auditLogs(Request $request)
+    {
+        $admin = session('admin');
+
+        if (!$admin) {
+            return redirect()->route('student.login');
+        }
+
+        // Get filter parameters
+        $action = $request->get('action');
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        // Build query
+        $query = AuditLog::with('user')->orderBy('created_at', 'desc');
+
+        // Apply filters
+        if ($action) {
+            $query->where('action', $action);
+        }
+
+        if ($dateFrom) {
+            $query->whereDate('created_at', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $query->whereDate('created_at', '<=', $dateTo);
+        }
+
+        // Get paginated results
+        $auditLogs = $query->paginate(20);
+
+        // Get unique actions for filter dropdown
+        $actions = AuditLog::select('action')->distinct()->pluck('action');
+
+        // Log viewing of audit logs
+        AuditLog::create([
+            'admin_id' => $admin->id,
+            'action' => 'view_audit_logs',
+            'description' => 'Admin viewed system audit logs',
+            'ip_address' => request()->ip(),
+        ]);
+
+        return view('admin.audit-logs', compact('admin', 'auditLogs', 'actions', 'action', 'dateFrom', 'dateTo'));
     }
 }

@@ -22,14 +22,20 @@
         }
 
         .dashboard-header h1 {
-            margin: 0;
+            margin: 0 0 15px 0;
             font-size: 28px;
             font-weight: 700;
+            line-height: 1.2;
         }
 
         .dashboard-header p {
-            margin: 10px 0 0 0;
+            margin: 0;
             opacity: 0.9;
+            font-size: 16px;
+            line-height: 1.5;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .admin-info-card {
@@ -307,6 +313,11 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
         }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -322,10 +333,14 @@
                 <nav class="desktop-nav">
                     <a href="{{ route('welcome') }}" class="nav-link">Home</a>
                     <a href="{{ route('admin.dashboard') }}" class="nav-link active">Dashboard</a>
+                    <span class="nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ $admin->name }}</span>
                     <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                         @csrf
-                        <button type="submit" class="nav-link" style="background: none; border: none; color: inherit; cursor: pointer;">
-                            Logout ({{ $admin->name }})
+                        <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
+                            <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                            </svg>
+                            Logout
                         </button>
                     </form>
                 </nav>
@@ -412,7 +427,7 @@
                     </div>
                     <h3>Audit Logs</h3>
                     <p>Review system audit logs to ensure compliance with ISO 21001 traceability requirements.</p>
-                    <button class="btn btn-warning" onclick="alert('Audit log viewer coming soon!')">View Logs</button>
+                    <a href="{{ route('admin.audit.logs') }}" class="btn btn-warning">View Logs</a>
                 </div>
             </div>
 

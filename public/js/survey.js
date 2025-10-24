@@ -652,16 +652,29 @@ async function submitSurveyLaravel(event) {
         // Prepare data for submission - collect all form data
         const submissionData = { ...surveyData };
 
-        // Get hidden form fields
+        // Get form fields
         const studentIdField = document.querySelector('input[name="student_id"]');
         const gradeLevelField = document.querySelector('input[name="grade_level"]');
+        const genderField = document.querySelector('select[name="gender"]');
+        const demographicsYearLevelField = document.querySelector('select[name="demographics_year_level"]');
+        const additionalFeedbackField = document.querySelector('textarea[name="additional_feedback"]');
+
+        // Determine grade level from either hidden field or demographics dropdown
+        let gradeLevel = 11;
+        if (gradeLevelField && gradeLevelField.value) {
+            gradeLevel = parseInt(gradeLevelField.value);
+        } else if (demographicsYearLevelField && demographicsYearLevelField.value) {
+            // Extract number from "Grade 11" or "Grade 12"
+            const match = demographicsYearLevelField.value.match(/\d+/);
+            gradeLevel = match ? parseInt(match[0]) : 11;
+        }
 
         // Map to Laravel API format with actual form data
         const laravelData = {
             // Student information from Laravel auth
             student_id: studentIdField ? studentIdField.value : '',
-            track: 'STEM', // CSS strand maps to STEM track
-            grade_level: gradeLevelField ? parseInt(gradeLevelField.value) : 11,
+            track: 'CSS', // CSS strand
+            grade_level: gradeLevel,
             academic_year: new Date().getFullYear().toString(),
             semester: getCurrentSemester(),
 
@@ -700,12 +713,12 @@ async function submitSurveyLaravel(event) {
             overall_satisfaction: parseInt(submissionData.q19) || 1,
 
             // Map open feedback to appropriate fields
-            positive_aspects: extractPositiveAspects(submissionData.open_feedback),
-            improvement_suggestions: extractImprovementSuggestions(submissionData.open_feedback),
-            additional_comments: submissionData.open_feedback || '',
+            positive_aspects: extractPositiveAspects(additionalFeedbackField ? additionalFeedbackField.value : ''),
+            improvement_suggestions: extractImprovementSuggestions(additionalFeedbackField ? additionalFeedbackField.value : ''),
+            additional_comments: additionalFeedbackField ? additionalFeedbackField.value : '',
 
             // Demographics
-            gender: submissionData.gender || 'Prefer not to say',
+            gender: genderField ? genderField.value : 'Prefer not to say',
 
             // Consent and privacy
             consent_given: true,

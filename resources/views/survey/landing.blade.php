@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ISO Quality Education Survey</title>
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
+    <style>
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -28,6 +34,36 @@
                 <nav class="desktop-nav">
                     <a href="{{ route('home') }}" class="nav-link active">Home</a>
                     <a href="{{ route('survey.form') }}" class="nav-link">Survey</a>
+
+                    @auth
+                        <!-- Show for logged-in students -->
+                        <span class="nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ Auth::user()->name }}</span>
+                        <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
+                            @csrf
+                            <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
+                                <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                                </svg>
+                                Logout
+                            </button>
+                        </form>
+                    @elseif(session('admin'))
+                        <!-- Show for logged-in admins -->
+                        <span class="nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ session('admin')->name }}</span>
+                        <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
+                            @csrf
+                            <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
+                                <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                                </svg>
+                                Logout
+                            </button>
+                        </form>
+                    @else
+                        <!-- Show for non-authenticated users -->
+                        <a href="{{ route('student.login') }}" class="nav-link">Login</a>
+                        <a href="{{ route('student.register') }}" class="nav-link">Register</a>
+                    @endauth
                 </nav>
             </div>
 
@@ -35,6 +71,27 @@
             <nav class="mobile-nav" id="mobileNav">
                 <a href="{{ route('home') }}" class="mobile-nav-link active">Home</a>
                 <a href="{{ route('survey.form') }}" class="mobile-nav-link">Survey</a>
+
+                @auth
+                    <span class="mobile-nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ Auth::user()->name }}</span>
+                    <form method="POST" action="{{ route('student.logout') }}" style="display: block; padding: 10px 0;">
+                        @csrf
+                        <button type="submit" class="mobile-nav-link logout-btn" style="width: 100%; text-align: left; background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 12px 20px; border-radius: 6px; font-weight: 600;">
+                            Logout
+                        </button>
+                    </form>
+                @elseif(session('admin'))
+                    <span class="mobile-nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ session('admin')->name }}</span>
+                    <form method="POST" action="{{ route('student.logout') }}" style="display: block; padding: 10px 0;">
+                        @csrf
+                        <button type="submit" class="mobile-nav-link logout-btn" style="width: 100%; text-align: left; background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 12px 20px; border-radius: 6px; font-weight: 600;">
+                            Logout
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('student.login') }}" class="mobile-nav-link">Login</a>
+                    <a href="{{ route('student.register') }}" class="mobile-nav-link">Register</a>
+                @endauth
             </nav>
         </div>
     </header>

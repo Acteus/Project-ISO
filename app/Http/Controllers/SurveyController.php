@@ -15,8 +15,11 @@ class SurveyController extends Controller
 {
     public function submitResponse(Request $request)
     {
+        // Check if user is authenticated
+        $isAuthenticated = Auth::check();
+
         $validator = Validator::make($request->all(), [
-            'student_id' => 'required|string|unique:survey_responses',
+            'student_id' => $isAuthenticated ? 'nullable|string' : 'required|string',
             'track' => 'required|in:CSS',
             'grade_level' => 'required|integer|in:11,12',
             'academic_year' => 'required|string|max:9',
@@ -51,6 +54,8 @@ class SurveyController extends Controller
             'positive_aspects' => 'nullable|string|max:1000',
             'improvement_suggestions' => 'nullable|string|max:1000',
             'additional_comments' => 'nullable|string|max:1000',
+            // Demographics
+            'gender' => 'nullable|string|in:Male,Female,Non-binary,Prefer not to say',
             // Consent
             'consent_given' => 'required|boolean|accepted',
             // Indirect metrics are optional for now
@@ -76,19 +81,26 @@ class SurveyController extends Controller
 
         $data = $request->all();
 
+        // If user is authenticated, use their student_id from auth
+        if ($isAuthenticated && Auth::user()->student_id) {
+            $data['student_id'] = Auth::user()->student_id;
+        }
+
         // Let model mutators handle encryption - don't encrypt in controller to avoid double encryption
         $data['ip_address'] = $request->ip();
 
         $response = SurveyResponse::create($data);
 
         // Log successful submission for audit trail (ISO 21001:8.2.4)
-        if (Auth::check() && Auth::user()->role === 'admin') {
+        if (Auth::check()) {
             AuditLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'submit_survey_response',
-                'description' => 'Processed ISO 21001 survey response submission',
+                'description' => Auth::user()->role === 'admin'
+                    ? 'Admin processed ISO 21001 survey response submission'
+                    : 'Student submitted ISO 21001 survey response',
                 'ip_address' => $request->ip(),
-                'new_values' => ['response_id' => $response->id],
+                'new_values' => ['response_id' => $response->id, 'student_id' => $data['student_id'] ?? 'anonymous'],
             ]);
         } else {
             // Log anonymous submission

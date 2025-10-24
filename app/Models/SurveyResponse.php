@@ -25,6 +25,7 @@ class SurveyResponse extends Model
         'grade_level',
         'academic_year',
         'semester',
+        'gender',
         // ISO 21001 Learner Needs Assessment
         'curriculum_relevance_rating',
         'learning_pace_appropriateness',

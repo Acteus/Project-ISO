@@ -25,7 +25,7 @@ Route::prefix('student')->name('student.')->group(function () {
     Route::post('/register', [StudentController::class, 'register'])->name('register.post');
     Route::get('/login', [StudentController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [StudentController::class, 'login'])->name('login.post');
-    Route::post('/logout', [StudentController::class, 'logout'])->name('logout');
+    Route::match(['get', 'post'], '/logout', [StudentController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
 });
 
@@ -34,6 +34,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [StudentController::class, 'adminDashboard'])->name('dashboard');
     Route::get('/responses', [StudentController::class, 'allResponses'])->name('responses');
     Route::get('/responses/{id}', [StudentController::class, 'viewResponse'])->name('response.view');
+    Route::get('/audit-logs', [StudentController::class, 'auditLogs'])->name('audit.logs');
 });
 
 // Survey routes
