@@ -152,13 +152,13 @@
   <div class="overlay" id="main-content">
     <h1>Jose Rizal University</h1>
     <div class="desc">Validation System</div>
-    <a href="{{ route('student.register') }}" class="btn" id="enter-btn">Enter</a>
+    <a href="{{ route('student.login') }}" class="btn" id="enter-btn">Enter</a>
   </div>
 
   <!-- Page Transition Overlay -->
   <div class="page-transition" id="page-transition">
     <div class="loading-spinner"></div>
-    <div class="loading-text">Loading Registration...</div>
+    <div class="loading-text">Loading Login...</div>
   </div>
 
   <script>
@@ -177,7 +177,7 @@
 
         // Navigate to Login page after animation
         setTimeout(() => {
-          window.location.href = '{{ route('student.register') }}';
+          window.location.href = '{{ route('student.login') }}';
         }, 800); // 800ms delay for smooth transition
       });
 
