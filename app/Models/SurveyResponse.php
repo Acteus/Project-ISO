@@ -7,6 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * SurveyResponse Model
+ *
+ * Handles ISO 21001 Quality Education survey responses for CSS (Computer System Servicing) students.
+ * All data follows ISO 21001 standards for learner-centric quality education assessment.
+ *
+ * @property string $track Should be 'CSS' for Computer System Servicing students
+ */
 class SurveyResponse extends Model
 {
     use HasFactory;

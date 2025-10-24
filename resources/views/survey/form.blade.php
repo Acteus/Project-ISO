@@ -64,7 +64,7 @@
                     <!-- Hidden fields for student info -->
                     @auth
                         <input type="hidden" name="student_id" value="{{ Auth::user()->student_id }}">
-                        <input type="hidden" name="track" value="STEM">
+                        <input type="hidden" name="track" value="CSS">
                         <input type="hidden" name="grade_level" value="{{ Auth::user()->year_level }}">
                         <input type="hidden" name="year_level" value="{{ Auth::user()->year_level === 11 ? 'Grade 11' : 'Grade 12' }}">
                     @endauth

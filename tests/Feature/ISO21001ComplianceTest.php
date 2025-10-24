@@ -33,7 +33,7 @@ class ISO21001ComplianceTest extends TestCase
 
         $this->validSurveyData = [
             'student_id' => 'STU' . rand(100000, 999999),
-            'track' => 'STEM',
+            'track' => 'CSS',
             'grade_level' => 11,
             'academic_year' => '2024-2025',
             'semester' => '1st',
@@ -66,7 +66,7 @@ class ISO21001ComplianceTest extends TestCase
             'overall_satisfaction' => 4,
             'positive_aspects' => 'Great support from teachers and modern facilities',
             'improvement_suggestions' => 'More hands-on lab activities would be beneficial',
-            'additional_comments' => 'Overall positive experience in STEM program',
+            'additional_comments' => 'Overall positive experience in CSS program',
             // Consent
             'consent_given' => true,
             // Indirect metrics
@@ -100,7 +100,7 @@ class ISO21001ComplianceTest extends TestCase
 
         // Verify record was created
         $this->assertDatabaseHas('survey_responses', [
-            'track' => 'STEM',
+            'track' => 'CSS',
             'grade_level' => 11,
             'overall_satisfaction' => 4,
             'consent_given' => true
@@ -131,7 +131,7 @@ class ISO21001ComplianceTest extends TestCase
 
         $this->assertDatabaseMissing('survey_responses', [
             'student_id' => $invalidData['student_id'],
-            'track' => 'STEM'
+            'track' => 'CSS'
         ]);
     }
 
@@ -183,7 +183,7 @@ class ISO21001ComplianceTest extends TestCase
     {
         // Create multiple survey responses for testing
         $surveys = SurveyResponse::factory()->count(5)->create([
-            'track' => 'STEM',
+            'track' => 'CSS',
             'grade_level' => 11,
             'academic_year' => '2024-2025',
             'semester' => '1st',
@@ -268,7 +268,7 @@ class ISO21001ComplianceTest extends TestCase
             'grade_average' => 2.0,     // Low performance
             'attendance_rate' => 60,    // Low attendance
             'consent_given' => true,
-            'track' => 'STEM'
+            'track' => 'CSS'
         ]);
 
         // Create normal responses
@@ -277,11 +277,11 @@ class ISO21001ComplianceTest extends TestCase
             'grade_average' => 3.5,
             'attendance_rate' => 90,
             'consent_given' => true,
-            'track' => 'STEM'
+            'track' => 'CSS'
         ]);
 
         $validationService = new ValidationService();
-        $result = $validationService->validateDirectVsIndirect('STEM');
+        $result = $validationService->validateDirectVsIndirect('CSS');
 
         $this->assertEquals('Validation analysis completed', $result['message']);
         $this->assertEquals(5, $result['total_responses']);
@@ -306,7 +306,7 @@ class ISO21001ComplianceTest extends TestCase
             'individual_support_availability' => 2, // Low support
             'learning_pace_appropriateness' => 1, // Inappropriate pace
             'consent_given' => true,
-            'track' => 'STEM'
+            'track' => 'CSS'
         ]);
 
         // Create compliant responses
@@ -315,11 +315,11 @@ class ISO21001ComplianceTest extends TestCase
             'individual_support_availability' => 5,
             'learning_pace_appropriateness' => 5,
             'consent_given' => true,
-            'track' => 'STEM'
+            'track' => 'CSS'
         ]);
 
         $validationService = new ValidationService();
-        $result = $validationService->validateAccessibilityCompliance('STEM');
+        $result = $validationService->validateAccessibilityCompliance('CSS');
 
         $this->assertEquals(5, $result['total_responses']);
 
@@ -346,14 +346,14 @@ class ISO21001ComplianceTest extends TestCase
         // Create responses with data quality issues
         SurveyResponse::factory()->create([
             'consent_given' => false, // Missing consent
-            'track' => 'STEM'
+            'track' => 'CSS'
         ]);
 
         // Create response with missing metrics
         SurveyResponse::factory()->create([
             'curriculum_relevance_rating' => 1, // Valid but low for testing
             'consent_given' => true,
-            'track' => 'STEM'
+            'track' => 'CSS'
         ]);
 
         // Create responses for outlier detection
@@ -361,11 +361,11 @@ class ISO21001ComplianceTest extends TestCase
             'overall_satisfaction' => 4, // Normal ratings
             'grade_average' => 3.5,
             'consent_given' => true,
-            'track' => 'STEM'
+            'track' => 'CSS'
         ]);
 
         $validationService = new ValidationService();
-        $result = $validationService->validateDataQuality('STEM');
+        $result = $validationService->validateDataQuality('CSS');
 
         // Should detect missing consent
         $consentIssues = array_filter($result['issues'], function($issue) {
@@ -376,7 +376,7 @@ class ISO21001ComplianceTest extends TestCase
         // Create response with incomplete metrics for testing
         SurveyResponse::factory()->create([
             'consent_given' => true,
-            'track' => 'STEM',
+            'track' => 'CSS',
             'curriculum_relevance_rating' => '', // Empty required field
             'overall_satisfaction' => 4,
         ]);
@@ -386,11 +386,11 @@ class ISO21001ComplianceTest extends TestCase
             'overall_satisfaction' => 1, // Extreme outlier
             'grade_average' => 1.0,
             'consent_given' => true,
-            'track' => 'STEM'
+            'track' => 'CSS'
         ]);
 
         // Should detect incomplete metrics
-        $result = $validationService->validateDataQuality('STEM');
+        $result = $validationService->validateDataQuality('CSS');
         $metricIssues = array_filter($result['issues'], function($issue) {
             return $issue['type'] === 'INCOMPLETE_METRICS';
         });
@@ -460,7 +460,7 @@ class ISO21001ComplianceTest extends TestCase
         // Create test survey responses
         SurveyResponse::factory()->count(3)->create([
             'consent_given' => true,
-            'track' => 'STEM',
+            'track' => 'CSS',
             'overall_satisfaction' => 4
         ]);
 
@@ -509,7 +509,7 @@ class ISO21001ComplianceTest extends TestCase
             'grade_average' => 2.0, // High satisfaction, low performance
             'learning_style_accommodation' => 1, // Accessibility issue
             'consent_given' => false, // Consent issue
-            'track' => 'STEM'
+            'track' => 'CSS'
         ]);
 
         SurveyResponse::factory()->count(3)->create([
@@ -517,11 +517,11 @@ class ISO21001ComplianceTest extends TestCase
             'grade_average' => 3.8,
             'learning_style_accommodation' => 5,
             'consent_given' => true,
-            'track' => 'STEM'
+            'track' => 'CSS'
         ]);
 
         $validationService = new ValidationService();
-        $report = $validationService->generateComprehensiveComplianceReport('STEM');
+        $report = $validationService->generateComprehensiveComplianceReport('CSS');
 
         $this->assertTrue($report['comprehensive_report']);
         $this->assertArrayHasKey('overall_compliance', $report);

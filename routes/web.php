@@ -29,6 +29,13 @@ Route::prefix('student')->name('student.')->group(function () {
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
 });
 
+// Admin routes
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [StudentController::class, 'adminDashboard'])->name('dashboard');
+    Route::get('/responses', [StudentController::class, 'allResponses'])->name('responses');
+    Route::get('/responses/{id}', [StudentController::class, 'viewResponse'])->name('response.view');
+});
+
 // Survey routes
 Route::get('/survey', function () {
     return view('survey.form');
@@ -125,10 +132,10 @@ Route::get('/debug-login', function () {
 Route::prefix('api')->group(function () {
     // Survey routes
     Route::post('/survey/submit', [SurveyController::class, 'submitResponse'])->name('survey.submit');
-    Route::get('/survey/analytics', [SurveyController::class, 'getAnalytics']);
-    Route::get('/survey/responses', [SurveyController::class, 'getAllResponses']);
-    Route::get('/survey/responses/{id}', [SurveyController::class, 'getResponse']);
-    Route::delete('/survey/responses/{id}', [SurveyController::class, 'deleteResponse']);
+    Route::get('/survey/analytics', [SurveyController::class, 'getAnalytics'])->name('api.survey.analytics');
+    Route::get('/survey/responses', [SurveyController::class, 'getAllResponses'])->name('api.survey.responses');
+    Route::get('/survey/responses/{id}', [SurveyController::class, 'getResponse'])->name('api.survey.response');
+    Route::delete('/survey/responses/{id}', [SurveyController::class, 'deleteResponse'])->name('api.survey.delete');
 
     // Admin authentication routes
     Route::post('/admin/login', [AdminAuthController::class, 'login']);
@@ -143,10 +150,10 @@ Route::prefix('api')->group(function () {
     Route::get('/ai/compliance-risk-meter', [AIController::class, 'getComplianceRiskMeter']);
 
     // Export routes
-    Route::get('/export/excel', [ExportController::class, 'exportExcel']);
-    Route::get('/export/csv', [ExportController::class, 'exportCsv']);
-    Route::get('/export/pdf', [ExportController::class, 'exportPdf']);
-    Route::get('/export/analytics-report', [ExportController::class, 'exportAnalyticsReport']);
+    Route::get('/export/excel', [ExportController::class, 'exportExcel'])->name('api.export.excel');
+    Route::get('/export/csv', [ExportController::class, 'exportCsv'])->name('api.export.csv');
+    Route::get('/export/pdf', [ExportController::class, 'exportPdf'])->name('api.export.pdf');
+    Route::get('/export/analytics-report', [ExportController::class, 'exportAnalyticsReport'])->name('api.export.analytics-report');
 
     // Visualization routes
     Route::get('/visualization/bar-chart', [VisualizationController::class, 'getBarChartData']);

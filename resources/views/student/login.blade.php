@@ -111,6 +111,33 @@
       text-align: center;
     }
 
+    .login-type-toggle {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .login-type-toggle button {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,215,0,0.3);
+      color: #FFD700;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 0 5px;
+      transition: all 0.3s ease;
+    }
+
+    .login-type-toggle button.active {
+      background: rgba(255,215,0,0.2);
+      border-color: #FFD700;
+      color: white;
+    }
+
+    .login-type-toggle button:hover {
+      background: rgba(255,215,0,0.1);
+    }
+
     /* Form validation styles */
     .error-message {
       color: #dc3545;
@@ -236,11 +263,15 @@
 
     <!-- Right Side: Form -->
     <div class="form-side">
-      <h2>Student Login</h2>
+      <h2 id="loginTitle">Student Login</h2>
+      <div class="login-type-toggle">
+        <button type="button" id="studentBtn" class="active">Student</button>
+        <button type="button" id="adminBtn">Admin</button>
+      </div>
       <form id="loginForm" method="post" action="{{ route('student.login.post') }}">
         @csrf
         <div class="form-group">
-          <label>Student ID</label>
+          <label id="idLabel">Student ID</label>
           <input type="text" name="student_id" required placeholder="Enter your student ID">
           <div class="error-message">Please enter your student ID</div>
         </div>
@@ -335,6 +366,27 @@
           alert('An error occurred during login. Please try again.');
         });
       }
+    });
+
+    // Login type toggle functionality
+    let isAdminLogin = false;
+
+    document.getElementById('studentBtn').addEventListener('click', function() {
+      isAdminLogin = false;
+      this.classList.add('active');
+      document.getElementById('adminBtn').classList.remove('active');
+      document.getElementById('loginTitle').textContent = 'Student Login';
+      document.getElementById('idLabel').textContent = 'Student ID';
+      document.querySelector('input[name="student_id"]').placeholder = 'Enter your student ID';
+    });
+
+    document.getElementById('adminBtn').addEventListener('click', function() {
+      isAdminLogin = true;
+      this.classList.add('active');
+      document.getElementById('studentBtn').classList.remove('active');
+      document.getElementById('loginTitle').textContent = 'Admin Login';
+      document.getElementById('idLabel').textContent = 'Username';
+      document.querySelector('input[name="student_id"]').placeholder = 'Enter admin username';
     });
 
     // Add entrance animation on load

@@ -17,7 +17,7 @@ class SurveyController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'student_id' => 'required|string|unique:survey_responses',
-            'track' => 'required|in:STEM',
+            'track' => 'required|in:CSS',
             'grade_level' => 'required|integer|in:11,12',
             'academic_year' => 'required|string|max:9',
             'semester' => 'required|in:1st,2nd',
@@ -146,9 +146,18 @@ class SurveyController extends Controller
         $responses = $query->get();
 
         if ($responses->isEmpty()) {
-            return response()->json([
-                'message' => 'No survey responses found',
-                'data' => []
+            // If request explicitly wants JSON (has Accept: application/json header)
+            if ($request->header('Accept') === 'application/json' || $request->wantsJson()) {
+                return response()->json([
+                    'message' => 'No survey responses found',
+                    'data' => []
+                ]);
+            }
+
+            // Otherwise return view with no data
+            return view('analytics.index', [
+                'analytics' => null,
+                'noData' => true
             ]);
         }
 
@@ -225,9 +234,18 @@ class SurveyController extends Controller
             'consent_rate' => round(($responses->where('consent_given', true)->count() / $responses->count()) * 100, 2),
         ];
 
-        return response()->json([
-            'message' => 'ISO 21001 Analytics retrieved successfully',
-            'data' => $analytics
+        // If request explicitly wants JSON (has Accept: application/json header)
+        if ($request->header('Accept') === 'application/json' || $request->wantsJson()) {
+            return response()->json([
+                'message' => 'ISO 21001 Analytics retrieved successfully',
+                'data' => $analytics
+            ]);
+        }
+
+        // Otherwise return HTML view with charts
+        return view('analytics.index', [
+            'analytics' => $analytics,
+            'noData' => false
         ]);
     }
 
