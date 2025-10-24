@@ -12,6 +12,11 @@ use App\Http\Controllers\VisualizationController;
 // Public routes
 Route::get('/', function () {
     return view('welcome');
+})->name('welcome');
+
+// Survey home/landing page
+Route::get('/home', function () {
+    return view('survey.landing');
 })->name('home');
 
 // Student authentication routes
