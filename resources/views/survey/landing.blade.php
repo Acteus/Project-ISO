@@ -133,9 +133,9 @@
                 <div class="footer-links">
                     <h4 class="footer-links-title">Quick Links</h4>
                     <ul class="footer-links-list">
-                        <li><a href="{{ route('survey.landing') }}" class="footer-link">About this Survey</a></li>
-                        <li><a href="{{ route('survey.landing') }}" class="footer-link">Privacy Policy</a></li>
-                        <li><a href="{{ route('survey.landing') }}" class="footer-link">Contact Academic Affairs</a></li>
+                        <li><a href="{{ route('survey.about') }}" class="footer-link">About this Survey</a></li>
+                        <li><a href="{{ route('survey.privacy') }}" class="footer-link">Privacy Policy</a></li>
+                        <li><a href="{{ route('survey.contact') }}" class="footer-link">Contact Academic Affairs</a></li>
                     </ul>
                 </div>
             </div>

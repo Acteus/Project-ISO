@@ -46,6 +46,18 @@ Route::get('/survey/landing', function () {
     return view('survey.landing');
 })->name('survey.landing');
 
+Route::get('/survey/about', function () {
+    return view('survey.about');
+})->name('survey.about');
+
+Route::get('/survey/privacy', function () {
+    return view('survey.privacy');
+})->name('survey.privacy');
+
+Route::get('/survey/contact', function () {
+    return view('survey.contact');
+})->name('survey.contact');
+
 Route::get('/thank-you', function () {
     return view('survey.thankyou');
 })->name('survey.thankyou');
