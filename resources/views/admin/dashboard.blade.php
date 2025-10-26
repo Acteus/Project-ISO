@@ -6,6 +6,15 @@
     <title>Admin Dashboard - ISO Quality Education</title>
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     <style>
+        body {
+            background: linear-gradient(135deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
+            min-height: 100vh;
+        }
+
+        .survey-main {
+            background-image: none !important;
+        }
+
         .dashboard-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -13,12 +22,13 @@
         }
 
         .dashboard-header {
-            background: linear-gradient(135deg, #4285F4, #2c6cd6);
-            color: white;
+            background: white;
+            color: black;
             padding: 30px;
             border-radius: 10px;
             margin-bottom: 30px;
             text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .dashboard-header h1 {
@@ -26,16 +36,17 @@
             font-size: 28px;
             font-weight: 700;
             line-height: 1.2;
+            color: black;
         }
 
         .dashboard-header p {
             margin: 0;
-            opacity: 0.9;
             font-size: 16px;
             line-height: 1.5;
             max-width: 800px;
             margin-left: auto;
             margin-right: auto;
+            color: #666;
         }
 
         .admin-info-card {
@@ -43,7 +54,7 @@
             padding: 25px;
             border-radius: 10px;
             margin-bottom: 30px;
-            border-left: 5px solid #4285F4;
+            border-left: 5px solid rgba(66, 133, 244, 1);
         }
 
         .admin-info-card h3 {
@@ -76,7 +87,7 @@
             left: 0;
             width: 100%;
             height: 4px;
-            background: linear-gradient(90deg, #4285F4, #2c6cd6);
+            background: linear-gradient(90deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
         }
 
         .metric-card:hover {
@@ -86,7 +97,7 @@
         .metric-value {
             font-size: 48px;
             font-weight: 700;
-            color: #4285F4;
+            color: rgba(66, 133, 244, 1);
             margin-bottom: 10px;
         }
 
@@ -108,7 +119,7 @@
         .recent-responses h3 {
             margin-top: 0;
             color: #333;
-            border-bottom: 2px solid #4285F4;
+            border-bottom: 2px solid rgba(66, 133, 244, 1);
             padding-bottom: 10px;
         }
 
@@ -135,7 +146,7 @@
 
         .response-track {
             font-weight: 600;
-            color: #4285F4;
+            color: rgba(66, 133, 244, 1);
         }
 
         .response-date {
@@ -153,7 +164,7 @@
         .track-distribution h3 {
             margin-top: 0;
             color: #333;
-            border-bottom: 2px solid #28a745;
+            border-bottom: 2px solid rgba(255, 215, 0, 1);
             padding-bottom: 10px;
         }
 
@@ -180,8 +191,8 @@
         }
 
         .track-count {
-            background: #28a745;
-            color: white;
+            background: rgba(255, 215, 0, 1);
+            color: #333;
             padding: 5px 12px;
             border-radius: 20px;
             font-weight: 600;
@@ -199,7 +210,7 @@
         }
 
         .btn-primary {
-            background: linear-gradient(90deg, #4285F4, #2c6cd6);
+            background: #4285F4;
             color: white;
         }
 
@@ -304,7 +315,7 @@
         }
 
         .btn-warning {
-            background: linear-gradient(90deg, #ffc107, #ff9800);
+            background: #ffc107;
             color: #333;
             font-weight: 700;
         }
@@ -331,9 +342,7 @@
 
                 <!-- Desktop navigation -->
                 <nav class="desktop-nav">
-                    <a href="{{ route('welcome') }}" class="nav-link">Home</a>
                     <a href="{{ route('admin.dashboard') }}" class="nav-link active">Dashboard</a>
-                    <span class="nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ $admin->name }}</span>
                     <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                         @csrf
                         <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">

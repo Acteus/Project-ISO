@@ -15,8 +15,12 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
             min-height: 100vh;
+        }
+
+        .survey-main {
+            background-image: none !important;
             padding: 20px;
         }
 
@@ -49,20 +53,22 @@
         .back-button {
             display: inline-block;
             padding: 12px 30px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+            background: white;
+            color: black;
             text-decoration: none;
             border-radius: 25px;
             margin-bottom: 20px;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid white;
         }
 
         .back-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-            color: white;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            color: black;
+            background: rgba(255, 255, 255, 0.9);
         }
 
         .stats-grid {
@@ -90,7 +96,7 @@
             left: 0;
             width: 100%;
             height: 5px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: linear-gradient(90deg, rgba(66,133,244,1), rgba(255,215,0,1));
         }
 
         .stat-card:hover {
@@ -101,7 +107,7 @@
         .stat-value {
             font-size: 42px;
             font-weight: 700;
-            color: #667eea;
+            color: rgba(66,133,244,1);
             margin-bottom: 10px;
         }
 
@@ -143,7 +149,7 @@
             color: #333;
             font-size: 20px;
             padding-bottom: 15px;
-            border-bottom: 3px solid #667eea;
+            border-bottom: 3px solid rgba(66,133,244,1);
         }
 
         .chart-wrapper {
@@ -168,7 +174,7 @@
             color: #333;
             font-size: 20px;
             padding-bottom: 15px;
-            border-bottom: 3px solid #667eea;
+            border-bottom: 3px solid rgba(66,133,244,1);
         }
 
         .metrics-grid {
@@ -185,7 +191,7 @@
             padding: 15px;
             background: #f8f9fa;
             border-radius: 10px;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid rgba(66,133,244,1);
             transition: all 0.2s ease;
         }
 
@@ -202,7 +208,7 @@
         .metric-value {
             font-size: 20px;
             font-weight: 700;
-            color: #667eea;
+            color: rgba(66,133,244,1);
         }
 
         .no-data-message {
@@ -242,11 +248,42 @@
                 height: 250px;
             }
         }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
     </style>
 </head>
 <body>
-    <div class="analytics-container">
-        <a href="{{ route('admin.dashboard') }}" class="back-button">← Back to Dashboard</a>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <a href="{{ route('welcome') }}">ISO Quality Education</a>
+                </div>
+
+                <!-- Desktop navigation -->
+                <nav class="desktop-nav">
+                    <a href="{{ route('admin.dashboard') }}" class="nav-link">Dashboard</a>
+                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
+                        @csrf
+                        <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
+                            <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                            </svg>
+                            Logout
+                        </button>
+                    </form>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="survey-main">
+        <div class="analytics-container">
+            <a href="{{ route('admin.dashboard') }}" class="back-button">← Back to Dashboard</a>
 
         <div class="analytics-header">
             <h1>ISO 21001 Survey Analytics Dashboard</h1>
@@ -332,7 +369,7 @@
             <div class="metrics-table">
                 <h3>Detailed Analytics</h3>
 
-                <h4 style="margin-top: 30px; margin-bottom: 15px; color: #667eea;">ISO 21001 Quality Indices</h4>
+                <h4 style="margin-top: 30px; margin-bottom: 15px; color: rgba(66,133,244,1);">ISO 21001 Quality Indices</h4>
                 <div class="metrics-grid">
                     <div class="metric-item">
                         <span class="metric-name">Learner Needs Index</span>
@@ -360,7 +397,7 @@
                     </div>
                 </div>
 
-                <h4 style="margin-top: 30px; margin-bottom: 15px; color: #764ba2;">Indirect Performance Metrics</h4>
+                <h4 style="margin-top: 30px; margin-bottom: 15px; color: #D4AF37;">Indirect Performance Metrics</h4>
                 <div class="metrics-grid">
                     <div class="metric-item">
                         <span class="metric-name">Average Grade</span>
@@ -389,7 +426,8 @@
                 </div>
             </div>
         @endif
-    </div>
+        </div>
+    </main>
 
     <script>
         @if(!$noData)
@@ -420,13 +458,13 @@
                         {{ $analytics['iso_21001_indices']['wellbeing_index'] }},
                         {{ $analytics['iso_21001_indices']['overall_satisfaction'] }}
                     ],
-                    backgroundColor: 'rgba(102, 126, 234, 0.2)',
-                    borderColor: 'rgba(102, 126, 234, 1)',
+                    backgroundColor: 'rgba(66, 133, 244, 0.2)',
+                    borderColor: 'rgba(66, 133, 244, 1)',
                     borderWidth: 2,
-                    pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+                    pointBackgroundColor: 'rgba(66, 133, 244, 1)',
                     pointBorderColor: '#fff',
                     pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: 'rgba(102, 126, 234, 1)',
+                    pointHoverBorderColor: 'rgba(66, 133, 244, 1)',
                     pointRadius: 5,
                     pointHoverRadius: 7
                 }]
@@ -481,16 +519,16 @@
                         @endforeach
                     ],
                     backgroundColor: [
-                        'rgba(102, 126, 234, 0.8)',
-                        'rgba(118, 75, 162, 0.8)',
-                        'rgba(237, 100, 166, 0.8)',
-                        'rgba(255, 154, 158, 0.8)'
+                        'rgba(66, 133, 244, 0.8)',
+                        'rgba(255, 215, 0, 0.8)',
+                        'rgba(100, 181, 246, 0.8)',
+                        'rgba(255, 235, 59, 0.8)'
                     ],
                     borderColor: [
-                        'rgba(102, 126, 234, 1)',
-                        'rgba(118, 75, 162, 1)',
-                        'rgba(237, 100, 166, 1)',
-                        'rgba(255, 154, 158, 1)'
+                        'rgba(66, 133, 244, 1)',
+                        'rgba(255, 215, 0, 1)',
+                        'rgba(100, 181, 246, 1)',
+                        'rgba(255, 235, 59, 1)'
                     ],
                     borderWidth: 2
                 }]
@@ -540,20 +578,20 @@
                         {{ $analytics['iso_21001_indices']['overall_satisfaction'] }}
                     ],
                     backgroundColor: [
-                        'rgba(102, 126, 234, 0.8)',
-                        'rgba(118, 75, 162, 0.8)',
-                        'rgba(237, 100, 166, 0.8)',
-                        'rgba(255, 154, 158, 0.8)',
-                        'rgba(72, 219, 251, 0.8)',
-                        'rgba(76, 201, 240, 0.8)'
+                        'rgba(66, 133, 244, 0.8)',
+                        'rgba(255, 215, 0, 0.8)',
+                        'rgba(100, 181, 246, 0.8)',
+                        'rgba(255, 235, 59, 0.8)',
+                        'rgba(33, 150, 243, 0.8)',
+                        'rgba(255, 193, 7, 0.8)'
                     ],
                     borderColor: [
-                        'rgba(102, 126, 234, 1)',
-                        'rgba(118, 75, 162, 1)',
-                        'rgba(237, 100, 166, 1)',
-                        'rgba(255, 154, 158, 1)',
-                        'rgba(72, 219, 251, 1)',
-                        'rgba(76, 201, 240, 1)'
+                        'rgba(66, 133, 244, 1)',
+                        'rgba(255, 215, 0, 1)',
+                        'rgba(100, 181, 246, 1)',
+                        'rgba(255, 235, 59, 1)',
+                        'rgba(33, 150, 243, 1)',
+                        'rgba(255, 193, 7, 1)'
                     ],
                     borderWidth: 2,
                     borderRadius: 8
@@ -612,8 +650,8 @@
                         {{ $analytics['indirect_metrics']['average_extracurricular_hours'] }},
                         {{ $analytics['indirect_metrics']['average_counseling_sessions'] }}
                     ],
-                    backgroundColor: 'rgba(118, 75, 162, 0.6)',
-                    borderColor: 'rgba(118, 75, 162, 1)',
+                    backgroundColor: 'rgba(255, 215, 0, 0.6)',
+                    borderColor: 'rgba(255, 215, 0, 1)',
                     borderWidth: 2,
                     borderRadius: 8
                 }]

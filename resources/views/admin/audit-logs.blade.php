@@ -6,19 +6,47 @@
     <title>Audit Logs - ISO Quality Education</title>
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     <style>
+        body {
+            background: linear-gradient(135deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
+            min-height: 100vh;
+        }
+
+        .survey-main {
+            background-image: none !important;
+        }
+
         .dashboard-container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
 
+        .back-btn {
+            background: white;
+            color: black;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid white;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            color: black;
+        }
+
         .page-header {
-            background: linear-gradient(135deg, #ffc107, #ff9800);
-            color: #333;
+            background: white;
+            color: black;
             padding: 30px;
             border-radius: 10px;
             margin-bottom: 30px;
             text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .page-header h1 {
@@ -26,13 +54,14 @@
             font-size: 28px;
             font-weight: 700;
             line-height: 1.2;
+            color: black;
         }
 
         .page-header p {
             margin: 0;
-            opacity: 0.9;
             font-size: 16px;
             line-height: 1.5;
+            color: #666;
         }
 
         .filters-section {
@@ -46,7 +75,7 @@
         .filters-section h3 {
             margin-top: 0;
             color: #333;
-            border-bottom: 2px solid #ffc107;
+            border-bottom: 2px solid rgba(66, 133, 244, 1);
             padding-bottom: 10px;
             margin-bottom: 20px;
         }
@@ -83,7 +112,7 @@
 
         .filter-group select:focus,
         .filter-group input[type="date"]:focus {
-            border-color: #ffc107;
+            border-color: rgba(66, 133, 244, 1);
             outline: none;
         }
 
@@ -104,7 +133,7 @@
         .audit-logs-section h3 {
             margin-top: 0;
             color: #333;
-            border-bottom: 2px solid #ffc107;
+            border-bottom: 2px solid rgba(66, 133, 244, 1);
             padding-bottom: 10px;
             margin-bottom: 20px;
         }
@@ -254,15 +283,15 @@
         }
 
         .pagination a:hover {
-            background: #ffc107;
-            border-color: #ffc107;
-            color: #333;
+            background: rgba(66, 133, 244, 1);
+            border-color: rgba(66, 133, 244, 1);
+            color: white;
         }
 
         .pagination .active span {
-            background: #ffc107;
-            border-color: #ffc107;
-            color: #333;
+            background: rgba(66, 133, 244, 1);
+            border-color: rgba(66, 133, 244, 1);
+            color: white;
             font-weight: 700;
         }
 
@@ -284,8 +313,8 @@
         }
 
         .btn-primary {
-            background: linear-gradient(90deg, #ffc107, #ff9800);
-            color: #333;
+            background: #4285F4;
+            color: white;
         }
 
         .btn-primary:hover {
@@ -324,13 +353,13 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             text-align: center;
-            border-left: 4px solid #ffc107;
+            border-left: 4px solid rgba(66, 133, 244, 1);
         }
 
         .stat-value {
             font-size: 32px;
             font-weight: 700;
-            color: #ffc107;
+            color: rgba(66, 133, 244, 1);
             margin-bottom: 5px;
         }
 
@@ -364,10 +393,7 @@
 
                 <!-- Desktop navigation -->
                 <nav class="desktop-nav">
-                    <a href="{{ route('welcome') }}" class="nav-link">Home</a>
                     <a href="{{ route('admin.dashboard') }}" class="nav-link">Dashboard</a>
-                    <a href="{{ route('admin.audit.logs') }}" class="nav-link active">Audit Logs</a>
-                    <span class="nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ $admin->name }}</span>
                     <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                         @csrf
                         <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
@@ -384,6 +410,8 @@
 
     <main class="survey-main">
         <div class="dashboard-container">
+            <a href="{{ route('admin.dashboard') }}" class="back-btn">← Back to Dashboard</a>
+
             <!-- Page Header -->
             <div class="page-header">
                 <h1>📋 Audit Logs</h1>

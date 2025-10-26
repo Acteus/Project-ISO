@@ -6,6 +6,15 @@
     <title>Survey Response Details - ISO Quality Education</title>
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     <style>
+        body {
+            background: linear-gradient(135deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
+            min-height: 100vh;
+        }
+
+        .survey-main {
+            background-image: none !important;
+        }
+
         .detail-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -13,7 +22,7 @@
         }
 
         .detail-header {
-            background: linear-gradient(135deg, #4285F4, #2c6cd6);
+            background: linear-gradient(135deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
             color: white;
             padding: 30px;
             border-radius: 10px;
@@ -30,8 +39,8 @@
         }
 
         .back-btn {
-            background: rgba(255,255,255,0.2);
-            color: white;
+            background: white;
+            color: black;
             padding: 10px 20px;
             border-radius: 6px;
             text-decoration: none;
@@ -41,8 +50,8 @@
         }
 
         .back-btn:hover {
-            background: white;
-            color: #4285F4;
+            background: rgba(255, 255, 255, 0.9);
+            color: black;
         }
 
         .section-card {
@@ -56,7 +65,7 @@
         .section-card h2 {
             margin-top: 0;
             color: #333;
-            border-bottom: 3px solid #4285F4;
+            border-bottom: 3px solid rgba(66, 133, 244, 1);
             padding-bottom: 15px;
             font-size: 24px;
         }
@@ -72,7 +81,7 @@
             background: #f8f9fa;
             padding: 15px;
             border-radius: 8px;
-            border-left: 4px solid #4285F4;
+            border-left: 4px solid rgba(66, 133, 244, 1);
         }
 
         .info-label {
@@ -208,9 +217,7 @@
 
                 <!-- Desktop navigation -->
                 <nav class="desktop-nav">
-                    <a href="{{ route('welcome') }}" class="nav-link">Home</a>
                     <a href="{{ route('admin.dashboard') }}" class="nav-link active">Dashboard</a>
-                    <span class="nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ $admin->name }}</span>
                     <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                         @csrf
                         <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
