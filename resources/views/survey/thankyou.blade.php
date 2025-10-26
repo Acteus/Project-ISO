@@ -465,17 +465,14 @@
         <div class="container">
             <div class="nav-wrapper">
                 <div class="logo">
-                    <a href="{{ route('welcome') }}">ISO Quality Education</a>
+                    <a href="{{ route('survey.landing') }}">ISO Quality Education</a>
                 </div>
 
                 <!-- Desktop navigation -->
                 <nav class="desktop-nav">
-                    <a href="{{ route('welcome') }}" class="nav-link">Home</a>
-                    <a href="{{ route('survey.form') }}" class="nav-link">Survey</a>
-
                     @auth
                         <!-- Show for logged-in students -->
-                        <span class="nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ Auth::user()->name }}</span>
+                        <a href="{{ route('student.dashboard') }}" class="nav-link">{{ Auth::user()->name }}</a>
                         <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                             @csrf
                             <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
@@ -487,7 +484,7 @@
                         </form>
                     @elseif(session('admin'))
                         <!-- Show for logged-in admins -->
-                        <span class="nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ session('admin')->name }}</span>
+                        <a href="{{ route('admin.dashboard') }}" class="nav-link">{{ session('admin')->name }}</a>
                         <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                             @csrf
                             <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
@@ -534,7 +531,7 @@
                     <a href="{{ route('survey.form') }}" class="btn-primary">
                         <span>Submit Another Response</span>
                     </a>
-                    <a href="{{ route('welcome') }}" class="btn-secondary">
+                    <a href="{{ route('survey.landing') }}" class="btn-secondary">
                         <span>Back to Home</span>
                     </a>
                 </div>
@@ -549,12 +546,12 @@
 
                         <div class="info-item">
                             <div class="info-label">Date Submitted</div>
-                            <div class="info-value">{{ date('F j, Y') }}</div>
+                            <div class="info-value">{{ now()->format('F j, Y') }}</div>
                         </div>
 
                         <div class="info-item">
                             <div class="info-label">Time Submitted</div>
-                            <div class="info-value">{{ date('g:i A') }}</div>
+                            <div class="info-value">{{ now()->format('g:i A') }}</div>
                         </div>
 
                         @auth

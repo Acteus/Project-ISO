@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard - ISO Quality Education</title>
+    <title>Profile Settings - ISO Quality Education</title>
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     <style>
         .dashboard-container {
@@ -206,14 +206,12 @@
         <div class="container">
             <div class="nav-wrapper">
                 <div class="logo">
-                    <a href="{{ route('welcome') }}">ISO Quality Education</a>
+                    <a href="{{ route('survey.landing') }}">ISO Quality Education</a>
                 </div>
 
                 <!-- Desktop navigation -->
                 <nav class="desktop-nav">
-                    <a href="{{ route('welcome') }}" class="nav-link">Home</a>
-                    <a href="{{ route('survey.form') }}" class="nav-link">Survey</a>
-                    <span class="nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ Auth::user()->name }}</span>
+                    <a href="{{ route('student.dashboard') }}" class="nav-link active">{{ Auth::user()->name }}</a>
                     <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                         @csrf
                         <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
@@ -230,13 +228,13 @@
 
     <main class="survey-main">
         <div class="dashboard-container">
-            <!-- Dashboard Header -->
+            <!-- Profile Header -->
             <div class="dashboard-header">
-                <h1>Student Dashboard</h1>
-                <p>Welcome back, {{ Auth::user()->name }}! Here's your ISO 21001 Survey overview.</p>
+                <h1>Profile Settings</h1>
+                <p>Manage your account information and preferences</p>
             </div>
 
-            <!-- Student Information -->
+            <!-- Student Information Card (Read-only) -->
             <div class="student-info-card">
                 <h3>Student Information</h3>
                 <div class="student-info-grid">
@@ -259,36 +257,86 @@
                 </div>
             </div>
 
-            <!-- Action Cards -->
-            <div class="dashboard-actions">
-                <div class="action-card survey">
-                    <div class="action-card-icon">📝</div>
-                    <h3>Take Survey</h3>
-                    <p>Complete the ISO 21001 Learner-Centric Survey to provide feedback on your educational experience.</p>
-                    <a href="{{ route('survey.form') }}" class="btn btn-success">Start Survey</a>
-                </div>
+            <!-- Profile Settings Form -->
+            <div class="survey-history" style="margin-bottom: 30px;">
+                <h3>Update Profile Information</h3>
+                <form action="#" method="POST" style="max-width: 600px;">
+                    @csrf
+                    <div style="margin-bottom: 20px;">
+                        <label for="name" style="display: block; font-weight: 600; color: #333; margin-bottom: 8px;">Full Name</label>
+                        <input type="text" id="name" name="name" value="{{ Auth::user()->name }}"
+                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px;"
+                               required>
+                    </div>
 
-                <div class="action-card analytics">
-                    <div class="action-card-icon">📊</div>
-                    <h3>View Analytics</h3>
-                    <p>Check out aggregated survey results and insights from the ISO 21001 quality education system.</p>
-                    <a href="{{ route('api.survey.analytics') }}" class="btn btn-primary" target="_blank">View Analytics</a>
-                </div>
+                    <div style="margin-bottom: 20px;">
+                        <label for="email" style="display: block; font-weight: 600; color: #333; margin-bottom: 8px;">Email Address</label>
+                        <input type="email" id="email" name="email" value="{{ Auth::user()->email }}"
+                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px;"
+                               required>
+                    </div>
 
-                <div class="action-card profile">
-                    <div class="action-card-icon">👤</div>
-                    <h3>Profile Settings</h3>
-                    <p>Update your profile information and manage your account settings.</p>
-                    <button class="btn btn-warning" onclick="alert('Profile management coming soon!')">Manage Profile</button>
-                </div>
+                    <div style="margin-bottom: 20px;">
+                        <label for="section" style="display: block; font-weight: 600; color: #333; margin-bottom: 8px;">Section</label>
+                        <input type="text" id="section" name="section" value="{{ Auth::user()->section }}"
+                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px;"
+                               required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" onclick="event.preventDefault(); alert('Profile update feature coming soon!');">
+                        Save Changes
+                    </button>
+                </form>
             </div>
 
-            <!-- Survey History -->
+            <!-- Change Password Section -->
+            <div class="survey-history" style="margin-bottom: 30px;">
+                <h3>Change Password</h3>
+                <form action="#" method="POST" style="max-width: 600px;">
+                    @csrf
+                    <div style="margin-bottom: 20px;">
+                        <label for="current_password" style="display: block; font-weight: 600; color: #333; margin-bottom: 8px;">Current Password</label>
+                        <input type="password" id="current_password" name="current_password"
+                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px;"
+                               required>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label for="new_password" style="display: block; font-weight: 600; color: #333; margin-bottom: 8px;">New Password</label>
+                        <input type="password" id="new_password" name="new_password"
+                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px;"
+                               required>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label for="confirm_password" style="display: block; font-weight: 600; color: #333; margin-bottom: 8px;">Confirm New Password</label>
+                        <input type="password" id="confirm_password" name="confirm_password"
+                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px;"
+                               required>
+                    </div>
+
+                    <button type="submit" class="btn btn-warning" onclick="event.preventDefault(); alert('Password change feature coming soon!');">
+                        Update Password
+                    </button>
+                </form>
+            </div>
+
+            <!-- Quick Actions -->
             <div class="survey-history">
-                <h3>Survey History</h3>
-                <div class="no-history">
-                    <p>You haven't submitted any surveys yet.</p>
-                    <p>Complete your first survey to see your submission history here!</p>
+                <h3>Quick Actions</h3>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; padding: 20px 0;">
+                    <a href="{{ route('survey.form') }}" class="btn btn-success">
+                        <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                        </svg>
+                        Take Survey
+                    </a>
+                    <a href="{{ route('survey.landing') }}" class="btn btn-primary">
+                        <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                        </svg>
+                        Back to Home
+                    </a>
                 </div>
             </div>
         </div>

@@ -19,17 +19,14 @@
         <div class="container">
             <div class="nav-wrapper">
                 <div class="logo">
-                    <a href="{{ route('home') }}">ISO Quality Education</a>
+                    <a href="{{ route('survey.landing') }}">ISO Quality Education</a>
                 </div>
 
                 <!-- Desktop navigation -->
                 <nav class="desktop-nav">
-                    <a href="{{ route('home') }}" class="nav-link">Home</a>
-                    <a href="{{ route('survey.form') }}" class="nav-link active">Survey</a>
-
                     @auth
                         <!-- Show for logged-in students -->
-                        <span class="nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ Auth::user()->name }}</span>
+                        <a href="{{ route('student.dashboard') }}" class="nav-link">{{ Auth::user()->name }}</a>
                         <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                             @csrf
                             <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
@@ -41,7 +38,7 @@
                         </form>
                     @elseif(session('admin'))
                         <!-- Show for logged-in admins -->
-                        <span class="nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ session('admin')->name }}</span>
+                        <a href="{{ route('admin.dashboard') }}" class="nav-link">{{ session('admin')->name }}</a>
                         <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                             @csrf
                             <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
@@ -68,13 +65,6 @@
                 <p class="survey-subtitle">
                     Your feedback helps us improve the quality of education for CSS Strand students.
                 </p>
-
-                @auth
-                    <div class="student-info" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                        <p><strong>Welcome, {{ Auth::user()->name }}!</strong></p>
-                        <p>Student ID: {{ Auth::user()->student_id }} | Year: {{ Auth::user()->year_level }} | Section: {{ Auth::user()->section }}</p>
-                    </div>
-                @endauth
 
                 <!-- Progress bar -->
                 <div class="progress-section">
@@ -680,29 +670,9 @@
                             </div>
                         </div>
 
-                        <!-- Section 8: Demographics & Open-ended Questions -->
+                        <!-- Section 8: Additional Feedback -->
                         <div class="survey-step" data-step="8" style="display: none;">
-                            <h2 class="section-title">Demographics & Open-ended Questions</h2>
-
-                            <div class="question-group">
-                                <label class="question-label">What is your current year level? <span class="required">*</span></label>
-                                <select name="demographics_year_level" class="form-select" required>
-                                    <option value="">Select your year level</option>
-                                    <option value="Grade 11">Grade 11</option>
-                                    <option value="Grade 12">Grade 12</option>
-                                </select>
-                            </div>
-
-                            <div class="question-group">
-                                <label class="question-label">Gender <span class="required">*</span></label>
-                                <select name="gender" class="form-select" required>
-                                    <option value="">Select your gender</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                    <option value="Non-binary">Non-binary</option>
-                                    <option value="Prefer not to say">Prefer not to say</option>
-                                </select>
-                            </div>
+                            <h2 class="section-title">Additional Feedback</h2>
 
                             <div class="question-group">
                                 <label class="question-label">Do you have any additional feedback or suggestions for improving the CSS strand program? <span class="required">*</span></label>

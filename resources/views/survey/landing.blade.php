@@ -10,6 +10,11 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
         }
+
+        .nav-link[href*="dashboard"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -18,26 +23,14 @@
         <div class="container">
             <div class="nav-wrapper">
                 <div class="logo">
-                    <a href="{{ route('home') }}">ISO Quality Education</a>
-                </div>
-
-                <!-- Mobile menu button -->
-                <div class="mobile-menu-btn">
-                    <button onclick="toggleMobileMenu()" class="menu-toggle">
-                        <span class="hamburger"></span>
-                        <span class="hamburger"></span>
-                        <span class="hamburger"></span>
-                    </button>
+                    <a href="{{ route('survey.landing') }}">ISO Quality Education</a>
                 </div>
 
                 <!-- Desktop navigation -->
                 <nav class="desktop-nav">
-                    <a href="{{ route('home') }}" class="nav-link active">Home</a>
-                    <a href="{{ route('survey.form') }}" class="nav-link">Survey</a>
-
                     @auth
                         <!-- Show for logged-in students -->
-                        <span class="nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ Auth::user()->name }}</span>
+                        <a href="{{ route('student.dashboard') }}" class="nav-link">{{ Auth::user()->name }}</a>
                         <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                             @csrf
                             <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
@@ -49,7 +42,7 @@
                         </form>
                     @elseif(session('admin'))
                         <!-- Show for logged-in admins -->
-                        <span class="nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ session('admin')->name }}</span>
+                        <a href="{{ route('admin.dashboard') }}" class="nav-link">{{ session('admin')->name }}</a>
                         <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                             @csrf
                             <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
@@ -66,33 +59,6 @@
                     @endauth
                 </nav>
             </div>
-
-            <!-- Mobile navigation -->
-            <nav class="mobile-nav" id="mobileNav">
-                <a href="{{ route('home') }}" class="mobile-nav-link active">Home</a>
-                <a href="{{ route('survey.form') }}" class="mobile-nav-link">Survey</a>
-
-                @auth
-                    <span class="mobile-nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ Auth::user()->name }}</span>
-                    <form method="POST" action="{{ route('student.logout') }}" style="display: block; padding: 10px 0;">
-                        @csrf
-                        <button type="submit" class="mobile-nav-link logout-btn" style="width: 100%; text-align: left; background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 12px 20px; border-radius: 6px; font-weight: 600;">
-                            Logout
-                        </button>
-                    </form>
-                @elseif(session('admin'))
-                    <span class="mobile-nav-link" style="color: rgba(255,255,255,0.8); cursor: default;">{{ session('admin')->name }}</span>
-                    <form method="POST" action="{{ route('student.logout') }}" style="display: block; padding: 10px 0;">
-                        @csrf
-                        <button type="submit" class="mobile-nav-link logout-btn" style="width: 100%; text-align: left; background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 12px 20px; border-radius: 6px; font-weight: 600;">
-                            Logout
-                        </button>
-                    </form>
-                @else
-                    <a href="{{ route('student.login') }}" class="mobile-nav-link">Login</a>
-                    <a href="{{ route('student.register') }}" class="mobile-nav-link">Register</a>
-                @endauth
-            </nav>
         </div>
     </header>
 
@@ -150,15 +116,6 @@
                         </p>
                     </div>
                 </div>
-
-                <div class="section-cta">
-                    <a href="{{ route('survey.form') }}" class="btn btn-secondary">
-                        Take the Survey Now
-                        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </a>
-                </div>
             </div>
         </section>
     </main>
@@ -176,9 +133,9 @@
                 <div class="footer-links">
                     <h4 class="footer-links-title">Quick Links</h4>
                     <ul class="footer-links-list">
-                        <li><a href="{{ route('home') }}" class="footer-link">About this Survey</a></li>
-                        <li><a href="{{ route('home') }}" class="footer-link">Privacy Policy</a></li>
-                        <li><a href="{{ route('home') }}" class="footer-link">Contact Academic Affairs</a></li>
+                        <li><a href="{{ route('survey.landing') }}" class="footer-link">About this Survey</a></li>
+                        <li><a href="{{ route('survey.landing') }}" class="footer-link">Privacy Policy</a></li>
+                        <li><a href="{{ route('survey.landing') }}" class="footer-link">Contact Academic Affairs</a></li>
                     </ul>
                 </div>
             </div>

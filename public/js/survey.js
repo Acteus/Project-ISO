@@ -641,32 +641,45 @@ window.addEventListener('beforeunload', function(event) {
 async function submitSurveyLaravel(event) {
     event.preventDefault();
 
-    if (!validateCurrentSection()) {
+    console.log('Submit survey called - Current step:', currentStep);
+    console.log('Total steps:', totalSteps);
+
+    // Use validateCurrentStep for static HTML structure
+    if (!validateCurrentStep()) {
+        console.log('Validation failed for current step');
         return;
     }
 
+    console.log('Validation passed, proceeding with submission...');
+
     const submitBtn = document.getElementById('submitBtn');
-    showLoading(submitBtn);
+
+    // Show loading state
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>Submitting...</span>';
+    }
 
     try {
-        // Prepare data for submission - collect all form data
-        const submissionData = { ...surveyData };
+        // Collect all form data from the actual form inputs
+        const form = document.getElementById('surveyForm');
+        const formData = new FormData(form);
 
         // Get form fields
         const studentIdField = document.querySelector('input[name="student_id"]');
         const gradeLevelField = document.querySelector('input[name="grade_level"]');
-        const genderField = document.querySelector('select[name="gender"]');
-        const demographicsYearLevelField = document.querySelector('select[name="demographics_year_level"]');
         const additionalFeedbackField = document.querySelector('textarea[name="additional_feedback"]');
 
-        // Determine grade level from either hidden field or demographics dropdown
+        // Get all question responses
+        const getQuestionValue = (qName) => {
+            const input = document.querySelector(`input[name="${qName}"]:checked`);
+            return input ? parseInt(input.value) : null;
+        };
+
+        // Determine grade level from hidden field
         let gradeLevel = 11;
         if (gradeLevelField && gradeLevelField.value) {
             gradeLevel = parseInt(gradeLevelField.value);
-        } else if (demographicsYearLevelField && demographicsYearLevelField.value) {
-            // Extract number from "Grade 11" or "Grade 12"
-            const match = demographicsYearLevelField.value.match(/\d+/);
-            gradeLevel = match ? parseInt(match[0]) : 11;
         }
 
         // Map to Laravel API format with actual form data
@@ -680,45 +693,48 @@ async function submitSurveyLaravel(event) {
 
             // Map survey questions to ISO 21001 fields
             // Learner Needs & Expectations (q1-q3)
-            curriculum_relevance_rating: parseInt(submissionData.q1) || 1,
-            learning_pace_appropriateness: parseInt(submissionData.q2) || 1,
-            individual_support_availability: parseInt(submissionData.q3) || 1,
-            learning_style_accommodation: parseInt(submissionData.q1) || 1,
+            curriculum_relevance_rating: getQuestionValue('q1') || 1,
+            learning_pace_appropriateness: getQuestionValue('q2') || 1,
+            individual_support_availability: getQuestionValue('q3') || 1,
+            learning_style_accommodation: getQuestionValue('q1') || 1,
 
             // Teaching & Learning Quality (q4-q6)
-            teaching_quality_rating: parseInt(submissionData.q4) || 1,
-            learning_environment_rating: parseInt(submissionData.q5) || 1,
-            peer_interaction_satisfaction: parseInt(submissionData.q6) || 1,
-            extracurricular_satisfaction: parseInt(submissionData.q4) || 1,
+            teaching_quality_rating: getQuestionValue('q4') || 1,
+            learning_environment_rating: getQuestionValue('q5') || 1,
+            peer_interaction_satisfaction: getQuestionValue('q6') || 1,
+            extracurricular_satisfaction: getQuestionValue('q4') || 1,
 
             // Assessments & Outcomes (q7-q9)
-            academic_progress_rating: parseInt(submissionData.q7) || 1,
-            skill_development_rating: parseInt(submissionData.q8) || 1,
-            critical_thinking_improvement: parseInt(submissionData.q9) || 1,
-            problem_solving_confidence: parseInt(submissionData.q7) || 1,
+            academic_progress_rating: getQuestionValue('q7') || 1,
+            skill_development_rating: getQuestionValue('q8') || 1,
+            critical_thinking_improvement: getQuestionValue('q9') || 1,
+            problem_solving_confidence: getQuestionValue('q7') || 1,
 
             // Support & Resources (q10-q12)
-            physical_safety_rating: parseInt(submissionData.q10) || 1,
-            psychological_safety_rating: parseInt(submissionData.q11) || 1,
-            bullying_prevention_effectiveness: parseInt(submissionData.q12) || 1,
-            emergency_preparedness_rating: parseInt(submissionData.q10) || 1,
+            physical_safety_rating: getQuestionValue('q10') || 1,
+            psychological_safety_rating: getQuestionValue('q11') || 1,
+            bullying_prevention_effectiveness: getQuestionValue('q12') || 1,
+            emergency_preparedness_rating: getQuestionValue('q10') || 1,
 
             // Environment & Inclusivity (q13-q15)
-            mental_health_support_rating: parseInt(submissionData.q13) || 1,
-            stress_management_support: parseInt(submissionData.q14) || 1,
-            physical_health_support: parseInt(submissionData.q15) || 1,
-            overall_wellbeing_rating: parseInt(submissionData.q13) || 1,
+            mental_health_support_rating: getQuestionValue('q13') || 1,
+            stress_management_support: getQuestionValue('q14') || 1,
+            physical_health_support: getQuestionValue('q15') || 1,
+            overall_wellbeing_rating: getQuestionValue('q13') || 1,
+
+            // Feedback & Responsiveness (q16-q18)
+            // Note: These aren't mapped to specific fields yet, but including them
+            feedback_taken_seriously: getQuestionValue('q16') || 1,
+            school_responsiveness: getQuestionValue('q17') || 1,
+            visible_improvements: getQuestionValue('q18') || 1,
 
             // Overall Satisfaction (q19-q21)
-            overall_satisfaction: parseInt(submissionData.q19) || 1,
+            overall_satisfaction: getQuestionValue('q19') || 1,
 
             // Map open feedback to appropriate fields
             positive_aspects: extractPositiveAspects(additionalFeedbackField ? additionalFeedbackField.value : ''),
             improvement_suggestions: extractImprovementSuggestions(additionalFeedbackField ? additionalFeedbackField.value : ''),
             additional_comments: additionalFeedbackField ? additionalFeedbackField.value : '',
-
-            // Demographics
-            gender: genderField ? genderField.value : 'Prefer not to say',
 
             // Consent and privacy
             consent_given: true,
@@ -733,37 +749,58 @@ async function submitSurveyLaravel(event) {
 
         console.log('Submitting survey data:', laravelData);
 
+        // Get CSRF token safely
+        let csrfToken = '';
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (csrfMeta) {
+            csrfToken = csrfMeta.getAttribute('content');
+            console.log('CSRF token found:', csrfToken ? 'Yes' : 'No');
+        } else {
+            console.warn('CSRF token meta tag not found');
+        }
+
         // Submit to Laravel API backend
+        console.log('Sending request to /api/survey/submit...');
         const response = await fetch('/api/survey/submit', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-CSRF-TOKEN': csrfToken,
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json'
             },
             body: JSON.stringify(laravelData)
         });
 
+        console.log('Response received. Status:', response.status, 'Status Text:', response.statusText);
+
         const data = await response.json();
-        console.log('Response:', response.status, data);
+        console.log('Response data:', data);
 
         if (response.ok && data.message) {
-            // Clear saved progress
-            removeFromLocalStorage('surveyProgress');
-
+            console.log('Survey submitted successfully!');
             // Show success message and redirect
             alert(data.message);
             window.location.href = '/thank-you';
         } else {
-            throw new Error(data.message || 'Submission failed');
+            console.error('Survey submission failed. Response:', data);
+            let errorMsg = data.message || 'Submission failed';
+            if (data.errors) {
+                errorMsg += '\nValidation errors: ' + JSON.stringify(data.errors);
+            }
+            throw new Error(errorMsg);
         }
 
     } catch (error) {
         console.error('Survey submission error:', error);
-        alert('There was an error submitting your survey. Please try again.');
-    } finally {
-        hideLoading(submitBtn);
+        console.error('Error stack:', error.stack);
+        alert('There was an error submitting your survey. Please try again.\n\nError: ' + error.message);
+
+        // Restore button state
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Submit <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+        }
     }
 }
 

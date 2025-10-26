@@ -181,12 +181,11 @@
         <div class="container">
             <div class="nav-wrapper">
                 <div class="logo">
-                    <a href="{{ route('welcome') }}">ISO Quality Education</a>
+                    <a href="{{ route('survey.landing') }}">ISO Quality Education</a>
                 </div>
 
                 <!-- Desktop navigation -->
                 <nav class="desktop-nav">
-                    <a href="{{ route('welcome') }}" class="nav-link">Home</a>
                     <a href="{{ route('student.login') }}" class="nav-link">Login</a>
                     <a href="{{ route('student.register') }}" class="nav-link">Register</a>
                 </nav>
@@ -208,7 +207,7 @@
 
                 <div class="logout-actions">
                     <a href="{{ route('student.login') }}" class="btn btn-primary">Log In Again</a>
-                    <a href="{{ route('welcome') }}" class="btn btn-secondary">Return Home</a>
+                    <a href="{{ route('survey.landing') }}" class="btn btn-secondary">Return Home</a>
                 </div>
 
                 <div class="security-notice">
