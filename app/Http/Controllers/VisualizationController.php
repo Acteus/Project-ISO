@@ -119,4 +119,86 @@ class VisualizationController extends Controller
             'data' => $dashboardData
         ]);
     }
+
+    /**
+     * Get time-series trend data for analytics
+     */
+    public function getTimeSeriesData(Request $request)
+    {
+        $metric = $request->query('metric', 'overall_satisfaction');
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+        $groupBy = $request->query('group_by', 'week');
+
+        $data = $this->visualizationService->generateTimeSeriesData($metric, $dateFrom, $dateTo, $groupBy);
+
+        return response()->json([
+            'message' => 'Time-series data generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get heat map data for track/grade performance
+     */
+    public function getHeatMapData(Request $request)
+    {
+        $metric = $request->query('metric', 'overall_satisfaction');
+
+        $data = $this->visualizationService->generateHeatMapData($metric);
+
+        return response()->json([
+            'message' => 'Heat map data generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get compliance risk meter data
+     */
+    public function getComplianceRiskData(Request $request)
+    {
+        $data = $this->visualizationService->generateComplianceRiskData();
+
+        return response()->json([
+            'message' => 'Compliance risk data generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get comparative period analysis
+     */
+    public function getComparativeAnalysis(Request $request)
+    {
+        $currentDateFrom = $request->query('current_from');
+        $currentDateTo = $request->query('current_to');
+        $previousDateFrom = $request->query('previous_from');
+        $previousDateTo = $request->query('previous_to');
+
+        $data = $this->visualizationService->generateComparativeAnalysis(
+            $currentDateFrom,
+            $currentDateTo,
+            $previousDateFrom,
+            $previousDateTo
+        );
+
+        return response()->json([
+            'message' => 'Comparative analysis generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get response rate analytics
+     */
+    public function getResponseRateAnalytics(Request $request)
+    {
+        $data = $this->visualizationService->generateResponseRateAnalytics();
+
+        return response()->json([
+            'message' => 'Response rate analytics generated successfully',
+            'data' => $data
+        ]);
+    }
 }

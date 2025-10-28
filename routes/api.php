@@ -43,6 +43,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/visualizations/year-trend', [VisualizationController::class, 'getYearLevelTrendData']);
     Route::get('/visualizations/dashboard', [VisualizationController::class, 'getDashboardData']);
 
+    // Advanced Analytics Routes
+    Route::get('/visualizations/time-series', [VisualizationController::class, 'getTimeSeriesData']);
+    Route::get('/visualizations/heat-map', [VisualizationController::class, 'getHeatMapData']);
+    Route::get('/visualizations/compliance-risk', [VisualizationController::class, 'getComplianceRiskData']);
+    Route::get('/visualizations/comparative-analysis', [VisualizationController::class, 'getComparativeAnalysis']);
+    Route::get('/visualizations/response-rate', [VisualizationController::class, 'getResponseRateAnalytics']);
+
     // Export Routes
     Route::get('/export/excel', [ExportController::class, 'exportExcel']);
     Route::get('/export/csv', [ExportController::class, 'exportCsv']);

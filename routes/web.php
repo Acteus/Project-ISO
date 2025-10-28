@@ -176,4 +176,14 @@ Route::prefix('api')->group(function () {
     Route::get('/visualization/track-comparison', [VisualizationController::class, 'getTrackComparisonData']);
     Route::get('/visualization/grade-trend', [VisualizationController::class, 'getGradeLevelTrendData']);
     Route::get('/visualization/dashboard', [VisualizationController::class, 'getDashboardData']);
+
+    // Advanced Analytics Visualization routes
+    Route::get('/visualizations/time-series', [VisualizationController::class, 'getTimeSeriesData']);
+    Route::get('/visualizations/heat-map', [VisualizationController::class, 'getHeatMapData']);
+    Route::get('/visualizations/compliance-risk', [VisualizationController::class, 'getComplianceRiskData']);
+    Route::get('/visualizations/comparative-analysis', [VisualizationController::class, 'getComparativeAnalysis']);
+    Route::get('/visualizations/response-rate', [VisualizationController::class, 'getResponseRateAnalytics']);
+
+    // AI Analytics routes
+    Route::get('/ai/sentiment-analysis', [AIController::class, 'analyzeSentiment']);
 });

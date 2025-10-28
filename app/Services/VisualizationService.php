@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\SurveyResponse;
+use Illuminate\Support\Facades\DB;
 
 class VisualizationService
 {
@@ -405,5 +406,353 @@ class VisualizationService
         }
 
         return $data;
+    }
+
+    /**
+     * Generate time-series trend data for specified metrics over time periods
+     */
+    public function generateTimeSeriesData($metric, $dateFrom = null, $dateTo = null, $groupBy = 'week')
+    {
+        $query = SurveyResponse::query();
+
+        if ($dateFrom) {
+            $query->where('created_at', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $query->where('created_at', '<=', $dateTo);
+        }
+
+        $responses = $query->orderBy('created_at', 'asc')->get();
+
+        // If no responses, return empty arrays
+        if ($responses->isEmpty()) {
+            return [
+                'labels' => [],
+                'data' => [],
+                'metric' => $metric,
+                'group_by' => $groupBy,
+                'date_range' => [
+                    'from' => $dateFrom,
+                    'to' => $dateTo
+                ]
+            ];
+        }
+
+        // Group responses by time period with proper date formatting
+        $groupedData = $responses->groupBy(function($response) use ($groupBy) {
+            switch ($groupBy) {
+                case 'day':
+                    return $response->created_at->format('Y-m-d');
+                case 'week':
+                    return $response->created_at->format('Y') . '-W' . $response->created_at->format('W');
+                case 'month':
+                    return $response->created_at->format('Y-m');
+                case 'year':
+                    return $response->created_at->format('Y');
+                default:
+                    return $response->created_at->format('Y') . '-W' . $response->created_at->format('W');
+            }
+        });
+
+        $labels = [];
+        $data = [];
+
+        foreach ($groupedData as $period => $periodResponses) {
+            $labels[] = $period;
+
+            // Calculate metric value based on metric type
+            switch ($metric) {
+                case 'overall_satisfaction':
+                    $data[] = round($periodResponses->avg('overall_satisfaction'), 2);
+                    break;
+                case 'learner_needs':
+                    $data[] = round(($periodResponses->avg('curriculum_relevance_rating') +
+                                     $periodResponses->avg('learning_pace_appropriateness') +
+                                     $periodResponses->avg('individual_support_availability') +
+                                     $periodResponses->avg('learning_style_accommodation')) / 4, 2);
+                    break;
+                case 'satisfaction':
+                    $data[] = round(($periodResponses->avg('teaching_quality_rating') +
+                                     $periodResponses->avg('learning_environment_rating') +
+                                     $periodResponses->avg('peer_interaction_satisfaction') +
+                                     $periodResponses->avg('extracurricular_satisfaction')) / 4, 2);
+                    break;
+                case 'success':
+                    $data[] = round(($periodResponses->avg('academic_progress_rating') +
+                                     $periodResponses->avg('skill_development_rating') +
+                                     $periodResponses->avg('critical_thinking_improvement') +
+                                     $periodResponses->avg('problem_solving_confidence')) / 4, 2);
+                    break;
+                case 'safety':
+                    $data[] = round(($periodResponses->avg('physical_safety_rating') +
+                                     $periodResponses->avg('psychological_safety_rating') +
+                                     $periodResponses->avg('bullying_prevention_effectiveness') +
+                                     $periodResponses->avg('emergency_preparedness_rating')) / 4, 2);
+                    break;
+                case 'wellbeing':
+                    $data[] = round(($periodResponses->avg('mental_health_support_rating') +
+                                     $periodResponses->avg('stress_management_support') +
+                                     $periodResponses->avg('physical_health_support') +
+                                     $periodResponses->avg('overall_wellbeing_rating')) / 4, 2);
+                    break;
+                case 'response_count':
+                    $data[] = $periodResponses->count();
+                    break;
+                default:
+                    $data[] = round($periodResponses->avg($metric), 2);
+            }
+        }
+
+        return [
+            'labels' => $labels,
+            'data' => $data,
+            'metric' => $metric,
+            'group_by' => $groupBy,
+            'date_range' => [
+                'from' => $dateFrom,
+                'to' => $dateTo
+            ]
+        ];
+    }
+
+    /**
+     * Generate heat map data for performance by track and grade level
+     */
+    public function generateHeatMapData($metric = 'overall_satisfaction')
+    {
+        $tracks = ['CSS']; // Current tracks
+        $gradeLevels = [11, 12];
+
+        $heatMapData = [];
+
+        foreach ($tracks as $track) {
+            foreach ($gradeLevels as $grade) {
+                $responses = SurveyResponse::where('track', $track)
+                    ->where('grade_level', $grade)
+                    ->get();
+
+                if ($responses->count() > 0) {
+                    $value = 0;
+                    switch ($metric) {
+                        case 'overall_satisfaction':
+                            $value = round($responses->avg('overall_satisfaction'), 2);
+                            break;
+                        case 'learner_needs':
+                            $value = round(($responses->avg('curriculum_relevance_rating') +
+                                           $responses->avg('learning_pace_appropriateness') +
+                                           $responses->avg('individual_support_availability') +
+                                           $responses->avg('learning_style_accommodation')) / 4, 2);
+                            break;
+                        case 'safety':
+                            $value = round(($responses->avg('physical_safety_rating') +
+                                           $responses->avg('psychological_safety_rating') +
+                                           $responses->avg('bullying_prevention_effectiveness') +
+                                           $responses->avg('emergency_preparedness_rating')) / 4, 2);
+                            break;
+                    }
+
+                    $heatMapData[] = [
+                        'track' => $track,
+                        'grade_level' => $grade,
+                        'value' => $value,
+                        'count' => $responses->count()
+                    ];
+                }
+            }
+        }
+
+        return [
+            'data' => $heatMapData,
+            'metric' => $metric,
+            'tracks' => $tracks,
+            'grade_levels' => $gradeLevels
+        ];
+    }
+
+    /**
+     * Generate compliance risk meter data
+     */
+    public function generateComplianceRiskData()
+    {
+        $responses = SurveyResponse::all();
+
+        if ($responses->isEmpty()) {
+            return [
+                'risk_level' => 'Unknown',
+                'risk_score' => 0,
+                'compliance_percentage' => 0,
+                'recommendations' => []
+            ];
+        }
+
+        // Calculate ISO 21001 indices
+        $learnerNeeds = round(($responses->avg('curriculum_relevance_rating') +
+                               $responses->avg('learning_pace_appropriateness') +
+                               $responses->avg('individual_support_availability') +
+                               $responses->avg('learning_style_accommodation')) / 4, 2);
+
+        $satisfaction = round(($responses->avg('teaching_quality_rating') +
+                               $responses->avg('learning_environment_rating') +
+                               $responses->avg('peer_interaction_satisfaction') +
+                               $responses->avg('extracurricular_satisfaction')) / 4, 2);
+
+        $success = round(($responses->avg('academic_progress_rating') +
+                          $responses->avg('skill_development_rating') +
+                          $responses->avg('critical_thinking_improvement') +
+                          $responses->avg('problem_solving_confidence')) / 4, 2);
+
+        $safety = round(($responses->avg('physical_safety_rating') +
+                         $responses->avg('psychological_safety_rating') +
+                         $responses->avg('bullying_prevention_effectiveness') +
+                         $responses->avg('emergency_preparedness_rating')) / 4, 2);
+
+        $wellbeing = round(($responses->avg('mental_health_support_rating') +
+                            $responses->avg('stress_management_support') +
+                            $responses->avg('physical_health_support') +
+                            $responses->avg('overall_wellbeing_rating')) / 4, 2);
+
+        // Calculate weighted compliance score
+        $complianceScore = (
+            $learnerNeeds * 0.15 +
+            $satisfaction * 0.25 +
+            $success * 0.20 +
+            $safety * 0.20 +
+            $wellbeing * 0.15 +
+            $responses->avg('overall_satisfaction') * 0.05
+        );
+
+        $compliancePercentage = round(($complianceScore / 5) * 100, 2);
+
+        // Determine risk level
+        if ($complianceScore >= 4.2) {
+            $riskLevel = 'Low';
+            $riskScore = 1;
+        } elseif ($complianceScore >= 3.5) {
+            $riskLevel = 'Medium';
+            $riskScore = 2;
+        } else {
+            $riskLevel = 'High';
+            $riskScore = 3;
+        }
+
+        // Generate recommendations
+        $recommendations = [];
+        if ($safety < 3.5) {
+            $recommendations[] = 'URGENT: Enhance safety protocols and emergency preparedness';
+        }
+        if ($wellbeing < 3.5) {
+            $recommendations[] = 'PRIORITY: Strengthen wellbeing support programs';
+        }
+        if ($satisfaction < 3.5) {
+            $recommendations[] = 'IMMEDIATE: Address learner satisfaction concerns';
+        }
+        if (empty($recommendations)) {
+            $recommendations[] = 'Continue monitoring and maintaining high standards';
+        }
+
+        return [
+            'risk_level' => $riskLevel,
+            'risk_score' => $riskScore,
+            'compliance_score' => round($complianceScore, 2),
+            'compliance_percentage' => $compliancePercentage,
+            'indices' => [
+                'learner_needs' => $learnerNeeds,
+                'satisfaction' => $satisfaction,
+                'success' => $success,
+                'safety' => $safety,
+                'wellbeing' => $wellbeing
+            ],
+            'recommendations' => $recommendations,
+            'total_responses' => $responses->count()
+        ];
+    }
+
+    /**
+     * Generate comparative period analysis (current vs previous)
+     */
+    public function generateComparativeAnalysis($currentDateFrom, $currentDateTo, $previousDateFrom, $previousDateTo)
+    {
+        $currentResponses = SurveyResponse::whereBetween('created_at', [$currentDateFrom, $currentDateTo])->get();
+        $previousResponses = SurveyResponse::whereBetween('created_at', [$previousDateFrom, $previousDateTo])->get();
+
+        $compareMetrics = function($current, $previous, $metric) {
+            $currentVal = $current->avg($metric) ?? 0;
+            $previousVal = $previous->avg($metric) ?? 0;
+            $change = $currentVal - $previousVal;
+            $percentChange = $previousVal > 0 ? round(($change / $previousVal) * 100, 2) : 0;
+
+            return [
+                'current' => round($currentVal, 2),
+                'previous' => round($previousVal, 2),
+                'change' => round($change, 2),
+                'percent_change' => $percentChange,
+                'trend' => $change > 0 ? 'up' : ($change < 0 ? 'down' : 'stable')
+            ];
+        };
+
+        return [
+            'overall_satisfaction' => $compareMetrics($currentResponses, $previousResponses, 'overall_satisfaction'),
+            'safety_index' => [
+                'current' => round(($currentResponses->avg('physical_safety_rating') + $currentResponses->avg('psychological_safety_rating')) / 2, 2),
+                'previous' => round(($previousResponses->avg('physical_safety_rating') + $previousResponses->avg('psychological_safety_rating')) / 2, 2)
+            ],
+            'response_count' => [
+                'current' => $currentResponses->count(),
+                'previous' => $previousResponses->count(),
+                'change' => $currentResponses->count() - $previousResponses->count()
+            ],
+            'date_ranges' => [
+                'current' => [$currentDateFrom, $currentDateTo],
+                'previous' => [$previousDateFrom, $previousDateTo]
+            ]
+        ];
+    }
+
+    /**
+     * Generate response rate analytics
+     */
+    public function generateResponseRateAnalytics()
+    {
+        $totalResponses = SurveyResponse::count();
+
+        $byTrack = SurveyResponse::select('track', DB::raw('count(*) as count'))
+            ->groupBy('track')
+            ->get()
+            ->pluck('count', 'track');
+
+        $byGrade = SurveyResponse::select('grade_level', DB::raw('count(*) as count'))
+            ->groupBy('grade_level')
+            ->get()
+            ->pluck('count', 'grade_level');
+
+        $bySemester = SurveyResponse::select('semester', DB::raw('count(*) as count'))
+            ->groupBy('semester')
+            ->get()
+            ->pluck('count', 'semester');
+
+        $byGender = SurveyResponse::select('gender', DB::raw('count(*) as count'))
+            ->whereNotNull('gender')
+            ->groupBy('gender')
+            ->get()
+            ->pluck('count', 'gender');
+
+        // Completion rate by time period
+        $last7Days = SurveyResponse::where('created_at', '>=', now()->subDays(7))->count();
+        $last30Days = SurveyResponse::where('created_at', '>=', now()->subDays(30))->count();
+        $last90Days = SurveyResponse::where('created_at', '>=', now()->subDays(90))->count();
+
+        return [
+            'total_responses' => $totalResponses,
+            'by_track' => $byTrack,
+            'by_grade_level' => $byGrade,
+            'by_semester' => $bySemester,
+            'by_gender' => $byGender,
+            'time_periods' => [
+                'last_7_days' => $last7Days,
+                'last_30_days' => $last30Days,
+                'last_90_days' => $last90Days
+            ]
+        ];
     }
 }
