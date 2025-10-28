@@ -795,6 +795,9 @@
             loadHeatMapData();
             loadResponseRateData();
             loadSentimentAnalysis();
+            loadWeeklyProgressData();
+            loadGoalProgressData();
+            loadWeeklyComparisonData();
             setupFilterHandlers();
 
             // Clear the week filter on page load to show all data
@@ -1460,6 +1463,230 @@
                 // Hide sentiment card if not available
                 document.getElementById('sentiment-container').style.display = 'none';
             }
+        }
+
+        // Load Weekly Progress Data
+        async function loadWeeklyProgressData() {
+            try {
+                const response = await fetch('/api/visualizations/weekly-progress', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const data = result.data;
+
+                // Initialize weekly progress chart
+                const progressCtx = document.getElementById('weeklyProgressChart').getContext('2d');
+                if (charts.weeklyProgress) {
+                    charts.weeklyProgress.destroy();
+                }
+
+                charts.weeklyProgress = new Chart(progressCtx, {
+                    type: 'line',
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 5,
+                                ticks: {
+                                    stepSize: 1
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading weekly progress data:', error);
+            }
+        }
+
+        // Load Goal Progress Data
+        async function loadGoalProgressData() {
+            try {
+                const response = await fetch('/api/visualizations/goal-progress', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const data = result.data;
+
+                // Initialize goal progress chart
+                const goalCtx = document.getElementById('goalProgressChart').getContext('2d');
+                if (charts.goalProgress) {
+                    charts.goalProgress.destroy();
+                }
+
+                charts.goalProgress = new Chart(goalCtx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            {
+                                label: 'Satisfaction Target (4.0)',
+                                data: data.labels.map(() => data.targets.satisfaction),
+                                borderColor: 'rgba(255, 193, 7, 1)',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                fill: false,
+                                pointRadius: 0
+                            },
+                            {
+                                label: 'Compliance Target (80%)',
+                                data: data.labels.map(() => data.targets.compliance),
+                                borderColor: 'rgba(40, 167, 69, 1)',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                fill: false,
+                                pointRadius: 0
+                            },
+                            ...data.datasets
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading goal progress data:', error);
+            }
+        }
+
+        // Load Weekly Comparison Data
+        async function loadWeeklyComparisonData() {
+            try {
+                const response = await fetch('/api/visualizations/weekly-comparison', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const data = result.data;
+
+                // Update progress overview cards
+                updateProgressOverview(data);
+            } catch (error) {
+                console.error('Error loading weekly comparison data:', error);
+            }
+        }
+
+        // Update Progress Overview Cards
+        function updateProgressOverview(data) {
+            const container = document.getElementById('progress-overview');
+
+            if (!data.current) {
+                container.innerHTML = '<div class="no-data-message" style="grid-column: 1 / -1; text-align: center; padding: 40px; background: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);"><h3>No Weekly Progress Data Available</h3><p>Weekly metrics will appear here once data aggregation runs.</p></div>';
+                return;
+            }
+
+            const current = data.current;
+            const previous = data.previous;
+            const comparison = data.comparison;
+
+            container.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${current.overall_satisfaction ? current.overall_satisfaction.toFixed(2) : 'N/A'}</div>
+                    <div class="stat-label">Current Week Satisfaction</div>
+                    <div class="stat-sublabel">Out of 5.00</div>
+                    ${comparison && comparison.overall_satisfaction ? `
+                        <div class="stat-trend trend-${comparison.overall_satisfaction.trend}">
+                            ${comparison.overall_satisfaction.change > 0 ? '+' : ''}${comparison.overall_satisfaction.change.toFixed(2)} vs last week
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${current.compliance_percentage ? current.compliance_percentage.toFixed(1) + '%' : 'N/A'}</div>
+                    <div class="stat-label">Compliance Score</div>
+                    <div class="stat-sublabel">Target: 80%</div>
+                    ${comparison && comparison.compliance_score ? `
+                        <div class="stat-trend trend-${comparison.compliance_score.trend}">
+                            ${comparison.compliance_score.change > 0 ? '+' : ''}${comparison.compliance_score.change.toFixed(2)} vs last week
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${current.new_responses || 0}</div>
+                    <div class="stat-label">New Responses</div>
+                    <div class="stat-sublabel">This Week</div>
+                    ${comparison && comparison.new_responses ? `
+                        <div class="stat-trend trend-${comparison.new_responses.trend}">
+                            ${comparison.new_responses.change > 0 ? '+' : ''}${comparison.new_responses.change} vs last week
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: ${current.risk_level === 'Low' ? '#28a745' : current.risk_level === 'Medium' ? '#ffc107' : '#dc3545'}">${current.risk_level || 'Unknown'}</div>
+                    <div class="stat-label">Risk Level</div>
+                    <div class="stat-sublabel">ISO 21001 Compliance</div>
+                </div>
+            `;
         }
 
         // Populate week filter dropdown

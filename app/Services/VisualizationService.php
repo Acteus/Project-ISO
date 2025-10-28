@@ -831,4 +831,329 @@ class VisualizationService
             ]
         ];
     }
+
+    /**
+     * Generate weekly progress data for trend analysis
+     */
+    public function generateWeeklyProgressData($weeks = 12)
+    {
+        $weeklyMetrics = \App\Models\WeeklyMetric::orderBy('week_start_date', 'desc')
+            ->limit($weeks)
+            ->get()
+            ->reverse(); // Reverse to chronological order
+
+        $data = [
+            'labels' => [],
+            'datasets' => [
+                [
+                    'label' => 'Overall Satisfaction',
+                    'data' => [],
+                    'borderColor' => 'rgba(66, 133, 244, 1)',
+                    'backgroundColor' => 'rgba(66, 133, 244, 0.1)',
+                    'tension' => 0.4,
+                    'fill' => true,
+                ],
+                [
+                    'label' => 'Compliance Score',
+                    'data' => [],
+                    'borderColor' => 'rgba(40, 167, 69, 1)',
+                    'backgroundColor' => 'rgba(40, 167, 69, 0.1)',
+                    'tension' => 0.4,
+                    'fill' => true,
+                ],
+                [
+                    'label' => 'Safety Index',
+                    'data' => [],
+                    'borderColor' => 'rgba(255, 193, 7, 1)',
+                    'backgroundColor' => 'rgba(255, 193, 7, 0.1)',
+                    'tension' => 0.4,
+                    'fill' => true,
+                ]
+            ]
+        ];
+
+        foreach ($weeklyMetrics as $metric) {
+            $data['labels'][] = $metric->date_range_label;
+            $data['datasets'][0]['data'][] = $metric->overall_satisfaction ?? 0;
+            $data['datasets'][1]['data'][] = $metric->compliance_score ?? 0;
+            $data['datasets'][2]['data'][] = $metric->safety_index ?? 0;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Generate goal tracking progress data
+     */
+    public function generateGoalProgressData($weeks = 12)
+    {
+        $weeklyMetrics = \App\Models\WeeklyMetric::orderBy('week_start_date', 'desc')
+            ->limit($weeks)
+            ->get()
+            ->reverse();
+
+        $data = [
+            'labels' => [],
+            'datasets' => [
+                [
+                    'label' => 'Satisfaction Target (4.0)',
+                    'data' => [],
+                    'borderColor' => 'rgba(66, 133, 244, 1)',
+                    'backgroundColor' => 'rgba(66, 133, 244, 0.1)',
+                    'tension' => 0.4,
+                ],
+                [
+                    'label' => 'Compliance Target (80%)',
+                    'data' => [],
+                    'borderColor' => 'rgba(40, 167, 69, 1)',
+                    'backgroundColor' => 'rgba(40, 167, 69, 0.1)',
+                    'tension' => 0.4,
+                ],
+                [
+                    'label' => 'Response Target (50)',
+                    'data' => [],
+                    'borderColor' => 'rgba(255, 193, 7, 1)',
+                    'backgroundColor' => 'rgba(255, 193, 7, 0.1)',
+                    'tension' => 0.4,
+                    'type' => 'bar',
+                ]
+            ],
+            'targets' => [
+                'satisfaction' => 4.0,
+                'compliance' => 80.0,
+                'responses' => 50
+            ]
+        ];
+
+        foreach ($weeklyMetrics as $metric) {
+            $data['labels'][] = $metric->date_range_label;
+            $data['datasets'][0]['data'][] = $metric->overall_satisfaction ?? 0;
+            $data['datasets'][1]['data'][] = $metric->compliance_percentage ?? 0;
+            $data['datasets'][2]['data'][] = $metric->new_responses ?? 0;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Generate weekly comparison data (current vs previous week)
+     */
+    public function generateWeeklyComparisonData()
+    {
+        $currentWeek = \App\Models\WeeklyMetric::orderBy('week_start_date', 'desc')->first();
+        $previousWeek = \App\Models\WeeklyMetric::orderBy('week_start_date', 'desc')->skip(1)->first();
+
+        if (!$currentWeek) {
+            return [
+                'current' => null,
+                'previous' => null,
+                'comparison' => []
+            ];
+        }
+
+        $comparison = [
+            'overall_satisfaction' => [
+                'current' => $currentWeek->overall_satisfaction,
+                'previous' => $previousWeek ? $previousWeek->overall_satisfaction : null,
+                'change' => $previousWeek ? round($currentWeek->overall_satisfaction - $previousWeek->overall_satisfaction, 2) : null,
+                'trend' => $previousWeek ? ($currentWeek->overall_satisfaction > $previousWeek->overall_satisfaction ? 'up' : ($currentWeek->overall_satisfaction < $previousWeek->overall_satisfaction ? 'down' : 'stable')) : null
+            ],
+            'compliance_score' => [
+                'current' => $currentWeek->compliance_score,
+                'previous' => $previousWeek ? $previousWeek->compliance_score : null,
+                'change' => $previousWeek ? round($currentWeek->compliance_score - $previousWeek->compliance_score, 2) : null,
+                'trend' => $previousWeek ? ($currentWeek->compliance_score > $previousWeek->compliance_score ? 'up' : ($currentWeek->compliance_score < $previousWeek->compliance_score ? 'down' : 'stable')) : null
+            ],
+            'new_responses' => [
+                'current' => $currentWeek->new_responses,
+                'previous' => $previousWeek ? $previousWeek->new_responses : null,
+                'change' => $previousWeek ? $currentWeek->new_responses - $previousWeek->new_responses : null,
+                'trend' => $previousWeek ? ($currentWeek->new_responses > $previousWeek->new_responses ? 'up' : ($currentWeek->new_responses < $previousWeek->new_responses ? 'down' : 'stable')) : null
+            ]
+        ];
+
+        return [
+            'current' => $currentWeek,
+            'previous' => $previousWeek,
+            'comparison' => $comparison
+        ];
+    }
+
+    /**
+     * Generate monthly comprehensive report data
+     */
+    public function generateMonthlyReportData($year = null, $month = null)
+    {
+        $year = $year ?? now()->year;
+        $month = $month ?? now()->month;
+
+        $startOfMonth = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
+        $endOfMonth = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
+
+        $weeklyMetrics = \App\Models\WeeklyMetric::whereBetween('week_start_date', [$startOfMonth, $endOfMonth])
+            ->orderBy('week_start_date')
+            ->get();
+
+        $monthlyAverages = [
+            'overall_satisfaction' => $weeklyMetrics->avg('overall_satisfaction'),
+            'compliance_score' => $weeklyMetrics->avg('compliance_score'),
+            'safety_index' => $weeklyMetrics->avg('safety_index'),
+            'total_responses' => $weeklyMetrics->sum('new_responses'),
+            'weeks_covered' => $weeklyMetrics->count()
+        ];
+
+        $trends = [];
+        if ($weeklyMetrics->count() >= 2) {
+            $firstWeek = $weeklyMetrics->first();
+            $lastWeek = $weeklyMetrics->last();
+
+            $trends = [
+                'satisfaction_change' => $lastWeek->overall_satisfaction - $firstWeek->overall_satisfaction,
+                'compliance_change' => $lastWeek->compliance_score - $firstWeek->compliance_score,
+                'response_total' => $weeklyMetrics->sum('new_responses')
+            ];
+        }
+
+        return [
+            'month' => $startOfMonth->format('F Y'),
+            'year' => $year,
+            'monthly_averages' => $monthlyAverages,
+            'trends' => $trends,
+            'weekly_data' => $weeklyMetrics,
+            'targets_achieved' => [
+                'satisfaction' => $monthlyAverages['overall_satisfaction'] >= 4.0,
+                'compliance' => $monthlyAverages['compliance_score'] >= 4.0,
+                'responses' => $monthlyAverages['total_responses'] >= 600 // 50 per week * 12 weeks
+            ]
+        ];
+    }
+
+    /**
+     * Generate progress alerts for admin dashboard
+     */
+    public function generateProgressAlerts()
+    {
+        $alerts = [];
+
+        // Get latest weekly metrics
+        $latestWeek = \App\Models\WeeklyMetric::orderBy('week_start_date', 'desc')->first();
+
+        if ($latestWeek) {
+            // Check if targets are being met
+            if (!$latestWeek->satisfaction_target_met) {
+                $alerts[] = [
+                    'type' => 'warning',
+                    'icon' => '⚠️',
+                    'title' => 'Satisfaction Target Not Met',
+                    'message' => "Current satisfaction score: {$latestWeek->overall_satisfaction}/5.00. Target: 4.0+",
+                    'action' => [
+                        'text' => 'View Analytics',
+                        'url' => '/analytics'
+                    ]
+                ];
+            }
+
+            if (!$latestWeek->compliance_target_met) {
+                $alerts[] = [
+                    'type' => 'danger',
+                    'icon' => '🚨',
+                    'title' => 'Compliance Target Not Met',
+                    'message' => "Current compliance: {$latestWeek->compliance_percentage}%. Target: 80%+",
+                    'action' => [
+                        'text' => 'View Analytics',
+                        'url' => '/analytics'
+                    ]
+                ];
+            }
+
+            if (!$latestWeek->response_target_met) {
+                $alerts[] = [
+                    'type' => 'info',
+                    'icon' => '📊',
+                    'title' => 'Low Response Volume',
+                    'message' => "Only {$latestWeek->new_responses} responses this week. Target: 50+",
+                    'action' => [
+                        'text' => 'View Analytics',
+                        'url' => '/analytics'
+                    ]
+                ];
+            }
+
+            // Check for significant changes
+            $previousWeek = \App\Models\WeeklyMetric::where('year', $latestWeek->year)
+                ->where('week_number', $latestWeek->week_number - 1)
+                ->first();
+
+            if ($previousWeek) {
+                if ($latestWeek->satisfaction_trend < -10) {
+                    $alerts[] = [
+                        'type' => 'danger',
+                        'icon' => '📉',
+                        'title' => 'Satisfaction Declining',
+                        'message' => "Satisfaction dropped by {$latestWeek->satisfaction_trend}% from last week",
+                        'action' => [
+                            'text' => 'View Details',
+                            'url' => '/analytics'
+                        ]
+                    ];
+                }
+
+                if ($latestWeek->compliance_trend < -5) {
+                    $alerts[] = [
+                        'type' => 'warning',
+                        'icon' => '⚠️',
+                        'title' => 'Compliance Declining',
+                        'message' => "Compliance dropped by {$latestWeek->compliance_trend}% from last week",
+                        'action' => [
+                            'text' => 'View Details',
+                            'url' => '/analytics'
+                        ]
+                    ];
+                }
+            }
+
+            // Check for overdue goals
+            $overdueGoals = \App\Models\Goal::overdue()->count();
+            if ($overdueGoals > 0) {
+                $alerts[] = [
+                    'type' => 'warning',
+                    'icon' => '⏰',
+                    'title' => 'Overdue Goals',
+                    'message' => "You have {$overdueGoals} goal(s) past their target date",
+                    'action' => [
+                        'text' => 'Manage Goals',
+                        'url' => '/admin/goals'
+                    ]
+                ];
+            }
+
+            // Success alerts for good performance
+            if ($latestWeek->all_targets_met) {
+                $alerts[] = [
+                    'type' => 'success',
+                    'icon' => '🎉',
+                    'title' => 'All Targets Achieved!',
+                    'message' => 'Congratulations! All weekly targets have been met.',
+                    'action' => [
+                        'text' => 'View Progress',
+                        'url' => '/analytics'
+                    ]
+                ];
+            }
+        } else {
+            // No weekly data yet
+            $alerts[] = [
+                'type' => 'info',
+                'icon' => '📈',
+                'title' => 'Weekly Progress Tracking Available',
+                'message' => 'Weekly metrics and progress tracking will appear here once data aggregation runs.',
+                'action' => [
+                    'text' => 'View Analytics',
+                    'url' => '/analytics'
+                ]
+            ];
+        }
+
+        return $alerts;
+    }
 }

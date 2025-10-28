@@ -209,4 +209,76 @@ class VisualizationController extends Controller
             'data' => $data
         ]);
     }
+
+    /**
+     * Get weekly progress data for trend analysis
+     */
+    public function getWeeklyProgressData(Request $request)
+    {
+        $weeks = $request->query('weeks', 12);
+
+        $data = $this->visualizationService->generateWeeklyProgressData($weeks);
+
+        return response()->json([
+            'message' => 'Weekly progress data generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get goal tracking progress data
+     */
+    public function getGoalProgressData(Request $request)
+    {
+        $weeks = $request->query('weeks', 12);
+
+        $data = $this->visualizationService->generateGoalProgressData($weeks);
+
+        return response()->json([
+            'message' => 'Goal progress data generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get weekly comparison data (current vs previous week)
+     */
+    public function getWeeklyComparisonData(Request $request)
+    {
+        $data = $this->visualizationService->generateWeeklyComparisonData();
+
+        return response()->json([
+            'message' => 'Weekly comparison data generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get monthly comprehensive report data
+     */
+    public function getMonthlyReportData(Request $request)
+    {
+        $year = $request->query('year');
+        $month = $request->query('month');
+
+        $data = $this->visualizationService->generateMonthlyReportData($year, $month);
+
+        return response()->json([
+            'message' => 'Monthly report data generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get progress alerts for admin dashboard
+     */
+    public function getProgressAlerts(Request $request)
+    {
+        $alerts = $this->visualizationService->generateProgressAlerts();
+
+        return response()->json([
+            'message' => 'Progress alerts generated successfully',
+            'data' => $alerts
+        ]);
+    }
 }
