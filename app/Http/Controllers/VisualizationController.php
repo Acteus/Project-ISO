@@ -119,4 +119,166 @@ class VisualizationController extends Controller
             'data' => $dashboardData
         ]);
     }
+
+    /**
+     * Get time-series trend data for analytics
+     */
+    public function getTimeSeriesData(Request $request)
+    {
+        $metric = $request->query('metric', 'overall_satisfaction');
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+        $groupBy = $request->query('group_by', 'week');
+
+        $data = $this->visualizationService->generateTimeSeriesData($metric, $dateFrom, $dateTo, $groupBy);
+
+        return response()->json([
+            'message' => 'Time-series data generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get heat map data for track/grade performance
+     */
+    public function getHeatMapData(Request $request)
+    {
+        $metric = $request->query('metric', 'overall_satisfaction');
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+
+        $data = $this->visualizationService->generateHeatMapData($metric, $dateFrom, $dateTo);
+
+        return response()->json([
+            'message' => 'Heat map data generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get compliance risk meter data
+     */
+    public function getComplianceRiskData(Request $request)
+    {
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+
+        $data = $this->visualizationService->generateComplianceRiskData($dateFrom, $dateTo);
+
+        return response()->json([
+            'message' => 'Compliance risk data generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get comparative period analysis
+     */
+    public function getComparativeAnalysis(Request $request)
+    {
+        $currentDateFrom = $request->query('current_from');
+        $currentDateTo = $request->query('current_to');
+        $previousDateFrom = $request->query('previous_from');
+        $previousDateTo = $request->query('previous_to');
+
+        $data = $this->visualizationService->generateComparativeAnalysis(
+            $currentDateFrom,
+            $currentDateTo,
+            $previousDateFrom,
+            $previousDateTo
+        );
+
+        return response()->json([
+            'message' => 'Comparative analysis generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get response rate analytics
+     */
+    public function getResponseRateAnalytics(Request $request)
+    {
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+
+        $data = $this->visualizationService->generateResponseRateAnalytics($dateFrom, $dateTo);
+
+        return response()->json([
+            'message' => 'Response rate analytics generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get weekly progress data for trend analysis
+     */
+    public function getWeeklyProgressData(Request $request)
+    {
+        $weeks = $request->query('weeks', 12);
+
+        $data = $this->visualizationService->generateWeeklyProgressData($weeks);
+
+        return response()->json([
+            'message' => 'Weekly progress data generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get goal tracking progress data
+     */
+    public function getGoalProgressData(Request $request)
+    {
+        $weeks = $request->query('weeks', 12);
+
+        $data = $this->visualizationService->generateGoalProgressData($weeks);
+
+        return response()->json([
+            'message' => 'Goal progress data generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get weekly comparison data (current vs previous week)
+     */
+    public function getWeeklyComparisonData(Request $request)
+    {
+        $data = $this->visualizationService->generateWeeklyComparisonData();
+
+        return response()->json([
+            'message' => 'Weekly comparison data generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get monthly comprehensive report data
+     */
+    public function getMonthlyReportData(Request $request)
+    {
+        $year = $request->query('year');
+        $month = $request->query('month');
+
+        $data = $this->visualizationService->generateMonthlyReportData($year, $month);
+
+        return response()->json([
+            'message' => 'Monthly report data generated successfully',
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Get progress alerts for admin dashboard
+     */
+    public function getProgressAlerts(Request $request)
+    {
+        $alerts = $this->visualizationService->generateProgressAlerts();
+
+        return response()->json([
+            'message' => 'Progress alerts generated successfully',
+            'data' => $alerts
+        ]);
+    }
 }

@@ -283,6 +283,11 @@
             box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
         }
 
+        .action-card.reports .action-card-icon {
+            background: linear-gradient(135deg, #6f42c1, #5a32a3);
+            box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+        }
+
         .action-card-icon svg {
             width: 40px;
             height: 40px;
@@ -343,6 +348,7 @@
                 <!-- Desktop navigation -->
                 <nav class="desktop-nav">
                     <a href="{{ route('admin.dashboard') }}" class="nav-link active">Dashboard</a>
+                    <a href="{{ route('admin.reports') }}" class="nav-link">Reports</a>
                     <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                         @csrf
                         <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
@@ -363,6 +369,11 @@
             <div class="dashboard-header">
                 <h1>Admin Dashboard</h1>
                 <p>Welcome back, {{ $admin->name }}! Here's your ISO 21001 Survey analytics overview.</p>
+            </div>
+
+            <!-- Progress Alerts Section -->
+            <div class="progress-alerts" id="progress-alerts" style="margin-bottom: 30px;">
+                <!-- Dynamic alerts loaded via JavaScript -->
             </div>
 
             <!-- Admin Information -->
@@ -438,6 +449,17 @@
                     <p>Review system audit logs to ensure compliance with ISO 21001 traceability requirements.</p>
                     <a href="{{ route('admin.audit.logs') }}" class="btn btn-warning">View Logs</a>
                 </div>
+
+                <div class="action-card reports">
+                    <div class="action-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                        </svg>
+                    </div>
+                    <h3>Send Reports</h3>
+                    <p>Send weekly progress reports and monthly compliance reports to administrators via email.</p>
+                    <a href="{{ route('admin.reports') }}" class="btn btn-primary">Manage Reports</a>
+                </div>
             </div>
 
             <!-- Recent Responses -->
@@ -509,6 +531,74 @@
     <script>
         // Set current year
         document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        // Load progress alerts
+        async function loadProgressAlerts() {
+            try {
+                const response = await fetch('/api/visualizations/progress-alerts', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const alerts = result.data;
+
+                updateProgressAlerts(alerts);
+            } catch (error) {
+                console.error('Error loading progress alerts:', error);
+            }
+        }
+
+        // Update progress alerts display
+        function updateProgressAlerts(alerts) {
+            const container = document.getElementById('progress-alerts');
+
+            if (!alerts || alerts.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let alertsHtml = '';
+
+            alerts.forEach(alert => {
+                const alertClass = alert.type === 'success' ? 'alert-success' :
+                                 alert.type === 'warning' ? 'alert-warning' :
+                                 alert.type === 'danger' ? 'alert-danger' : 'alert-info';
+
+                alertsHtml += `
+                    <div class="alert ${alertClass}" style="
+                        padding: 15px 20px;
+                        margin-bottom: 15px;
+                        border-radius: 8px;
+                        border-left: 4px solid;
+                        background: white;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    ">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            ${alert.icon ? `<div style="font-size: 20px;">${alert.icon}</div>` : ''}
+                            <div style="flex: 1;">
+                                <strong>${alert.title}</strong>
+                                <div style="margin-top: 5px; color: #666;">${alert.message}</div>
+                            </div>
+                            ${alert.action ? `<a href="${alert.action.url}" class="btn btn-sm" style="background: rgba(66,133,244,1); color: white; padding: 5px 15px; border-radius: 4px; text-decoration: none; font-size: 12px;">${alert.action.text}</a>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = alertsHtml;
+        }
+
+        // Load progress alerts on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProgressAlerts();
+        });
 
         console.log('Admin dashboard loaded');
     </script>

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\SurveyResponse;
+use Illuminate\Support\Facades\DB;
 
 class VisualizationService
 {
@@ -405,5 +406,754 @@ class VisualizationService
         }
 
         return $data;
+    }
+
+    /**
+     * Generate time-series trend data for specified metrics over time periods
+     */
+    public function generateTimeSeriesData($metric, $dateFrom = null, $dateTo = null, $groupBy = 'week')
+    {
+        $query = SurveyResponse::query();
+
+        if ($dateFrom) {
+            $query->where('created_at', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $query->where('created_at', '<=', $dateTo);
+        }
+
+        $responses = $query->orderBy('created_at', 'asc')->get();
+
+        // If no responses, return empty arrays
+        if ($responses->isEmpty()) {
+            return [
+                'labels' => [],
+                'data' => [],
+                'metric' => $metric,
+                'group_by' => $groupBy,
+                'date_range' => [
+                    'from' => $dateFrom,
+                    'to' => $dateTo
+                ]
+            ];
+        }
+
+        // Group responses by time period with proper date formatting
+        $groupedData = $responses->groupBy(function($response) use ($groupBy) {
+            switch ($groupBy) {
+                case 'day':
+                    return $response->created_at->format('Y-m-d');
+                case 'week':
+                    return $response->created_at->format('Y') . '-W' . $response->created_at->format('W');
+                case 'month':
+                    return $response->created_at->format('Y-m');
+                case 'year':
+                    return $response->created_at->format('Y');
+                default:
+                    return $response->created_at->format('Y') . '-W' . $response->created_at->format('W');
+            }
+        });
+
+        $labels = [];
+        $data = [];
+
+        foreach ($groupedData as $period => $periodResponses) {
+            $labels[] = $period;
+
+            // Calculate metric value based on metric type
+            switch ($metric) {
+                case 'overall_satisfaction':
+                    $data[] = round($periodResponses->avg('overall_satisfaction'), 2);
+                    break;
+                case 'learner_needs':
+                    $data[] = round(($periodResponses->avg('curriculum_relevance_rating') +
+                                     $periodResponses->avg('learning_pace_appropriateness') +
+                                     $periodResponses->avg('individual_support_availability') +
+                                     $periodResponses->avg('learning_style_accommodation')) / 4, 2);
+                    break;
+                case 'satisfaction':
+                    $data[] = round(($periodResponses->avg('teaching_quality_rating') +
+                                     $periodResponses->avg('learning_environment_rating') +
+                                     $periodResponses->avg('peer_interaction_satisfaction') +
+                                     $periodResponses->avg('extracurricular_satisfaction')) / 4, 2);
+                    break;
+                case 'success':
+                    $data[] = round(($periodResponses->avg('academic_progress_rating') +
+                                     $periodResponses->avg('skill_development_rating') +
+                                     $periodResponses->avg('critical_thinking_improvement') +
+                                     $periodResponses->avg('problem_solving_confidence')) / 4, 2);
+                    break;
+                case 'safety':
+                    $data[] = round(($periodResponses->avg('physical_safety_rating') +
+                                     $periodResponses->avg('psychological_safety_rating') +
+                                     $periodResponses->avg('bullying_prevention_effectiveness') +
+                                     $periodResponses->avg('emergency_preparedness_rating')) / 4, 2);
+                    break;
+                case 'wellbeing':
+                    $data[] = round(($periodResponses->avg('mental_health_support_rating') +
+                                     $periodResponses->avg('stress_management_support') +
+                                     $periodResponses->avg('physical_health_support') +
+                                     $periodResponses->avg('overall_wellbeing_rating')) / 4, 2);
+                    break;
+                case 'response_count':
+                    $data[] = $periodResponses->count();
+                    break;
+                default:
+                    $data[] = round($periodResponses->avg($metric), 2);
+            }
+        }
+
+        return [
+            'labels' => $labels,
+            'data' => $data,
+            'metric' => $metric,
+            'group_by' => $groupBy,
+            'date_range' => [
+                'from' => $dateFrom,
+                'to' => $dateTo
+            ]
+        ];
+    }
+
+    /**
+     * Generate heat map data for performance by track and grade level
+     */
+    public function generateHeatMapData($metric = 'overall_satisfaction', $dateFrom = null, $dateTo = null)
+    {
+        $tracks = ['CSS']; // Current tracks
+        $gradeLevels = [11, 12];
+
+        $heatMapData = [];
+
+        foreach ($tracks as $track) {
+            foreach ($gradeLevels as $grade) {
+                $query = SurveyResponse::where('track', $track)
+                    ->where('grade_level', $grade);
+
+                // Apply date filters
+                if ($dateFrom && $dateTo) {
+                    $query->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+                } elseif ($dateFrom) {
+                    $query->where('created_at', '>=', $dateFrom . ' 00:00:00');
+                } elseif ($dateTo) {
+                    $query->where('created_at', '<=', $dateTo . ' 23:59:59');
+                }
+
+                $responses = $query->get();
+
+                if ($responses->count() > 0) {
+                    $value = 0;
+                    switch ($metric) {
+                        case 'overall_satisfaction':
+                            $value = round($responses->avg('overall_satisfaction'), 2);
+                            break;
+                        case 'learner_needs':
+                            $value = round(($responses->avg('curriculum_relevance_rating') +
+                                           $responses->avg('learning_pace_appropriateness') +
+                                           $responses->avg('individual_support_availability') +
+                                           $responses->avg('learning_style_accommodation')) / 4, 2);
+                            break;
+                        case 'safety':
+                            $value = round(($responses->avg('physical_safety_rating') +
+                                           $responses->avg('psychological_safety_rating') +
+                                           $responses->avg('bullying_prevention_effectiveness') +
+                                           $responses->avg('emergency_preparedness_rating')) / 4, 2);
+                            break;
+                    }
+
+                    $heatMapData[] = [
+                        'track' => $track,
+                        'grade_level' => $grade,
+                        'value' => $value,
+                        'count' => $responses->count()
+                    ];
+                }
+            }
+        }
+
+        return [
+            'data' => $heatMapData,
+            'metric' => $metric,
+            'tracks' => $tracks,
+            'grade_levels' => $gradeLevels
+        ];
+    }
+
+    /**
+     * Generate compliance risk meter data
+     */
+    public function generateComplianceRiskData($dateFrom = null, $dateTo = null)
+    {
+        $query = SurveyResponse::query();
+
+        // Apply date filters
+        if ($dateFrom && $dateTo) {
+            $query->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+        } elseif ($dateFrom) {
+            $query->where('created_at', '>=', $dateFrom . ' 00:00:00');
+        } elseif ($dateTo) {
+            $query->where('created_at', '<=', $dateTo . ' 23:59:59');
+        }
+
+        $responses = $query->get();
+
+        if ($responses->isEmpty()) {
+            return [
+                'risk_level' => 'Unknown',
+                'risk_score' => 0,
+                'compliance_percentage' => 0,
+                'recommendations' => []
+            ];
+        }
+
+        // Calculate ISO 21001 indices
+        $learnerNeeds = round(($responses->avg('curriculum_relevance_rating') +
+                               $responses->avg('learning_pace_appropriateness') +
+                               $responses->avg('individual_support_availability') +
+                               $responses->avg('learning_style_accommodation')) / 4, 2);
+
+        $satisfaction = round(($responses->avg('teaching_quality_rating') +
+                               $responses->avg('learning_environment_rating') +
+                               $responses->avg('peer_interaction_satisfaction') +
+                               $responses->avg('extracurricular_satisfaction')) / 4, 2);
+
+        $success = round(($responses->avg('academic_progress_rating') +
+                          $responses->avg('skill_development_rating') +
+                          $responses->avg('critical_thinking_improvement') +
+                          $responses->avg('problem_solving_confidence')) / 4, 2);
+
+        $safety = round(($responses->avg('physical_safety_rating') +
+                         $responses->avg('psychological_safety_rating') +
+                         $responses->avg('bullying_prevention_effectiveness') +
+                         $responses->avg('emergency_preparedness_rating')) / 4, 2);
+
+        $wellbeing = round(($responses->avg('mental_health_support_rating') +
+                            $responses->avg('stress_management_support') +
+                            $responses->avg('physical_health_support') +
+                            $responses->avg('overall_wellbeing_rating')) / 4, 2);
+
+        // Calculate weighted compliance score
+        $complianceScore = (
+            $learnerNeeds * 0.15 +
+            $satisfaction * 0.25 +
+            $success * 0.20 +
+            $safety * 0.20 +
+            $wellbeing * 0.15 +
+            $responses->avg('overall_satisfaction') * 0.05
+        );
+
+        $compliancePercentage = round(($complianceScore / 5) * 100, 2);
+
+        // Determine risk level
+        if ($complianceScore >= 4.2) {
+            $riskLevel = 'Low';
+            $riskScore = 1;
+        } elseif ($complianceScore >= 3.5) {
+            $riskLevel = 'Medium';
+            $riskScore = 2;
+        } else {
+            $riskLevel = 'High';
+            $riskScore = 3;
+        }
+
+        // Generate recommendations
+        $recommendations = [];
+        if ($safety < 3.5) {
+            $recommendations[] = 'URGENT: Enhance safety protocols and emergency preparedness';
+        }
+        if ($wellbeing < 3.5) {
+            $recommendations[] = 'PRIORITY: Strengthen wellbeing support programs';
+        }
+        if ($satisfaction < 3.5) {
+            $recommendations[] = 'IMMEDIATE: Address learner satisfaction concerns';
+        }
+        if (empty($recommendations)) {
+            $recommendations[] = 'Continue monitoring and maintaining high standards';
+        }
+
+        return [
+            'risk_level' => $riskLevel,
+            'risk_score' => $riskScore,
+            'compliance_score' => round($complianceScore, 2),
+            'compliance_percentage' => $compliancePercentage,
+            'indices' => [
+                'learner_needs' => $learnerNeeds,
+                'satisfaction' => $satisfaction,
+                'success' => $success,
+                'safety' => $safety,
+                'wellbeing' => $wellbeing
+            ],
+            'recommendations' => $recommendations,
+            'total_responses' => $responses->count()
+        ];
+    }
+
+    /**
+     * Generate comparative period analysis (current vs previous)
+     */
+    public function generateComparativeAnalysis($currentDateFrom, $currentDateTo, $previousDateFrom, $previousDateTo)
+    {
+        $currentResponses = SurveyResponse::whereBetween('created_at', [$currentDateFrom, $currentDateTo])->get();
+        $previousResponses = SurveyResponse::whereBetween('created_at', [$previousDateFrom, $previousDateTo])->get();
+
+        $compareMetrics = function($current, $previous, $metric) {
+            $currentVal = $current->avg($metric) ?? 0;
+            $previousVal = $previous->avg($metric) ?? 0;
+            $change = $currentVal - $previousVal;
+            $percentChange = $previousVal > 0 ? round(($change / $previousVal) * 100, 2) : 0;
+
+            return [
+                'current' => round($currentVal, 2),
+                'previous' => round($previousVal, 2),
+                'change' => round($change, 2),
+                'percent_change' => $percentChange,
+                'trend' => $change > 0 ? 'up' : ($change < 0 ? 'down' : 'stable')
+            ];
+        };
+
+        return [
+            'overall_satisfaction' => $compareMetrics($currentResponses, $previousResponses, 'overall_satisfaction'),
+            'safety_index' => [
+                'current' => round(($currentResponses->avg('physical_safety_rating') + $currentResponses->avg('psychological_safety_rating')) / 2, 2),
+                'previous' => round(($previousResponses->avg('physical_safety_rating') + $previousResponses->avg('psychological_safety_rating')) / 2, 2)
+            ],
+            'response_count' => [
+                'current' => $currentResponses->count(),
+                'previous' => $previousResponses->count(),
+                'change' => $currentResponses->count() - $previousResponses->count()
+            ],
+            'date_ranges' => [
+                'current' => [$currentDateFrom, $currentDateTo],
+                'previous' => [$previousDateFrom, $previousDateTo]
+            ]
+        ];
+    }
+
+    /**
+     * Generate response rate analytics
+     */
+    public function generateResponseRateAnalytics($dateFrom = null, $dateTo = null)
+    {
+        $query = SurveyResponse::query();
+
+        // Apply date filters
+        if ($dateFrom && $dateTo) {
+            $query->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+        } elseif ($dateFrom) {
+            $query->where('created_at', '>=', $dateFrom . ' 00:00:00');
+        } elseif ($dateTo) {
+            $query->where('created_at', '<=', $dateTo . ' 23:59:59');
+        }
+
+        $totalResponses = $query->count();
+
+        $byTrackQuery = SurveyResponse::select('track', DB::raw('count(*) as count'))
+            ->groupBy('track');
+
+        // Apply date filters to byTrack query
+        if ($dateFrom && $dateTo) {
+            $byTrackQuery->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+        } elseif ($dateFrom) {
+            $byTrackQuery->where('created_at', '>=', $dateFrom . ' 00:00:00');
+        } elseif ($dateTo) {
+            $byTrackQuery->where('created_at', '<=', $dateTo . ' 23:59:59');
+        }
+
+        $byTrack = $byTrackQuery->get()
+            ->pluck('count', 'track');
+
+        $byGradeQuery = SurveyResponse::select('grade_level', DB::raw('count(*) as count'))
+            ->groupBy('grade_level');
+
+        // Apply date filters to byGrade query
+        if ($dateFrom && $dateTo) {
+            $byGradeQuery->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+        } elseif ($dateFrom) {
+            $byGradeQuery->where('created_at', '>=', $dateFrom . ' 00:00:00');
+        } elseif ($dateTo) {
+            $byGradeQuery->where('created_at', '<=', $dateTo . ' 23:59:59');
+        }
+
+        $byGrade = $byGradeQuery->get()
+            ->pluck('count', 'grade_level');
+
+        $bySemesterQuery = SurveyResponse::select('semester', DB::raw('count(*) as count'))
+            ->groupBy('semester');
+
+        // Apply date filters to bySemester query
+        if ($dateFrom && $dateTo) {
+            $bySemesterQuery->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+        } elseif ($dateFrom) {
+            $bySemesterQuery->where('created_at', '>=', $dateFrom . ' 00:00:00');
+        } elseif ($dateTo) {
+            $bySemesterQuery->where('created_at', '<=', $dateTo . ' 23:59:59');
+        }
+
+        $bySemester = $bySemesterQuery->get()
+            ->pluck('count', 'semester');
+
+        $byGenderQuery = SurveyResponse::select('gender', DB::raw('count(*) as count'))
+            ->whereNotNull('gender')
+            ->groupBy('gender');
+
+        // Apply date filters to byGender query
+        if ($dateFrom && $dateTo) {
+            $byGenderQuery->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+        } elseif ($dateFrom) {
+            $byGenderQuery->where('created_at', '>=', $dateFrom . ' 00:00:00');
+        } elseif ($dateTo) {
+            $byGenderQuery->where('created_at', '<=', $dateTo . ' 23:59:59');
+        }
+
+        $byGender = $byGenderQuery->get()
+            ->pluck('count', 'gender');
+
+        // Completion rate by time period (don't apply custom date filters to these)
+        $last7DaysQuery = SurveyResponse::where('created_at', '>=', now()->subDays(7));
+        $last30DaysQuery = SurveyResponse::where('created_at', '>=', now()->subDays(30));
+        $last90DaysQuery = SurveyResponse::where('created_at', '>=', now()->subDays(90));
+
+        $last7Days = $last7DaysQuery->count();
+        $last30Days = $last30DaysQuery->count();
+        $last90Days = $last90DaysQuery->count();
+
+        return [
+            'total_responses' => $totalResponses,
+            'by_track' => $byTrack,
+            'by_grade_level' => $byGrade,
+            'by_semester' => $bySemester,
+            'by_gender' => $byGender,
+            'time_periods' => [
+                'last_7_days' => $last7Days,
+                'last_30_days' => $last30Days,
+                'last_90_days' => $last90Days
+            ]
+        ];
+    }
+
+    /**
+     * Generate weekly progress data for trend analysis
+     */
+    public function generateWeeklyProgressData($weeks = 12)
+    {
+        $weeklyMetrics = \App\Models\WeeklyMetric::orderBy('week_start_date', 'desc')
+            ->limit($weeks)
+            ->get()
+            ->reverse(); // Reverse to chronological order
+
+        $data = [
+            'labels' => [],
+            'datasets' => [
+                [
+                    'label' => 'Overall Satisfaction',
+                    'data' => [],
+                    'borderColor' => 'rgba(66, 133, 244, 1)',
+                    'backgroundColor' => 'rgba(66, 133, 244, 0.1)',
+                    'tension' => 0.4,
+                    'fill' => true,
+                ],
+                [
+                    'label' => 'Compliance Score',
+                    'data' => [],
+                    'borderColor' => 'rgba(40, 167, 69, 1)',
+                    'backgroundColor' => 'rgba(40, 167, 69, 0.1)',
+                    'tension' => 0.4,
+                    'fill' => true,
+                ],
+                [
+                    'label' => 'Safety Index',
+                    'data' => [],
+                    'borderColor' => 'rgba(255, 193, 7, 1)',
+                    'backgroundColor' => 'rgba(255, 193, 7, 0.1)',
+                    'tension' => 0.4,
+                    'fill' => true,
+                ]
+            ]
+        ];
+
+        foreach ($weeklyMetrics as $metric) {
+            $data['labels'][] = $metric->date_range_label;
+            $data['datasets'][0]['data'][] = $metric->overall_satisfaction ?? 0;
+            $data['datasets'][1]['data'][] = $metric->compliance_score ?? 0;
+            $data['datasets'][2]['data'][] = $metric->safety_index ?? 0;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Generate goal tracking progress data
+     */
+    public function generateGoalProgressData($weeks = 12)
+    {
+        $weeklyMetrics = \App\Models\WeeklyMetric::orderBy('week_start_date', 'desc')
+            ->limit($weeks)
+            ->get()
+            ->reverse();
+
+        $data = [
+            'labels' => [],
+            'datasets' => [
+                [
+                    'label' => 'Satisfaction Target (4.0)',
+                    'data' => [],
+                    'borderColor' => 'rgba(66, 133, 244, 1)',
+                    'backgroundColor' => 'rgba(66, 133, 244, 0.1)',
+                    'tension' => 0.4,
+                ],
+                [
+                    'label' => 'Compliance Target (80%)',
+                    'data' => [],
+                    'borderColor' => 'rgba(40, 167, 69, 1)',
+                    'backgroundColor' => 'rgba(40, 167, 69, 0.1)',
+                    'tension' => 0.4,
+                ],
+                [
+                    'label' => 'Response Target (50)',
+                    'data' => [],
+                    'borderColor' => 'rgba(255, 193, 7, 1)',
+                    'backgroundColor' => 'rgba(255, 193, 7, 0.1)',
+                    'tension' => 0.4,
+                    'type' => 'bar',
+                ]
+            ],
+            'targets' => [
+                'satisfaction' => 4.0,
+                'compliance' => 80.0,
+                'responses' => 50
+            ]
+        ];
+
+        foreach ($weeklyMetrics as $metric) {
+            $data['labels'][] = $metric->date_range_label;
+            $data['datasets'][0]['data'][] = $metric->overall_satisfaction ?? 0;
+            $data['datasets'][1]['data'][] = $metric->compliance_percentage ?? 0;
+            $data['datasets'][2]['data'][] = $metric->new_responses ?? 0;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Generate weekly comparison data (current vs previous week)
+     */
+    public function generateWeeklyComparisonData()
+    {
+        $currentWeek = \App\Models\WeeklyMetric::orderBy('week_start_date', 'desc')->first();
+        $previousWeek = \App\Models\WeeklyMetric::orderBy('week_start_date', 'desc')->skip(1)->first();
+
+        if (!$currentWeek) {
+            return [
+                'current' => null,
+                'previous' => null,
+                'comparison' => []
+            ];
+        }
+
+        $comparison = [
+            'overall_satisfaction' => [
+                'current' => $currentWeek->overall_satisfaction,
+                'previous' => $previousWeek ? $previousWeek->overall_satisfaction : null,
+                'change' => $previousWeek ? round($currentWeek->overall_satisfaction - $previousWeek->overall_satisfaction, 2) : null,
+                'trend' => $previousWeek ? ($currentWeek->overall_satisfaction > $previousWeek->overall_satisfaction ? 'up' : ($currentWeek->overall_satisfaction < $previousWeek->overall_satisfaction ? 'down' : 'stable')) : null
+            ],
+            'compliance_score' => [
+                'current' => $currentWeek->compliance_score,
+                'previous' => $previousWeek ? $previousWeek->compliance_score : null,
+                'change' => $previousWeek ? round($currentWeek->compliance_score - $previousWeek->compliance_score, 2) : null,
+                'trend' => $previousWeek ? ($currentWeek->compliance_score > $previousWeek->compliance_score ? 'up' : ($currentWeek->compliance_score < $previousWeek->compliance_score ? 'down' : 'stable')) : null
+            ],
+            'new_responses' => [
+                'current' => $currentWeek->new_responses,
+                'previous' => $previousWeek ? $previousWeek->new_responses : null,
+                'change' => $previousWeek ? $currentWeek->new_responses - $previousWeek->new_responses : null,
+                'trend' => $previousWeek ? ($currentWeek->new_responses > $previousWeek->new_responses ? 'up' : ($currentWeek->new_responses < $previousWeek->new_responses ? 'down' : 'stable')) : null
+            ]
+        ];
+
+        return [
+            'current' => $currentWeek,
+            'previous' => $previousWeek,
+            'comparison' => $comparison
+        ];
+    }
+
+    /**
+     * Generate monthly comprehensive report data
+     */
+    public function generateMonthlyReportData($year = null, $month = null)
+    {
+        $year = $year ?? now()->year;
+        $month = $month ?? now()->month;
+
+        $startOfMonth = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
+        $endOfMonth = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
+
+        $weeklyMetrics = \App\Models\WeeklyMetric::whereBetween('week_start_date', [$startOfMonth, $endOfMonth])
+            ->orderBy('week_start_date')
+            ->get();
+
+        $monthlyAverages = [
+            'overall_satisfaction' => $weeklyMetrics->avg('overall_satisfaction'),
+            'compliance_score' => $weeklyMetrics->avg('compliance_score'),
+            'safety_index' => $weeklyMetrics->avg('safety_index'),
+            'total_responses' => $weeklyMetrics->sum('new_responses'),
+            'weeks_covered' => $weeklyMetrics->count()
+        ];
+
+        $trends = [];
+        if ($weeklyMetrics->count() >= 2) {
+            $firstWeek = $weeklyMetrics->first();
+            $lastWeek = $weeklyMetrics->last();
+
+            $trends = [
+                'satisfaction_change' => $lastWeek->overall_satisfaction - $firstWeek->overall_satisfaction,
+                'compliance_change' => $lastWeek->compliance_score - $firstWeek->compliance_score,
+                'response_total' => $weeklyMetrics->sum('new_responses')
+            ];
+        }
+
+        return [
+            'month' => $startOfMonth->format('F Y'),
+            'year' => $year,
+            'monthly_averages' => $monthlyAverages,
+            'trends' => $trends,
+            'weekly_data' => $weeklyMetrics,
+            'targets_achieved' => [
+                'satisfaction' => $monthlyAverages['overall_satisfaction'] >= 4.0,
+                'compliance' => $monthlyAverages['compliance_score'] >= 4.0,
+                'responses' => $monthlyAverages['total_responses'] >= 600 // 50 per week * 12 weeks
+            ]
+        ];
+    }
+
+    /**
+     * Generate progress alerts for admin dashboard
+     */
+    public function generateProgressAlerts()
+    {
+        $alerts = [];
+
+        // Get latest weekly metrics
+        $latestWeek = \App\Models\WeeklyMetric::orderBy('week_start_date', 'desc')->first();
+
+        if ($latestWeek) {
+            // Check if targets are being met
+            if (!$latestWeek->satisfaction_target_met) {
+                $alerts[] = [
+                    'type' => 'warning',
+                    'icon' => '⚠️',
+                    'title' => 'Satisfaction Target Not Met',
+                    'message' => "Current satisfaction score: {$latestWeek->overall_satisfaction}/5.00. Target: 4.0+",
+                    'action' => [
+                        'text' => 'View Analytics',
+                        'url' => '/analytics'
+                    ]
+                ];
+            }
+
+            if (!$latestWeek->compliance_target_met) {
+                $alerts[] = [
+                    'type' => 'danger',
+                    'icon' => '🚨',
+                    'title' => 'Compliance Target Not Met',
+                    'message' => "Current compliance: {$latestWeek->compliance_percentage}%. Target: 80%+",
+                    'action' => [
+                        'text' => 'View Analytics',
+                        'url' => '/analytics'
+                    ]
+                ];
+            }
+
+            if (!$latestWeek->response_target_met) {
+                $alerts[] = [
+                    'type' => 'info',
+                    'icon' => '📊',
+                    'title' => 'Low Response Volume',
+                    'message' => "Only {$latestWeek->new_responses} responses this week. Target: 50+",
+                    'action' => [
+                        'text' => 'View Analytics',
+                        'url' => '/analytics'
+                    ]
+                ];
+            }
+
+            // Check for significant changes
+            $previousWeek = \App\Models\WeeklyMetric::where('year', $latestWeek->year)
+                ->where('week_number', $latestWeek->week_number - 1)
+                ->first();
+
+            if ($previousWeek) {
+                if ($latestWeek->satisfaction_trend < -10) {
+                    $alerts[] = [
+                        'type' => 'danger',
+                        'icon' => '📉',
+                        'title' => 'Satisfaction Declining',
+                        'message' => "Satisfaction dropped by {$latestWeek->satisfaction_trend}% from last week",
+                        'action' => [
+                            'text' => 'View Details',
+                            'url' => '/analytics'
+                        ]
+                    ];
+                }
+
+                if ($latestWeek->compliance_trend < -5) {
+                    $alerts[] = [
+                        'type' => 'warning',
+                        'icon' => '⚠️',
+                        'title' => 'Compliance Declining',
+                        'message' => "Compliance dropped by {$latestWeek->compliance_trend}% from last week",
+                        'action' => [
+                            'text' => 'View Details',
+                            'url' => '/analytics'
+                        ]
+                    ];
+                }
+            }
+
+            // Check for overdue goals
+            $overdueGoals = \App\Models\Goal::overdue()->count();
+            if ($overdueGoals > 0) {
+                $alerts[] = [
+                    'type' => 'warning',
+                    'icon' => '⏰',
+                    'title' => 'Overdue Goals',
+                    'message' => "You have {$overdueGoals} goal(s) past their target date",
+                    'action' => [
+                        'text' => 'Manage Goals',
+                        'url' => '/admin/goals'
+                    ]
+                ];
+            }
+
+            // Success alerts for good performance
+            if ($latestWeek->all_targets_met) {
+                $alerts[] = [
+                    'type' => 'success',
+                    'icon' => '🎉',
+                    'title' => 'All Targets Achieved!',
+                    'message' => 'Congratulations! All weekly targets have been met.',
+                    'action' => [
+                        'text' => 'View Progress',
+                        'url' => '/analytics'
+                    ]
+                ];
+            }
+        } else {
+            // No weekly data yet
+            $alerts[] = [
+                'type' => 'info',
+                'icon' => '📈',
+                'title' => 'Weekly Progress Tracking Available',
+                'message' => 'Weekly metrics and progress tracking will appear here once data aggregation runs.',
+                'action' => [
+                    'text' => 'View Analytics',
+                    'url' => '/analytics'
+                ]
+            ];
+        }
+
+        return $alerts;
     }
 }

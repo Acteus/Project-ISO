@@ -125,6 +125,8 @@ class SurveyController extends Controller
         $gradeLevel = $request->query('grade_level');
         $academicYear = $request->query('academic_year');
         $semester = $request->query('semester');
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
 
         // Log analytics access for audit (ISO 21001:8.2.4 - Data access traceability)
         if (Auth::check() && Auth::user()->role === 'admin') {
@@ -155,6 +157,15 @@ class SurveyController extends Controller
             $query->where('semester', $semester);
         }
 
+        // Date range filtering
+        if ($dateFrom && $dateTo) {
+            $query->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+        } elseif ($dateFrom) {
+            $query->where('created_at', '>=', $dateFrom . ' 00:00:00');
+        } elseif ($dateTo) {
+            $query->where('created_at', '<=', $dateTo . ' 23:59:59');
+        }
+
         $responses = $query->get();
 
         if ($responses->isEmpty()) {
@@ -162,7 +173,37 @@ class SurveyController extends Controller
             if ($request->header('Accept') === 'application/json' || $request->wantsJson()) {
                 return response()->json([
                     'message' => 'No survey responses found',
-                    'data' => []
+                    'data' => [
+                        'total_responses' => 0,
+                        'iso_21001_indices' => [
+                            'learner_needs_index' => 0.00,
+                            'satisfaction_score' => 0.00,
+                            'success_index' => 0.00,
+                            'safety_index' => 0.00,
+                            'wellbeing_index' => 0.00,
+                            'overall_satisfaction' => 0.00,
+                        ],
+                        'indirect_metrics' => [
+                            'average_grade' => 0.00,
+                            'average_attendance_rate' => 0.00,
+                            'average_participation_score' => 0.00,
+                            'average_extracurricular_hours' => 0.00,
+                            'average_counseling_sessions' => 0.00,
+                        ],
+                        'correlation_analysis' => [
+                            'satisfaction_vs_performance_correlation' => 0.00,
+                            'satisfaction_vs_attendance_correlation' => 0.00,
+                            'safety_vs_attendance_correlation' => 0.00,
+                            'wellbeing_vs_counseling_correlation' => 0.00,
+                        ],
+                        'distribution' => [
+                            'track' => [],
+                            'grade_level' => [],
+                            'academic_year' => [],
+                            'semester' => [],
+                        ],
+                        'consent_rate' => 0.00,
+                    ]
                 ]);
             }
 

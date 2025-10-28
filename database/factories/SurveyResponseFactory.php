@@ -91,6 +91,10 @@ class SurveyResponseFactory extends Factory
             'participation_score' => fake()->numberBetween(60, 100),
             'extracurricular_hours' => fake()->numberBetween(0, 15),
             'counseling_sessions' => fake()->numberBetween(0, 5),
+
+            // Timestamps - spread responses across the last 90 days for time-series visualization
+            'created_at' => fake()->dateTimeBetween('-90 days', 'now'),
+            'updated_at' => fake()->dateTimeBetween('-90 days', 'now'),
         ];
     }
 }

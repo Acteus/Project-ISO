@@ -35,6 +35,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/responses', [StudentController::class, 'allResponses'])->name('responses');
     Route::get('/responses/{id}', [StudentController::class, 'viewResponse'])->name('response.view');
     Route::get('/audit-logs', [StudentController::class, 'auditLogs'])->name('audit.logs');
+
+    // Report Management Routes
+    Route::get('/reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports');
+    Route::post('/reports/send-weekly', [App\Http\Controllers\Admin\ReportController::class, 'sendWeeklyReport'])->name('reports.send-weekly');
+    Route::post('/reports/send-monthly', [App\Http\Controllers\Admin\ReportController::class, 'sendMonthlyReport'])->name('reports.send-monthly');
+    Route::post('/reports/preview-weekly', [App\Http\Controllers\Admin\ReportController::class, 'previewWeeklyReport'])->name('reports.preview-weekly');
+    Route::post('/reports/preview-monthly', [App\Http\Controllers\Admin\ReportController::class, 'previewMonthlyReport'])->name('reports.preview-monthly');
+
+    // Goal Management Routes
+    Route::resource('goals', App\Http\Controllers\Admin\GoalController::class);
+    Route::post('goals/{goal}/progress', [App\Http\Controllers\Admin\GoalController::class, 'updateProgress'])->name('goals.update-progress');
 });
 
 // Survey routes
@@ -176,4 +187,14 @@ Route::prefix('api')->group(function () {
     Route::get('/visualization/track-comparison', [VisualizationController::class, 'getTrackComparisonData']);
     Route::get('/visualization/grade-trend', [VisualizationController::class, 'getGradeLevelTrendData']);
     Route::get('/visualization/dashboard', [VisualizationController::class, 'getDashboardData']);
+
+    // Advanced Analytics Visualization routes
+    Route::get('/visualizations/time-series', [VisualizationController::class, 'getTimeSeriesData']);
+    Route::get('/visualizations/heat-map', [VisualizationController::class, 'getHeatMapData']);
+    Route::get('/visualizations/compliance-risk', [VisualizationController::class, 'getComplianceRiskData']);
+    Route::get('/visualizations/comparative-analysis', [VisualizationController::class, 'getComparativeAnalysis']);
+    Route::get('/visualizations/response-rate', [VisualizationController::class, 'getResponseRateAnalytics']);
+
+    // AI Analytics routes
+    Route::get('/ai/sentiment-analysis', [AIController::class, 'analyzeSentiment']);
 });
