@@ -519,7 +519,7 @@ class VisualizationService
     /**
      * Generate heat map data for performance by track and grade level
      */
-    public function generateHeatMapData($metric = 'overall_satisfaction')
+    public function generateHeatMapData($metric = 'overall_satisfaction', $dateFrom = null, $dateTo = null)
     {
         $tracks = ['CSS']; // Current tracks
         $gradeLevels = [11, 12];
@@ -528,9 +528,19 @@ class VisualizationService
 
         foreach ($tracks as $track) {
             foreach ($gradeLevels as $grade) {
-                $responses = SurveyResponse::where('track', $track)
-                    ->where('grade_level', $grade)
-                    ->get();
+                $query = SurveyResponse::where('track', $track)
+                    ->where('grade_level', $grade);
+
+                // Apply date filters
+                if ($dateFrom && $dateTo) {
+                    $query->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+                } elseif ($dateFrom) {
+                    $query->where('created_at', '>=', $dateFrom . ' 00:00:00');
+                } elseif ($dateTo) {
+                    $query->where('created_at', '<=', $dateTo . ' 23:59:59');
+                }
+
+                $responses = $query->get();
 
                 if ($responses->count() > 0) {
                     $value = 0;
@@ -573,9 +583,20 @@ class VisualizationService
     /**
      * Generate compliance risk meter data
      */
-    public function generateComplianceRiskData()
+    public function generateComplianceRiskData($dateFrom = null, $dateTo = null)
     {
-        $responses = SurveyResponse::all();
+        $query = SurveyResponse::query();
+
+        // Apply date filters
+        if ($dateFrom && $dateTo) {
+            $query->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+        } elseif ($dateFrom) {
+            $query->where('created_at', '>=', $dateFrom . ' 00:00:00');
+        } elseif ($dateTo) {
+            $query->where('created_at', '<=', $dateTo . ' 23:59:59');
+        }
+
+        $responses = $query->get();
 
         if ($responses->isEmpty()) {
             return [
@@ -712,35 +733,90 @@ class VisualizationService
     /**
      * Generate response rate analytics
      */
-    public function generateResponseRateAnalytics()
+    public function generateResponseRateAnalytics($dateFrom = null, $dateTo = null)
     {
-        $totalResponses = SurveyResponse::count();
+        $query = SurveyResponse::query();
 
-        $byTrack = SurveyResponse::select('track', DB::raw('count(*) as count'))
-            ->groupBy('track')
-            ->get()
+        // Apply date filters
+        if ($dateFrom && $dateTo) {
+            $query->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+        } elseif ($dateFrom) {
+            $query->where('created_at', '>=', $dateFrom . ' 00:00:00');
+        } elseif ($dateTo) {
+            $query->where('created_at', '<=', $dateTo . ' 23:59:59');
+        }
+
+        $totalResponses = $query->count();
+
+        $byTrackQuery = SurveyResponse::select('track', DB::raw('count(*) as count'))
+            ->groupBy('track');
+
+        // Apply date filters to byTrack query
+        if ($dateFrom && $dateTo) {
+            $byTrackQuery->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+        } elseif ($dateFrom) {
+            $byTrackQuery->where('created_at', '>=', $dateFrom . ' 00:00:00');
+        } elseif ($dateTo) {
+            $byTrackQuery->where('created_at', '<=', $dateTo . ' 23:59:59');
+        }
+
+        $byTrack = $byTrackQuery->get()
             ->pluck('count', 'track');
 
-        $byGrade = SurveyResponse::select('grade_level', DB::raw('count(*) as count'))
-            ->groupBy('grade_level')
-            ->get()
+        $byGradeQuery = SurveyResponse::select('grade_level', DB::raw('count(*) as count'))
+            ->groupBy('grade_level');
+
+        // Apply date filters to byGrade query
+        if ($dateFrom && $dateTo) {
+            $byGradeQuery->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+        } elseif ($dateFrom) {
+            $byGradeQuery->where('created_at', '>=', $dateFrom . ' 00:00:00');
+        } elseif ($dateTo) {
+            $byGradeQuery->where('created_at', '<=', $dateTo . ' 23:59:59');
+        }
+
+        $byGrade = $byGradeQuery->get()
             ->pluck('count', 'grade_level');
 
-        $bySemester = SurveyResponse::select('semester', DB::raw('count(*) as count'))
-            ->groupBy('semester')
-            ->get()
+        $bySemesterQuery = SurveyResponse::select('semester', DB::raw('count(*) as count'))
+            ->groupBy('semester');
+
+        // Apply date filters to bySemester query
+        if ($dateFrom && $dateTo) {
+            $bySemesterQuery->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+        } elseif ($dateFrom) {
+            $bySemesterQuery->where('created_at', '>=', $dateFrom . ' 00:00:00');
+        } elseif ($dateTo) {
+            $bySemesterQuery->where('created_at', '<=', $dateTo . ' 23:59:59');
+        }
+
+        $bySemester = $bySemesterQuery->get()
             ->pluck('count', 'semester');
 
-        $byGender = SurveyResponse::select('gender', DB::raw('count(*) as count'))
+        $byGenderQuery = SurveyResponse::select('gender', DB::raw('count(*) as count'))
             ->whereNotNull('gender')
-            ->groupBy('gender')
-            ->get()
+            ->groupBy('gender');
+
+        // Apply date filters to byGender query
+        if ($dateFrom && $dateTo) {
+            $byGenderQuery->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+        } elseif ($dateFrom) {
+            $byGenderQuery->where('created_at', '>=', $dateFrom . ' 00:00:00');
+        } elseif ($dateTo) {
+            $byGenderQuery->where('created_at', '<=', $dateTo . ' 23:59:59');
+        }
+
+        $byGender = $byGenderQuery->get()
             ->pluck('count', 'gender');
 
-        // Completion rate by time period
-        $last7Days = SurveyResponse::where('created_at', '>=', now()->subDays(7))->count();
-        $last30Days = SurveyResponse::where('created_at', '>=', now()->subDays(30))->count();
-        $last90Days = SurveyResponse::where('created_at', '>=', now()->subDays(90))->count();
+        // Completion rate by time period (don't apply custom date filters to these)
+        $last7DaysQuery = SurveyResponse::where('created_at', '>=', now()->subDays(7));
+        $last30DaysQuery = SurveyResponse::where('created_at', '>=', now()->subDays(30));
+        $last90DaysQuery = SurveyResponse::where('created_at', '>=', now()->subDays(90));
+
+        $last7Days = $last7DaysQuery->count();
+        $last30Days = $last30DaysQuery->count();
+        $last90Days = $last90DaysQuery->count();
 
         return [
             'total_responses' => $totalResponses,

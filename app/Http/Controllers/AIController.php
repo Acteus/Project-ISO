@@ -83,6 +83,8 @@ class AIController extends Controller
         $gradeLevel = $request->query('grade_level');
         $academicYear = $request->query('academic_year');
         $semester = $request->query('semester');
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
 
         $query = SurveyResponse::query();
 
@@ -100,6 +102,15 @@ class AIController extends Controller
 
         if ($semester) {
             $query->where('semester', $semester);
+        }
+
+        // Date range filtering
+        if ($dateFrom && $dateTo) {
+            $query->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+        } elseif ($dateFrom) {
+            $query->where('created_at', '>=', $dateFrom . ' 00:00:00');
+        } elseif ($dateTo) {
+            $query->where('created_at', '<=', $dateTo . ' 23:59:59');
         }
 
         // Combine all three feedback fields

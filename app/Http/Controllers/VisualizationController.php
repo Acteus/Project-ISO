@@ -144,8 +144,10 @@ class VisualizationController extends Controller
     public function getHeatMapData(Request $request)
     {
         $metric = $request->query('metric', 'overall_satisfaction');
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
 
-        $data = $this->visualizationService->generateHeatMapData($metric);
+        $data = $this->visualizationService->generateHeatMapData($metric, $dateFrom, $dateTo);
 
         return response()->json([
             'message' => 'Heat map data generated successfully',
@@ -158,7 +160,10 @@ class VisualizationController extends Controller
      */
     public function getComplianceRiskData(Request $request)
     {
-        $data = $this->visualizationService->generateComplianceRiskData();
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+
+        $data = $this->visualizationService->generateComplianceRiskData($dateFrom, $dateTo);
 
         return response()->json([
             'message' => 'Compliance risk data generated successfully',
@@ -194,7 +199,10 @@ class VisualizationController extends Controller
      */
     public function getResponseRateAnalytics(Request $request)
     {
-        $data = $this->visualizationService->generateResponseRateAnalytics();
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+
+        $data = $this->visualizationService->generateResponseRateAnalytics($dateFrom, $dateTo);
 
         return response()->json([
             'message' => 'Response rate analytics generated successfully',

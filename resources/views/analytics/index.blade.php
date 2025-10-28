@@ -570,11 +570,10 @@
                     <h3>Advanced Filters & Segmentation</h3>
 
                     <div class="quick-filters">
-                        <button class="quick-filter-btn active" data-range="all">All Time</button>
-                        <button class="quick-filter-btn" data-range="7">Last 7 Days</button>
-                        <button class="quick-filter-btn" data-range="30">Last 30 Days</button>
-                        <button class="quick-filter-btn" data-range="90">Last 90 Days</button>
-                        <button class="quick-filter-btn" data-range="custom">Custom Range</button>
+                        <button class="quick-filter-btn" data-range="all">All Time</button>
+                        <select id="week-filter" class="filter-group select" style="padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; margin-right: 10px;">
+                            <option value="">Select Week</option>
+                        </select>
                     </div>
 
                     <form id="analytics-filters">
@@ -621,7 +620,6 @@
                         </div>
                         <div class="filter-actions">
                             <button type="button" class="btn btn-secondary" id="clear-filters">Clear Filters</button>
-                            <button type="button" class="btn btn-primary" id="apply-filters">Apply Filters</button>
                         </div>
                     </form>
                 </div>
@@ -785,6 +783,12 @@
 
         // Initialize analytics on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Populate week filter dropdown
+            populateWeekFilter();
+
+            // Set default to current week but don't filter by it
+            setCurrentWeekAsDefault();
+
             initializeCharts();
             loadComplianceRisk();
             loadTimeSeriesData();
@@ -792,6 +796,11 @@
             loadResponseRateData();
             loadSentimentAnalysis();
             setupFilterHandlers();
+
+            // Clear the week filter on page load to show all data
+            document.getElementById('week-filter').value = '';
+            document.getElementById('date_from').value = '';
+            document.getElementById('date_to').value = '';
         });
 
         function initializeCharts() {
@@ -1052,9 +1061,14 @@
         }
 
         // Load Compliance Risk Data
-        async function loadComplianceRisk() {
+        async function loadComplianceRisk(filterParams = null) {
             try {
-                const response = await fetch('/api/visualizations/compliance-risk', {
+                let url = '/api/visualizations/compliance-risk';
+                if (filterParams) {
+                    url += '?' + filterParams;
+                }
+
+                const response = await fetch(url, {
                     headers: {
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken
@@ -1068,8 +1082,14 @@
                 const result = await response.json();
                 const data = result.data;
 
-                // Update risk level text
+                // Check if elements exist before updating
                 const riskLevelText = document.getElementById('risk-level-text');
+                if (!riskLevelText) {
+                    console.warn('Risk meter elements not found');
+                    return;
+                }
+
+                // Update risk level text
                 riskLevelText.textContent = data.risk_level + ' Risk';
                 riskLevelText.className = 'risk-level risk-' + data.risk_level.toLowerCase();
 
@@ -1086,8 +1106,18 @@
                     recommendationsList.appendChild(li);
                 });
 
+                // Destroy existing gauge chart if it exists
+                if (charts.gauge) {
+                    charts.gauge.destroy();
+                }
+
                 // Create gauge chart
-                const gaugeCtx = document.getElementById('riskGaugeChart').getContext('2d');
+                const gaugeCanvas = document.getElementById('riskGaugeChart');
+                if (!gaugeCanvas) {
+                    console.warn('Risk gauge chart canvas not found');
+                    return;
+                }
+                const gaugeCtx = gaugeCanvas.getContext('2d');
                 charts.gauge = new Chart(gaugeCtx, {
                     type: 'doughnut',
                     data: {
@@ -1123,12 +1153,20 @@
         }
 
         // Load Time-Series Data
-        async function loadTimeSeriesData(metric = 'overall_satisfaction', groupBy = 'week') {
+        async function loadTimeSeriesData(metric = 'overall_satisfaction', groupBy = 'week', filterParams = null) {
             try {
                 const params = new URLSearchParams({
                     metric: metric,
                     group_by: groupBy
                 });
+
+                // Add filter params if provided
+                if (filterParams) {
+                    const filterUrlParams = new URLSearchParams(filterParams);
+                    for (const [key, value] of filterUrlParams) {
+                        params.append(key, value);
+                    }
+                }
 
                 const response = await fetch('/api/visualizations/time-series?' + params, {
                     headers: {
@@ -1150,12 +1188,19 @@
                 if (!data || !data.labels || data.labels.length === 0) {
                     console.warn('No time-series data available');
                     // Show a message in the chart area
-                    const chartWrapper = document.getElementById('timeSeriesChart').parentElement;
-                    chartWrapper.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 16px;">Insufficient data for time-series analysis. Need responses from multiple time periods.</div>';
+                    const chartElement = document.getElementById('timeSeriesChart');
+                    if (chartElement && chartElement.parentElement) {
+                        chartElement.parentElement.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999; font-size: 16px;">Insufficient data for time-series analysis. Need responses from multiple time periods.</div>';
+                    }
                     return;
                 }
 
-                const tsCtx = document.getElementById('timeSeriesChart').getContext('2d');
+                const tsCtx = document.getElementById('timeSeriesChart');
+                if (!tsCtx) {
+                    console.warn('Time-series chart element not found');
+                    return;
+                }
+                const ctx = tsCtx.getContext('2d');
 
                 if (charts.timeSeries) {
                     charts.timeSeries.destroy();
@@ -1185,7 +1230,7 @@
                     datasetConfig.borderRadius = 8;
                 }
 
-                charts.timeSeries = new Chart(tsCtx, {
+                charts.timeSeries = new Chart(ctx, {
                     type: chartType,
                     data: {
                         labels: data.labels,
@@ -1226,15 +1271,22 @@
             } catch (error) {
                 console.error('Error loading time-series data:', error);
                 // Show error message in the chart area
-                const chartWrapper = document.getElementById('timeSeriesChart').parentElement;
-                chartWrapper.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #dc3545; font-size: 16px;">Error loading time-series data. Please check console for details.</div>';
+                const chartElement = document.getElementById('timeSeriesChart');
+                if (chartElement && chartElement.parentElement) {
+                    chartElement.parentElement.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #dc3545; font-size: 16px;">Error loading time-series data. Please check console for details.</div>';
+                }
             }
         }
 
         // Load Heat Map Data
-        async function loadHeatMapData() {
+        async function loadHeatMapData(filterParams = null) {
             try {
-                const response = await fetch('/api/visualizations/heat-map', {
+                let url = '/api/visualizations/heat-map';
+                if (filterParams) {
+                    url += '?' + filterParams;
+                }
+
+                const response = await fetch(url, {
                     headers: {
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken
@@ -1301,9 +1353,14 @@
         }
 
         // Load Response Rate Data
-        async function loadResponseRateData() {
+        async function loadResponseRateData(filterParams = null) {
             try {
-                const response = await fetch('/api/visualizations/response-rate', {
+                let url = '/api/visualizations/response-rate';
+                if (filterParams) {
+                    url += '?' + filterParams;
+                }
+
+                const response = await fetch(url, {
                     headers: {
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken
@@ -1367,9 +1424,14 @@
         }
 
         // Load Sentiment Analysis
-        async function loadSentimentAnalysis() {
+        async function loadSentimentAnalysis(filterParams = null) {
             try {
-                const response = await fetch('/api/ai/sentiment-analysis', {
+                let url = '/api/ai/sentiment-analysis';
+                if (filterParams) {
+                    url += '?' + filterParams;
+                }
+
+                const response = await fetch(url, {
                     headers: {
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken
@@ -1400,6 +1462,65 @@
             }
         }
 
+        // Populate week filter dropdown
+        function populateWeekFilter() {
+            const weekFilter = document.getElementById('week-filter');
+            const currentYear = new Date().getFullYear();
+
+            for (let week = 1; week <= 52; week++) {
+                const option = document.createElement('option');
+                option.value = `${currentYear}-W${week.toString().padStart(2, '0')}`;
+                option.textContent = `Week ${week} (${getWeekDateRange(currentYear, week)})`;
+                weekFilter.appendChild(option);
+            }
+        }
+
+        // Get date range for a specific week
+        function getWeekDateRange(year, week) {
+            const jan1 = new Date(year, 0, 1);
+            const daysToFirstMonday = (8 - jan1.getDay()) % 7;
+            const firstMonday = new Date(year, 0, daysToFirstMonday + 1);
+
+            const weekStart = new Date(firstMonday);
+            weekStart.setDate(firstMonday.getDate() + (week - 1) * 7);
+
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+
+            const formatDate = (date) => {
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                return `${month}/${day}`;
+            };
+
+            return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
+        }
+
+        // Set current week as default
+        function setCurrentWeekAsDefault() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const weekFilter = document.getElementById('week-filter');
+
+            // Calculate current week number
+            const jan1 = new Date(currentYear, 0, 1);
+            const daysToFirstMonday = (8 - jan1.getDay()) % 7;
+            const firstMonday = new Date(currentYear, 0, daysToFirstMonday + 1);
+            const currentWeek = Math.ceil(((now - firstMonday) / 86400000 + 1) / 7);
+
+            weekFilter.value = `${currentYear}-W${currentWeek.toString().padStart(2, '0')}`;
+
+            // Set the date inputs to current week range
+            const weekStart = new Date(firstMonday);
+            weekStart.setDate(firstMonday.getDate() + (currentWeek - 1) * 7);
+
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+
+            document.getElementById('date_from').value = weekStart.toISOString().split('T')[0];
+            document.getElementById('date_to').value = weekEnd.toISOString().split('T')[0];
+        }
+
         // Setup Filter Handlers
         function setupFilterHandlers() {
             // Quick filter buttons
@@ -1409,29 +1530,98 @@
                     this.classList.add('active');
 
                     const range = this.getAttribute('data-range');
-                    if (range !== 'custom' && range !== 'all') {
-                        const daysAgo = parseInt(range);
-                        const dateTo = new Date();
-                        const dateFrom = new Date();
-                        dateFrom.setDate(dateFrom.getDate() - daysAgo);
-
-                        document.getElementById('date_from').value = dateFrom.toISOString().split('T')[0];
-                        document.getElementById('date_to').value = dateTo.toISOString().split('T')[0];
-                    } else if (range === 'all') {
+                    if (range === 'all') {
+                        // Clear all date filters
                         document.getElementById('date_from').value = '';
                         document.getElementById('date_to').value = '';
+                        document.getElementById('week-filter').value = '';
+
+                        // Clear all other filters too
+                        document.getElementById('track').value = '';
+                        document.getElementById('grade_level').value = '';
+                        document.getElementById('semester').value = '';
+                        document.getElementById('academic_year').value = '';
+
+                        // Apply the filters to show all data
+                        applyFilters();
                     }
                 });
             });
 
-            // Apply filters button
-            document.getElementById('apply-filters').addEventListener('click', applyFilters);
+            // Week filter change handler
+            document.getElementById('week-filter').addEventListener('change', function() {
+                const selectedValue = this.value;
+                if (selectedValue) {
+                    const [year, weekStr] = selectedValue.split('-W');
+                    const week = parseInt(weekStr);
+
+                    const jan1 = new Date(parseInt(year), 0, 1);
+                    const daysToFirstMonday = (8 - jan1.getDay()) % 7;
+                    const firstMonday = new Date(parseInt(year), 0, daysToFirstMonday + 1);
+
+                    const weekStart = new Date(firstMonday);
+                    weekStart.setDate(firstMonday.getDate() + (week - 1) * 7);
+
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+
+                    document.getElementById('date_from').value = weekStart.toISOString().split('T')[0];
+                    document.getElementById('date_to').value = weekEnd.toISOString().split('T')[0];
+
+                    // Clear quick filter active state
+                    document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
+
+                    // Automatically apply filters when week is selected
+                    applyFilters();
+                } else {
+                    // If no week selected, clear dates and show all data
+                    document.getElementById('date_from').value = '';
+                    document.getElementById('date_to').value = '';
+
+                    // Automatically apply to show all data
+                    applyFilters();
+                }
+            });
+
+            // Auto-apply when other filters change
+            ['track', 'grade_level', 'semester', 'academic_year'].forEach(filterId => {
+                const filterElement = document.getElementById(filterId);
+                if (filterElement) {
+                    filterElement.addEventListener('change', function() {
+                        // Clear quick filter active state when other filters are used
+                        document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
+                        applyFilters();
+                    });
+                }
+            });
+
+            // Auto-apply when date inputs change
+            ['date_from', 'date_to'].forEach(dateId => {
+                const dateElement = document.getElementById(dateId);
+                if (dateElement) {
+                    dateElement.addEventListener('change', function() {
+                        // Clear quick filter and week filter when manually changing dates
+                        document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
+                        document.getElementById('week-filter').value = '';
+                        applyFilters();
+                    });
+                }
+            });
 
             // Clear filters button
             document.getElementById('clear-filters').addEventListener('click', function() {
+                // Clear the form
                 document.getElementById('analytics-filters').reset();
+
+                // Clear all date filters to show all data
+                document.getElementById('date_from').value = '';
+                document.getElementById('date_to').value = '';
+                document.getElementById('week-filter').value = '';
+
+                // Remove active state from quick filter buttons
                 document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
-                document.querySelector('.quick-filter-btn[data-range="all"]').classList.add('active');
+
+                // Apply filters to show all data
                 applyFilters();
             });
         }
@@ -1452,26 +1642,71 @@
                     }
                 }
 
+                const paramsString = params.toString();
+
                 // Reload analytics with filters
-                const response = await fetch('/api/survey/analytics?' + params, {
+                const response = await fetch('/api/survey/analytics?' + paramsString, {
                     headers: {
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken
                     }
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const result = await response.json();
                 const analytics = result.data;
+
+                console.log('Analytics data received:', analytics);
+
+                // Hide no data message if it was showing
+                hideNoDataMessage();
+
+                // Check if we have any data or if the structure is invalid
+                if (!analytics || !analytics.iso_21001_indices || analytics.total_responses === 0) {
+                    showNoDataMessage();
+                    overlay.classList.remove('active');
+                    return;
+                }
 
                 // Update stats
                 updateStats(analytics);
 
-                // Reload all charts
+                // Reload all charts with filter parameters
                 updateCharts(analytics);
-                await loadComplianceRisk();
-                await loadTimeSeriesData();
-                await loadHeatMapData();
-                await loadResponseRateData();
-                await loadSentimentAnalysis();
+
+                // Load each visualization independently with error handling
+                try {
+                    await loadComplianceRisk(paramsString);
+                } catch (err) {
+                    console.error('Failed to load compliance risk:', err);
+                }
+
+                try {
+                    await loadTimeSeriesData('overall_satisfaction', 'week', paramsString);
+                } catch (err) {
+                    console.error('Failed to load time-series data:', err);
+                }
+
+                try {
+                    await loadHeatMapData(paramsString);
+                } catch (err) {
+                    console.error('Failed to load heat map:', err);
+                }
+
+                try {
+                    await loadResponseRateData(paramsString);
+                } catch (err) {
+                    console.error('Failed to load response rate:', err);
+                }
+
+                try {
+                    await loadSentimentAnalysis(paramsString);
+                } catch (err) {
+                    console.error('Failed to load sentiment analysis:', err);
+                }
 
             } catch (error) {
                 console.error('Error applying filters:', error);
@@ -1481,37 +1716,95 @@
             }
         }
 
+        // Show no data message
+        function showNoDataMessage() {
+            const weekFilter = document.getElementById('week-filter');
+            const selectedWeek = weekFilter.options[weekFilter.selectedIndex]?.text || 'selected period';
+
+            // Hide all chart sections
+            document.getElementById('stats-container').style.display = 'none';
+            document.getElementById('risk-meter-container').style.display = 'none';
+            document.querySelector('.full-width-chart').style.display = 'none';
+            document.querySelector('.charts-grid').style.display = 'none';
+            document.getElementById('sentiment-container').style.display = 'none';
+
+            // Show no data message
+            let noDataDiv = document.getElementById('no-data-filtered');
+            if (!noDataDiv) {
+                noDataDiv = document.createElement('div');
+                noDataDiv.id = 'no-data-filtered';
+                noDataDiv.className = 'no-data-message';
+                noDataDiv.innerHTML = `
+                    <h2>No Data Available for ${selectedWeek}</h2>
+                    <p>There are no survey responses for the selected time period. Please try selecting a different week or clearing the filters.</p>
+                `;
+                document.querySelector('.analytics-container').appendChild(noDataDiv);
+            } else {
+                noDataDiv.style.display = 'block';
+                noDataDiv.innerHTML = `
+                    <h2>No Data Available for ${selectedWeek}</h2>
+                    <p>There are no survey responses for the selected time period. Please try selecting a different week or clearing the filters.</p>
+                `;
+            }
+        }
+
+        // Hide no data message
+        function hideNoDataMessage() {
+            const noDataDiv = document.getElementById('no-data-filtered');
+            if (noDataDiv) {
+                noDataDiv.style.display = 'none';
+            }
+
+            // Show all chart sections
+            document.getElementById('stats-container').style.display = 'grid';
+            document.getElementById('risk-meter-container').style.display = 'block';
+            document.querySelector('.full-width-chart').style.display = 'block';
+            document.querySelector('.charts-grid').style.display = 'grid';
+            document.getElementById('sentiment-container').style.display = 'block';
+
+            // Restore time-series chart canvas if it was replaced
+            const timeSeriesChartWrapper = document.querySelector('.full-width-chart .chart-wrapper');
+            if (timeSeriesChartWrapper && !document.getElementById('timeSeriesChart')) {
+                timeSeriesChartWrapper.innerHTML = '<canvas id="timeSeriesChart"></canvas>';
+            }
+        }
+
         // Update Stats
         function updateStats(analytics) {
+            if (!analytics || !analytics.iso_21001_indices) {
+                console.error('Invalid analytics data structure');
+                return;
+            }
+
             const statsContainer = document.getElementById('stats-container');
             statsContainer.innerHTML = `
                 <div class="stat-card">
-                    <div class="stat-value">${analytics.total_responses}</div>
+                    <div class="stat-value">${analytics.total_responses || 0}</div>
                     <div class="stat-label">Total Responses</div>
                     <div class="stat-sublabel">Survey Submissions</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${analytics.iso_21001_indices.learner_needs_index}</div>
+                    <div class="stat-value">${analytics.iso_21001_indices.learner_needs_index || '0.00'}</div>
                     <div class="stat-label">Learner Needs</div>
                     <div class="stat-sublabel">Out of 5.00</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${analytics.iso_21001_indices.satisfaction_score}</div>
+                    <div class="stat-value">${analytics.iso_21001_indices.satisfaction_score || '0.00'}</div>
                     <div class="stat-label">Satisfaction Score</div>
                     <div class="stat-sublabel">Out of 5.00</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${analytics.iso_21001_indices.success_index}</div>
+                    <div class="stat-value">${analytics.iso_21001_indices.success_index || '0.00'}</div>
                     <div class="stat-label">Success Index</div>
                     <div class="stat-sublabel">Out of 5.00</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${analytics.iso_21001_indices.safety_index}</div>
+                    <div class="stat-value">${analytics.iso_21001_indices.safety_index || '0.00'}</div>
                     <div class="stat-label">Safety Index</div>
                     <div class="stat-sublabel">Out of 5.00</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${analytics.iso_21001_indices.wellbeing_index}</div>
+                    <div class="stat-value">${analytics.iso_21001_indices.wellbeing_index || '0.00'}</div>
                     <div class="stat-label">Wellbeing Index</div>
                     <div class="stat-sublabel">Out of 5.00</div>
                 </div>
@@ -1520,37 +1813,56 @@
 
         // Update Charts
         function updateCharts(analytics) {
-            // Update radar chart
-            charts.radar.data.datasets[0].data = [
-                analytics.iso_21001_indices.learner_needs_index,
-                analytics.iso_21001_indices.satisfaction_score,
-                analytics.iso_21001_indices.success_index,
-                analytics.iso_21001_indices.safety_index,
-                analytics.iso_21001_indices.wellbeing_index,
-                analytics.iso_21001_indices.overall_satisfaction
-            ];
-            charts.radar.update();
+            if (!analytics || !analytics.iso_21001_indices || !analytics.indirect_metrics) {
+                console.error('Invalid analytics data structure for charts');
+                return;
+            }
 
-            // Update bar chart
-            charts.bar.data.datasets[0].data = [
-                analytics.iso_21001_indices.learner_needs_index,
-                analytics.iso_21001_indices.satisfaction_score,
-                analytics.iso_21001_indices.success_index,
-                analytics.iso_21001_indices.safety_index,
-                analytics.iso_21001_indices.wellbeing_index,
-                analytics.iso_21001_indices.overall_satisfaction
-            ];
-            charts.bar.update();
+            try {
+                // Update radar chart
+                charts.radar.data.datasets[0].data = [
+                    analytics.iso_21001_indices.learner_needs_index || 0,
+                    analytics.iso_21001_indices.satisfaction_score || 0,
+                    analytics.iso_21001_indices.success_index || 0,
+                    analytics.iso_21001_indices.safety_index || 0,
+                    analytics.iso_21001_indices.wellbeing_index || 0,
+                    analytics.iso_21001_indices.overall_satisfaction || 0
+                ];
+                charts.radar.update();
 
-            // Update indirect metrics chart
-            charts.indirect.data.datasets[0].data = [
-                analytics.indirect_metrics.average_grade,
-                analytics.indirect_metrics.average_attendance_rate,
-                analytics.indirect_metrics.average_participation_score,
-                analytics.indirect_metrics.average_extracurricular_hours,
-                analytics.indirect_metrics.average_counseling_sessions
-            ];
-            charts.indirect.update();
+                // Update bar chart
+                charts.bar.data.datasets[0].data = [
+                    analytics.iso_21001_indices.learner_needs_index || 0,
+                    analytics.iso_21001_indices.satisfaction_score || 0,
+                    analytics.iso_21001_indices.success_index || 0,
+                    analytics.iso_21001_indices.safety_index || 0,
+                    analytics.iso_21001_indices.wellbeing_index || 0,
+                    analytics.iso_21001_indices.overall_satisfaction || 0
+                ];
+                charts.bar.update();
+
+                // Update pie chart for grade level distribution
+                if (analytics.distribution && analytics.distribution.grade_level) {
+                    const gradeLabels = Object.keys(analytics.distribution.grade_level).map(grade => `Grade ${grade}`);
+                    const gradeData = Object.values(analytics.distribution.grade_level);
+
+                    charts.pie.data.labels = gradeLabels;
+                    charts.pie.data.datasets[0].data = gradeData;
+                    charts.pie.update();
+                }
+
+                // Update indirect metrics chart
+                charts.indirect.data.datasets[0].data = [
+                    analytics.indirect_metrics.average_grade || 0,
+                    analytics.indirect_metrics.average_attendance_rate || 0,
+                    analytics.indirect_metrics.average_participation_score || 0,
+                    analytics.indirect_metrics.average_extracurricular_hours || 0,
+                    analytics.indirect_metrics.average_counseling_sessions || 0
+                ];
+                charts.indirect.update();
+            } catch (error) {
+                console.error('Error updating charts:', error);
+            }
         }
         @endif
     </script>
