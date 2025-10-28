@@ -321,4 +321,177 @@ class AIController extends Controller
             ]
         ]);
     }
+
+    public function getServiceStatus()
+    {
+        $flaskClient = app(\App\Services\FlaskAIClient::class);
+        $status = $flaskClient->getServiceStatus();
+
+        return response()->json([
+            'success' => true,
+            'data' => $status
+        ]);
+    }
+
+    public function getAIMetrics()
+    {
+        // Get basic AI metrics (this could be expanded with more detailed metrics)
+        $totalPredictions = \App\Models\AuditLog::where('action', 'LIKE', '%ai%')->count();
+        $accuracyRate = 85; // Placeholder - would need actual model metrics
+        $avgResponseTime = 150; // Placeholder - would need actual timing data
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total_predictions' => $totalPredictions,
+                'accuracy_rate' => $accuracyRate,
+                'avg_response_time' => $avgResponseTime
+            ]
+        ]);
+    }
+
+    public function runAnalysis(Request $request, $type)
+    {
+        $flaskClient = app(\App\Services\FlaskAIClient::class);
+
+        try {
+            $result = null;
+
+            switch ($type) {
+                case 'compliance':
+                    // Get sample data from recent survey responses for compliance prediction
+                    $recentResponse = \App\Models\SurveyResponse::latest()->first();
+                    if ($recentResponse) {
+                        $data = [
+                            'learner_needs_index' => ($recentResponse->curriculum_relevance_rating + $recentResponse->learning_pace_appropriateness + $recentResponse->individual_support_availability + $recentResponse->learning_style_accommodation) / 4,
+                            'satisfaction_score' => ($recentResponse->teaching_quality_rating + $recentResponse->learning_environment_rating + $recentResponse->peer_interaction_satisfaction + $recentResponse->extracurricular_satisfaction) / 4,
+                            'success_index' => ($recentResponse->academic_progress_rating + $recentResponse->skill_development_rating + $recentResponse->critical_thinking_improvement + $recentResponse->problem_solving_confidence) / 4,
+                            'safety_index' => ($recentResponse->physical_safety_rating + $recentResponse->psychological_safety_rating + $recentResponse->bullying_prevention_effectiveness + $recentResponse->emergency_preparedness_rating) / 4,
+                            'wellbeing_index' => ($recentResponse->mental_health_support_rating + $recentResponse->stress_management_support + $recentResponse->physical_health_support + $recentResponse->overall_wellbeing_rating) / 4,
+                            'overall_satisfaction' => $recentResponse->overall_satisfaction
+                        ];
+                        $result = $flaskClient->predictCompliance($data);
+                    }
+                    break;
+
+                case 'sentiment':
+                    // Get recent comments for sentiment analysis
+                    $comments = \App\Models\SurveyResponse::whereNotNull('positive_aspects')
+                        ->orWhereNotNull('improvement_suggestions')
+                        ->orWhereNotNull('additional_comments')
+                        ->latest()
+                        ->take(10)
+                        ->get()
+                        ->map(function($response) {
+                            $texts = [];
+                            if ($response->positive_aspects) $texts[] = $response->positive_aspects;
+                            if ($response->improvement_suggestions) $texts[] = $response->improvement_suggestions;
+                            if ($response->additional_comments) $texts[] = $response->additional_comments;
+                            return implode(' ', $texts);
+                        })
+                        ->filter()
+                        ->take(5)
+                        ->toArray();
+
+                    if (!empty($comments)) {
+                        $result = $flaskClient->analyzeSentiment($comments);
+                    }
+                    break;
+
+                case 'clustering':
+                    // Get recent responses for clustering
+                    $responses = \App\Models\SurveyResponse::latest()->take(20)->get()->toArray();
+                    if (count($responses) >= 3) {
+                        $result = $flaskClient->clusterStudents($responses, 3);
+                    }
+                    break;
+
+                case 'performance':
+                    // Get sample data for performance prediction
+                    $recentResponse = \App\Models\SurveyResponse::latest()->first();
+                    if ($recentResponse) {
+                        $data = [
+                            'curriculum_relevance_rating' => $recentResponse->curriculum_relevance_rating,
+                            'learning_pace_appropriateness' => $recentResponse->learning_pace_appropriateness,
+                            'individual_support_availability' => $recentResponse->individual_support_availability,
+                            'teaching_quality_rating' => $recentResponse->teaching_quality_rating,
+                            'attendance_rate' => $recentResponse->attendance_rate ?? 85,
+                            'participation_score' => $recentResponse->participation_score ?? 80,
+                            'overall_satisfaction' => $recentResponse->overall_satisfaction
+                        ];
+                        $result = $flaskClient->predictPerformance($data);
+                    }
+                    break;
+
+                case 'dropout':
+                    // Get sample data for dropout risk prediction
+                    $recentResponse = \App\Models\SurveyResponse::latest()->first();
+                    if ($recentResponse) {
+                        $data = [
+                            'attendance_rate' => $recentResponse->attendance_rate ?? 75,
+                            'overall_satisfaction' => $recentResponse->overall_satisfaction,
+                            'academic_progress_rating' => $recentResponse->academic_progress_rating,
+                            'physical_safety_rating' => $recentResponse->physical_safety_rating,
+                            'psychological_safety_rating' => $recentResponse->psychological_safety_rating,
+                            'mental_health_support_rating' => $recentResponse->mental_health_support_rating
+                        ];
+                        $result = $flaskClient->predictDropoutRisk($data);
+                    }
+                    break;
+
+                case 'comprehensive':
+                    // Get sample data for comprehensive analytics
+                    $recentResponse = \App\Models\SurveyResponse::latest()->first();
+                    if ($recentResponse) {
+                        $data = [
+                            'learner_needs_index' => ($recentResponse->curriculum_relevance_rating + $recentResponse->learning_pace_appropriateness) / 2,
+                            'satisfaction_score' => ($recentResponse->teaching_quality_rating + $recentResponse->learning_environment_rating) / 2,
+                            'comments' => array_filter([$recentResponse->positive_aspects, $recentResponse->improvement_suggestions, $recentResponse->additional_comments]),
+                            'curriculum_relevance_rating' => $recentResponse->curriculum_relevance_rating,
+                            'attendance_rate' => $recentResponse->attendance_rate ?? 85
+                        ];
+                        $result = $flaskClient->getComprehensiveAnalytics($data);
+                    }
+                    break;
+
+                default:
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Unknown analysis type'
+                    ], 400);
+            }
+
+            if ($result) {
+                // Log the AI analysis for audit trail
+                \App\Models\AuditLog::create([
+                    'admin_id' => session('admin')->id ?? null,
+                    'action' => 'ai_analysis_' . $type,
+                    'description' => 'AI analysis performed: ' . $type,
+                    'ip_address' => $request->ip(),
+                    'new_values' => ['analysis_type' => $type]
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'data' => $result
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'AI service unavailable or analysis failed'
+                ], 503);
+            }
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('AI Analysis error', [
+                'type' => $type,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Analysis failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

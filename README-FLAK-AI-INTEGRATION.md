@@ -78,7 +78,7 @@ pip install -r requirements.txt
 cd ai-service
 docker-compose up --build -d
 
-# Service will be available at http://localhost:5001
+# Service will be available at http://localhost:5002
 ```
 
 ### 3. Laravel Configuration
@@ -87,7 +87,7 @@ Add to your `.env` file:
 
 ```env
 # Flask AI Service
-FLASK_AI_SERVICE_URL=http://localhost:5000
+FLASK_AI_SERVICE_URL=http://localhost:5002
 FLASK_AI_API_KEY=your-optional-api-key
 AI_TIMEOUT_SECONDS=30
 AI_MAX_RETRIES=3

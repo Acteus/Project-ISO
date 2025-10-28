@@ -10,7 +10,7 @@ return [
     |
     */
 
-    'flask_service_url' => env('FLASK_AI_SERVICE_URL', 'http://localhost:5001'),
+    'flask_service_url' => env('FLASK_AI_SERVICE_URL', 'http://localhost:5002'),
 
     'api_key' => env('FLASK_AI_API_KEY'),
 

@@ -19,7 +19,7 @@ class FlaskAIClient
 
     public function __construct()
     {
-        $this->baseUrl = config('ai.flask_service_url', 'http://localhost:5001');
+        $this->baseUrl = config('ai.flask_service_url', 'http://localhost:5002');
         $this->timeout = config('ai.timeout_seconds', 30);
         $this->retries = config('ai.max_retries', 3);
         $this->apiKey = config('ai.api_key');

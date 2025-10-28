@@ -46,6 +46,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Goal Management Routes
     Route::resource('goals', App\Http\Controllers\Admin\GoalController::class);
     Route::post('goals/{goal}/progress', [App\Http\Controllers\Admin\GoalController::class, 'updateProgress'])->name('goals.update-progress');
+
+    // AI Insights Routes
+    Route::get('/ai-insights', [StudentController::class, 'aiInsights'])->name('ai.insights');
 });
 
 // Survey routes
@@ -172,6 +175,11 @@ Route::prefix('api')->group(function () {
     Route::post('/ai/analyze-sentiment', [AIController::class, 'analyzeSentiment']);
     Route::post('/ai/extract-keywords', [AIController::class, 'extractKeywords']);
     Route::get('/ai/compliance-risk-meter', [AIController::class, 'getComplianceRiskMeter']);
+
+    // AI Service Status and Analysis routes (session-based auth for admin dashboard)
+    Route::get('/ai/service-status', [AIController::class, 'getServiceStatus']);
+    Route::get('/ai/metrics', [AIController::class, 'getAIMetrics']);
+    Route::post('/ai/analyze/{type}', [AIController::class, 'runAnalysis']);
 
     // Export routes
     Route::get('/export/excel', [ExportController::class, 'exportExcel'])->name('api.export.excel');

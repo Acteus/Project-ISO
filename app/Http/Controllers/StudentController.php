@@ -324,4 +324,23 @@ class StudentController extends Controller
 
         return view('admin.audit-logs', compact('admin', 'auditLogs', 'actions', 'action', 'dateFrom', 'dateTo'));
     }
+
+    public function aiInsights()
+    {
+        $admin = session('admin');
+
+        if (!$admin) {
+            return redirect()->route('student.login');
+        }
+
+        // Log viewing of AI insights for audit trail
+        AuditLog::create([
+            'admin_id' => $admin->id,
+            'action' => 'view_ai_insights',
+            'description' => 'Admin accessed AI insights dashboard',
+            'ip_address' => request()->ip(),
+        ]);
+
+        return view('admin.ai-insights', compact('admin'));
+    }
 }
