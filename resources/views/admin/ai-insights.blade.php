@@ -339,6 +339,15 @@
             <div class="insights-header">
                 <h1>AI Insights Dashboard</h1>
                 <p>Comprehensive machine learning analytics for ISO 21001 compliance, predictive modeling, and proactive quality management</p>
+                <div id="data-range-display" style="margin-top: 20px; padding: 12px 24px; background: rgba(66, 133, 244, 0.1); border-radius: 25px; display: inline-block; font-weight: 600; color: #333; font-size: 14px;">
+                    <svg style="width: 18px; height: 18px; vertical-align: middle; margin-right: 8px; fill: rgba(66, 133, 244, 1);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+                    </svg>
+                    <span id="data-range-text">Loading data range...</span>
+                </div>
+                <div id="data-stats-display" style="margin-top: 10px; padding: 8px 20px; background: rgba(255, 255, 255, 0.5); border-radius: 20px; display: inline-block; font-size: 13px; color: #555;">
+                    <span id="data-stats-text">Analyzing <strong id="total-responses-count">0</strong> survey responses</span>
+                </div>
             </div>
 
             <!-- Alert Messages -->
@@ -497,6 +506,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             checkAIServiceStatus();
             loadAIMetrics();
+            loadDataRangeInfo();
         });
 
         /* ----------------------
@@ -530,9 +540,65 @@
                     document.getElementById('response-time').textContent = (d.avg_response_time ?? 0) + 'ms';
                     document.getElementById('iso-compliance').textContent = (d.iso_compliance_score ?? 0) + '%';
                     document.getElementById('risk-score').textContent = (d.overall_risk_score ?? 0) + '/100';
+
+                    // Update total responses count in the data stats display
+                    if (d.total_responses_analyzed !== undefined) {
+                        document.getElementById('total-responses-count').textContent = d.total_responses_analyzed;
+                    }
                 }
             } catch (err) {
                 console.error('Error loading AI metrics:', err);
+            }
+        }
+
+        async function loadDataRangeInfo() {
+            try {
+                const res = await fetch('/api/survey/analytics', {
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }
+                });
+                const json = await res.json();
+
+                if (json?.success && json?.data) {
+                    const analytics = json.data;
+                    const dataRangeText = document.getElementById('data-range-text');
+                    const dataStatsText = document.getElementById('data-stats-text');
+
+                    // Update total responses
+                    const totalResponses = analytics.total_responses || 0;
+                    document.getElementById('total-responses-count').textContent = totalResponses;
+
+                    // Get date range from responses
+                    if (analytics.date_range) {
+                        const startDate = new Date(analytics.date_range.oldest);
+                        const endDate = new Date(analytics.date_range.newest);
+
+                        const formatDate = (date) => {
+                            const options = { month: 'short', day: 'numeric', year: 'numeric' };
+                            return date.toLocaleDateString('en-US', options);
+                        };
+
+                        dataRangeText.innerHTML = `<strong>Data Range:</strong> ${formatDate(startDate)} - ${formatDate(endDate)}`;
+                    } else {
+                        dataRangeText.innerHTML = '<strong>Analyzing All Available Data</strong>';
+                    }
+
+                    // Update data stats with more details
+                    if (analytics.distribution) {
+                        const tracks = Object.keys(analytics.distribution.track || {}).length;
+                        const grades = Object.keys(analytics.distribution.grade_level || {}).length;
+
+                        dataStatsText.innerHTML = `Analyzing <strong>${totalResponses}</strong> survey responses across <strong>${tracks}</strong> tracks and <strong>${grades}</strong> grade levels`;
+                    } else {
+                        dataStatsText.innerHTML = `Analyzing <strong>${totalResponses}</strong> survey responses`;
+                    }
+
+                } else {
+                    document.getElementById('data-range-text').innerHTML = '<strong>No data available</strong>';
+                    document.getElementById('data-stats-text').innerHTML = 'No survey responses found';
+                }
+            } catch (err) {
+                console.error('Error loading data range info:', err);
+                document.getElementById('data-range-text').innerHTML = '<strong>Error loading data range</strong>';
             }
         }
 
