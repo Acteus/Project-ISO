@@ -14,6 +14,7 @@ import joblib
 import os
 import logging
 from datetime import datetime
+from utils.data_processor import convert_numpy_types
 
 logger = logging.getLogger(__name__)
 
@@ -56,12 +57,16 @@ class DropoutRiskPredictor:
 
     def preprocess_data(self, data):
         """Preprocess student data for dropout risk prediction"""
+        # Convert single dict to list
+        if isinstance(data, dict):
+            data = [data]
+
         if isinstance(data, list):
             df = pd.DataFrame(data)
         elif isinstance(data, pd.DataFrame):
             df = data.copy()
         else:
-            raise ValueError("Data must be a list of dictionaries or pandas DataFrame")
+            raise ValueError("Data must be a dictionary, list of dictionaries, or pandas DataFrame")
 
         # Handle categorical variables
         categorical_cols = ['track', 'grade_level', 'semester']
@@ -72,36 +77,40 @@ class DropoutRiskPredictor:
                 df[col] = df[col].astype(str)
                 df[col] = self.encoder.fit_transform(df[col])
 
-        # Select features for prediction
+        # Select features for prediction - MUST match training features exactly
         feature_columns = [
             'curriculum_relevance_rating', 'learning_pace_appropriateness',
-            'individual_support_availability', 'learning_style_accommodation',
-            'teaching_quality_rating', 'learning_environment_rating',
-            'peer_interaction_satisfaction', 'academic_progress_rating',
-            'skill_development_rating', 'critical_thinking_improvement',
-            'problem_solving_confidence', 'physical_safety_rating',
-            'psychological_safety_rating', 'mental_health_support_rating',
-            'stress_management_support', 'attendance_rate',
-            'participation_score', 'overall_satisfaction',
-            'bullying_prevention_effectiveness', 'emergency_preparedness_rating'
+            'individual_support_availability', 'teaching_quality_rating',
+            'learning_environment_rating', 'peer_interaction_satisfaction',
+            'academic_progress_rating', 'skill_development_rating',
+            'physical_safety_rating', 'psychological_safety_rating',
+            'mental_health_support_rating', 'stress_management_support',
+            'attendance_rate', 'participation_score', 'overall_satisfaction'
         ]
 
-        # Add encoded categorical features
-        feature_columns.extend([col for col in categorical_cols if col in df.columns])
+        # Extract features - ensure all expected features are present
+        X = pd.DataFrame()
+        for col in feature_columns:
+            if col in df.columns:
+                X[col] = df[col]
+            else:
+                # Use default value of 3.0 for rating fields (neutral), 80 for rates
+                if 'rate' in col.lower() and col not in ['learning_pace_appropriateness']:
+                    X[col] = 80.0
+                elif 'score' in col.lower():
+                    X[col] = 3.0
+                else:
+                    X[col] = 3.0  # Default to neutral rating
 
-        # Filter to available columns
-        available_columns = [col for col in feature_columns if col in df.columns]
-        if not available_columns:
-            raise ValueError("No suitable features found for dropout risk prediction")
-
-        # Extract features
-        X = df[available_columns].fillna(0)
+        X = X.fillna(3.0)
 
         # Scale features
         if self.scaler is None:
             self.scaler = StandardScaler()
-
-        X_scaled = self.scaler.fit_transform(X)
+            X_scaled = self.scaler.fit_transform(X)
+        else:
+            # Use transform() for already fitted scaler
+            X_scaled = self.scaler.transform(X)
 
         return X_scaled, df
 
@@ -209,7 +218,7 @@ class DropoutRiskPredictor:
             # Calculate confidence
             confidence = self._calculate_prediction_confidence(data, risk_probability)
 
-            return {
+            result = {
                 'dropout_risk': risk_level,
                 'risk_probability': round(float(risk_probability), 4),
                 'intervention_urgency': intervention_urgency,
@@ -217,13 +226,16 @@ class DropoutRiskPredictor:
                 'model_used': 'Random Forest Classifier (Calibrated)',
                 'iso_21001_insights': {
                     'risk_indicator': risk_level,
-                    'requires_intervention': risk_probability >= 0.4,
+                    'requires_intervention': bool(risk_probability >= 0.4),
                     'monitoring_frequency': self._get_monitoring_frequency(risk_probability),
                     'compliance_impact': 'High' if risk_probability >= 0.6 else 'Medium' if risk_probability >= 0.4 else 'Low'
                 },
                 'risk_factors': self._identify_risk_factors(data),
                 'recommendations': self._generate_risk_recommendations(risk_probability, data)
             }
+
+            # Convert numpy types to Python native types
+            return convert_numpy_types(result)
 
         except Exception as e:
             logger.error(f"Prediction failed: {e}")

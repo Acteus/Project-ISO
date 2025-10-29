@@ -467,7 +467,7 @@ class ModelTrainer:
                 df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
                 # Remove any invalid timestamps
                 df_valid = df.dropna(subset=['timestamp'])
-                
+
                 if len(df_valid) >= 12:
                     time_series = df_valid.groupby(df_valid['timestamp'].dt.to_period('M'))['overall_satisfaction'].mean()
                     ts_result = model.train_time_series(time_series)

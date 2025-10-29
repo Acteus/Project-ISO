@@ -363,14 +363,21 @@ class AIController extends Controller
                     $recentResponse = \App\Models\SurveyResponse::latest()->first();
                     if ($recentResponse) {
                         $data = [
-                            'learner_needs_index' => ($recentResponse->curriculum_relevance_rating + $recentResponse->learning_pace_appropriateness + $recentResponse->individual_support_availability + $recentResponse->learning_style_accommodation) / 4,
-                            'satisfaction_score' => ($recentResponse->teaching_quality_rating + $recentResponse->learning_environment_rating + $recentResponse->peer_interaction_satisfaction + $recentResponse->extracurricular_satisfaction) / 4,
-                            'success_index' => ($recentResponse->academic_progress_rating + $recentResponse->skill_development_rating + $recentResponse->critical_thinking_improvement + $recentResponse->problem_solving_confidence) / 4,
-                            'safety_index' => ($recentResponse->physical_safety_rating + $recentResponse->psychological_safety_rating + $recentResponse->bullying_prevention_effectiveness + $recentResponse->emergency_preparedness_rating) / 4,
-                            'wellbeing_index' => ($recentResponse->mental_health_support_rating + $recentResponse->stress_management_support + $recentResponse->physical_health_support + $recentResponse->overall_wellbeing_rating) / 4,
-                            'overall_satisfaction' => $recentResponse->overall_satisfaction
+                            'learner_needs_index' => floatval(($recentResponse->curriculum_relevance_rating + $recentResponse->learning_pace_appropriateness + $recentResponse->individual_support_availability + $recentResponse->learning_style_accommodation) / 4),
+                            'satisfaction_score' => floatval(($recentResponse->teaching_quality_rating + $recentResponse->learning_environment_rating + $recentResponse->peer_interaction_satisfaction + $recentResponse->extracurricular_satisfaction) / 4),
+                            'success_index' => floatval(($recentResponse->academic_progress_rating + $recentResponse->skill_development_rating + $recentResponse->critical_thinking_improvement + $recentResponse->problem_solving_confidence) / 4),
+                            'safety_index' => floatval(($recentResponse->physical_safety_rating + $recentResponse->psychological_safety_rating + $recentResponse->bullying_prevention_effectiveness + $recentResponse->emergency_preparedness_rating) / 4),
+                            'wellbeing_index' => floatval(($recentResponse->mental_health_support_rating + $recentResponse->stress_management_support + $recentResponse->physical_health_support + $recentResponse->overall_wellbeing_rating) / 4),
+                            'overall_satisfaction' => floatval($recentResponse->overall_satisfaction)
                         ];
+                        
+                        // Log the data being sent for debugging
+                        \Illuminate\Support\Facades\Log::info('Compliance prediction data being sent to Flask:', $data);
+                        
                         $result = $flaskClient->predictCompliance($data);
+                        
+                        // Log the raw result from Flask
+                        \Illuminate\Support\Facades\Log::info('Raw result from Flask compliance prediction:', ['result' => $result]);
                     }
                     break;
 

@@ -55,12 +55,16 @@ class StudentPerformancePredictor:
 
     def preprocess_data(self, data):
         """Preprocess student data for performance prediction"""
+        # Convert single dict to list
+        if isinstance(data, dict):
+            data = [data]
+
         if isinstance(data, list):
             df = pd.DataFrame(data)
         elif isinstance(data, pd.DataFrame):
             df = data.copy()
         else:
-            raise ValueError("Data must be a list of dictionaries or pandas DataFrame")
+            raise ValueError("Data must be a dictionary, list of dictionaries, or pandas DataFrame")
 
         # Handle categorical variables
         categorical_cols = ['track', 'grade_level', 'semester']
@@ -90,14 +94,30 @@ class StudentPerformancePredictor:
         if not available_columns:
             raise ValueError("No suitable features found for performance prediction")
 
-        # Extract features
-        X = df[available_columns].fillna(0)
+        # Extract features - ensure all expected features are present
+        # Fill missing features with default values (0 or median)
+        X = pd.DataFrame()
+        for col in feature_columns:
+            if col in df.columns:
+                X[col] = df[col]
+            else:
+                # Use default value of 3.0 for rating fields (neutral), 80 for rates
+                if 'rate' in col.lower() and col not in ['learning_pace_appropriateness']:
+                    X[col] = 80.0
+                elif 'score' in col.lower():
+                    X[col] = 3.0
+                else:
+                    X[col] = 3.0  # Default to neutral rating
+
+        X = X.fillna(3.0)
 
         # Scale features
         if self.scaler is None:
             self.scaler = StandardScaler()
-
-        X_scaled = self.scaler.fit_transform(X)
+            X_scaled = self.scaler.fit_transform(X)
+        else:
+            # Use transform() for already fitted scaler
+            X_scaled = self.scaler.transform(X)
 
         return X_scaled, df
 

@@ -59,12 +59,16 @@ class SatisfactionTrendPredictor:
 
     def preprocess_data(self, data, include_time_features=True):
         """Preprocess data for satisfaction trend prediction"""
+        # Convert single dict to list
+        if isinstance(data, dict):
+            data = [data]
+
         if isinstance(data, list):
             df = pd.DataFrame(data)
         elif isinstance(data, pd.DataFrame):
             df = data.copy()
         else:
-            raise ValueError("Data must be a list of dictionaries or pandas DataFrame")
+            raise ValueError("Data must be a dictionary, list of dictionaries, or pandas DataFrame")
 
         # Handle time-based features if available
         if include_time_features and 'timestamp' in df.columns:
@@ -74,40 +78,46 @@ class SatisfactionTrendPredictor:
             df['day_of_year'] = df['timestamp'].dt.dayofyear
             df['week_of_year'] = df['timestamp'].dt.isocalendar().week
 
-        # Select features for trend prediction
+        # Select features for trend prediction - MUST match training features exactly
         feature_columns = [
             'curriculum_relevance_rating', 'learning_pace_appropriateness',
-            'individual_support_availability', 'learning_style_accommodation',
-            'teaching_quality_rating', 'learning_environment_rating',
-            'peer_interaction_satisfaction', 'extracurricular_satisfaction',
+            'individual_support_availability', 'teaching_quality_rating',
+            'learning_environment_rating', 'peer_interaction_satisfaction',
             'academic_progress_rating', 'skill_development_rating',
-            'critical_thinking_improvement', 'problem_solving_confidence',
-            'physical_safety_rating', 'psychological_safety_rating',
-            'bullying_prevention_effectiveness', 'emergency_preparedness_rating',
-            'mental_health_support_rating', 'stress_management_support',
-            'physical_health_support', 'overall_wellbeing_rating',
+            'physical_safety_rating', 'mental_health_support_rating',
             'attendance_rate', 'participation_score'
         ]
 
-        # Add time-based features if available
-        if include_time_features:
-            time_features = ['month', 'quarter', 'day_of_year', 'week_of_year']
-            feature_columns.extend([col for col in time_features if col in df.columns])
+        # NOTE: Time-based features were NOT used in training, so don't add them during prediction
+        # if include_time_features:
+        #     time_features = ['month', 'quarter', 'day_of_year', 'week_of_year']
+        #     feature_columns.extend([col for col in time_features if col in df.columns])
 
-        # Filter to available columns
-        available_columns = [col for col in feature_columns if col in df.columns]
-        if not available_columns:
-            raise ValueError("No suitable features found for satisfaction trend prediction")
+        # Extract features - ensure all expected features are present
+        X = pd.DataFrame()
+        for col in feature_columns:
+            if col in df.columns:
+                X[col] = df[col]
+            else:
+                # Use default value of 3.0 for rating fields (neutral), 80 for rates
+                if 'rate' in col.lower() and col not in ['learning_pace_appropriateness']:
+                    X[col] = 80.0
+                elif 'score' in col.lower():
+                    X[col] = 3.0
+                else:
+                    X[col] = 3.0  # Default to neutral rating
 
-        # Extract features and target
-        X = df[available_columns].fillna(0)
+        X = X.fillna(3.0)
+
         y = df.get('overall_satisfaction', pd.Series([3.0] * len(df)))  # Default satisfaction
 
         # Scale features
         if self.scaler is None:
             self.scaler = StandardScaler()
-
-        X_scaled = self.scaler.fit_transform(X)
+            X_scaled = self.scaler.fit_transform(X)
+        else:
+            # Use transform() for already fitted scaler
+            X_scaled = self.scaler.transform(X)
 
         return X_scaled, y, df
 
