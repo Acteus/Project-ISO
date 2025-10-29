@@ -100,20 +100,21 @@
 
         .ai-metrics {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
 
         .metric-card {
             background: white;
-            padding: 25px;
+            padding: 25px 15px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             text-align: center;
             transition: transform 0.3s ease;
             position: relative;
             overflow: hidden;
+            min-width: 200px;
         }
 
         .metric-card::before {
@@ -131,17 +132,24 @@
         }
 
         .metric-value {
-            font-size: 48px;
+            font-size: 42px;
             font-weight: 700;
             color: rgba(66, 133, 244, 1);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            line-height: 1;
         }
 
         .metric-label {
-            font-size: 16px;
-            color: #666;
+            font-size: 11px;
+            color: #555;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+            line-height: 1.3;
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn {
