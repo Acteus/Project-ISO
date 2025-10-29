@@ -8,6 +8,7 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\VisualizationController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 
 // Public routes
 Route::get('/', function () {
@@ -27,6 +28,14 @@ Route::prefix('student')->name('student.')->group(function () {
     Route::post('/login', [StudentController::class, 'login'])->name('login.post');
     Route::match(['get', 'post'], '/logout', [StudentController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
+});
+
+// Password Reset Routes
+Route::prefix('password')->name('password.')->group(function () {
+    Route::get('/forgot', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('request');
+    Route::post('/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('email');
+    Route::get('/reset/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('reset');
+    Route::post('/reset', [ForgotPasswordController::class, 'reset'])->name('update');
 });
 
 // Admin routes

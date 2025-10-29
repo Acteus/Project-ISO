@@ -271,9 +271,9 @@
       <form id="loginForm" method="post" action="{{ route('student.login.post') }}">
         @csrf
         <div class="form-group">
-          <label id="idLabel">Student ID</label>
-          <input type="text" name="student_id" required placeholder="Enter your student ID">
-          <div class="error-message">Please enter your student ID</div>
+          <label id="idLabel">Student ID or Email</label>
+          <input type="text" name="student_id" required placeholder="Enter your student ID or email">
+          <div class="error-message">Please enter your student ID or email</div>
         </div>
 
         <div class="form-group">
@@ -285,7 +285,7 @@
         <button type="submit" class="login-btn">Log In</button>
 
         <div class="forgot-password">
-          <a href="#">Forgot password?</a>
+          <a href="{{ route('password.request') }}">Forgot password?</a>
         </div>
 
         <a href="{{ route('student.register') }}" class="create-account-btn">Create new account</a>
@@ -376,8 +376,8 @@
       this.classList.add('active');
       document.getElementById('adminBtn').classList.remove('active');
       document.getElementById('loginTitle').textContent = 'Student Login';
-      document.getElementById('idLabel').textContent = 'Student ID';
-      document.querySelector('input[name="student_id"]').placeholder = 'Enter your student ID';
+      document.getElementById('idLabel').textContent = 'Student ID or Email';
+      document.querySelector('input[name="student_id"]').placeholder = 'Enter your student ID or email';
     });
 
     document.getElementById('adminBtn').addEventListener('click', function() {

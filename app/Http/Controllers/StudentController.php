@@ -22,11 +22,24 @@ class StudentController extends Controller
         $validator = Validator::make($request->all(), [
             'firstname' => 'required|string|max:255',
             'lastname' => 'required|string|max:255',
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                'unique:users',
+                'regex:/^[a-zA-Z0-9._%+-]+@my\.jru\.edu$/',
+            ],
             'year' => 'required|in:11,12',
             'section' => 'required|string|max:10',
             'studentid' => 'required|string|unique:users,student_id',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:8|confirmed',
             'acknowledge' => 'required|accepted',
+        ], [
+            'email.regex' => 'Email must be a valid @my.jru.edu address.',
+            'email.unique' => 'This email is already registered.',
+            'studentid.unique' => 'This student ID is already registered.',
+            'password.min' => 'Password must be at least 8 characters.',
         ]);
 
         if ($validator->fails()) {
@@ -39,8 +52,8 @@ class StudentController extends Controller
         // Create user account for student
         $user = User::create([
             'name' => $request->firstname . ' ' . $request->lastname,
-            'email' => $request->studentid . '@student.jru.edu', // Generate student email
-            'password' => Hash::make($request->password), // Use provided password
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
             'role' => 'student',
             'student_id' => $request->studentid,
             'first_name' => $request->firstname,
@@ -129,9 +142,11 @@ class StudentController extends Controller
             ], 401);
         }
 
-        // Regular student login
+        // Regular student login - check if input is email or student ID
+        $loginField = filter_var($request->student_id, FILTER_VALIDATE_EMAIL) ? 'email' : 'student_id';
+
         $credentials = [
-            'student_id' => $request->student_id,
+            $loginField => $request->student_id,
             'password' => $request->password,
         ];
 

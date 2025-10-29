@@ -196,6 +196,12 @@
         </div>
 
         <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" name="email" required placeholder="yourname@my.jru.edu">
+          <div class="error-message">Please enter a valid @my.jru.edu email address</div>
+        </div>
+
+        <div class="form-group">
           <label>Year Level</label>
           <div class="year-check">
             <label><input type="radio" name="year" value="11"> Grade 11</label>
@@ -221,7 +227,7 @@
         <div class="form-group">
           <label>Password</label>
           <input type="password" name="password" required placeholder="Create a password">
-          <div class="error-message">Password is required (minimum 6 characters)</div>
+          <div class="error-message">Password is required (minimum 8 characters)</div>
         </div>
 
         <div class="form-group">
@@ -372,7 +378,7 @@
                   });
 
                   // Validate password length
-                  if (password && password.value.length < 6) {
+                  if (password && password.value.length < 8) {
                       const formGroup = password.closest('.form-group');
                       formGroup.classList.add('error');
                       valid = false;
