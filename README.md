@@ -15,15 +15,18 @@ This application implements a complete ISO 21001 quality management system for e
 
 ## Architecture Overview
 
-This is a monolithic Laravel application with a service-oriented architecture:
+This is a monolithic Laravel application with a service-oriented architecture and integrated Python AI service:
 
 ### Core Components
 - **Laravel Framework**: Version 12 with PHP 8.2+
 - **Database**: SQLite/MySQL/PostgreSQL support
 - **Authentication**: Laravel Sanctum for API authentication
-- **Frontend**: Laravel Blade views with minimal JavaScript (Axios, Vite, TailwindCSS)
-- **AI/ML**: PHP-ML library for compliance analysis
+- **Frontend**: Laravel Blade views with vanilla JavaScript (Axios for API calls)
+- **AI/ML**: 
+  - **Primary**: Python Flask AI Service with TensorFlow/scikit-learn (8 ML models)
+  - **Fallback**: PHP-ML library for offline compliance analysis
 - **Exports**: Laravel Excel and DomPDF for reporting
+- **Visualization**: Chart.js for real-time analytics dashboards
 
 ### Key Features
 - Student registration and authentication system
@@ -39,11 +42,31 @@ This is a monolithic Laravel application with a service-oriented architecture:
 project-iso/
 ├── app/                          # Laravel application code
 │   ├── Http/Controllers/         # Controllers (Survey, AI, Admin, etc.)
+│   │   ├── AIAnalysisController.php    # AI insights and predictions
+│   │   ├── AdminController.php         # Admin dashboard
+│   │   └── SurveyController.php        # Survey management
 │   ├── Models/                   # Eloquent models (SurveyResponse, Admin, etc.)
 │   ├── Services/                 # Business logic services
+│   │   ├── AIService.php         # Core AI service with fallback logic
+│   │   └── FlaskAIClient.php     # Flask AI service client
 │   └── Exports/                  # Export classes
+├── ai-service/                   # Python Flask AI microservice
+│   ├── app.py                    # Flask application entry point
+│   ├── ai_models/                # 8 ML model implementations
+│   │   ├── compliance_predictor.py
+│   │   ├── sentiment_analyzer.py
+│   │   ├── student_clusterer.py
+│   │   ├── dropout_risk_predictor.py
+│   │   ├── risk_assessment_predictor.py
+│   │   ├── satisfaction_trend_predictor.py
+│   │   └── student_performance_predictor.py
+│   ├── utils/                    # Data processing utilities
+│   ├── models/                   # Trained model files
+│   ├── Dockerfile                # Docker configuration
+│   └── requirements.txt          # Python dependencies
 ├── bootstrap/                    # Laravel bootstrap files
 ├── config/                       # Configuration files
+│   └── ai.php                    # AI service configuration
 ├── database/                     # Migrations and seeders
 │   ├── migrations/               # Database schema
 │   └── seeders/                  # Data seeding
@@ -52,12 +75,15 @@ project-iso/
 │   ├── css/                      # Stylesheets
 │   ├── js/                       # JavaScript files
 │   └── views/                    # Blade templates
+│       └── admin/
+│           ├── dashboard.blade.php       # Admin dashboard
+│           └── ai-insights.blade.php     # AI insights dashboard
 ├── routes/                       # Route definitions
+│   ├── web.php                   # Web routes
+│   └── api.php                   # API routes
 ├── storage/                      # File storage and logs
 ├── tests/                        # Test suites
-├── docs/                         # Documentation
-├── html/                         # Legacy HTML files (deprecated)
-└── vendor/                       # Composer dependencies
+└── docs/                         # Documentation
 ```
 
 ## ISO 21001 Compliance Features
@@ -70,11 +96,18 @@ project-iso/
 5. **Learner Wellbeing Metrics** (Mental health support, stress management, physical health, overall wellbeing)
 
 ### AI-Powered Features
-- **Compliance Prediction**: Machine learning models to predict ISO 21001 compliance levels
-- **Response Clustering**: K-means analysis to identify learner experience patterns
-- **Sentiment Analysis**: NLP processing of qualitative feedback
-- **Keyword Extraction**: Thematic analysis of student comments
-- **Risk Assessment**: Traffic light system for compliance monitoring
+- **8 Advanced ML Models**: 
+  - Compliance Prediction (Deep Learning with TensorFlow)
+  - Sentiment Analysis (NLP with scikit-learn)
+  - Student Clustering (K-Means & DBSCAN)
+  - Performance Prediction (Gradient Boosting)
+  - Dropout Risk Assessment (Random Forest)
+  - Comprehensive Risk Assessment (Multi-dimensional analysis)
+  - Satisfaction Trend Analysis (Time Series Forecasting)
+  - Predictive Analytics (Advanced forecasting)
+- **Real-time AI Insights Dashboard**: Interactive dashboard with live metrics and predictions
+- **Automatic Fallback System**: PHP-ML backup when Flask service unavailable
+- **Circuit Breaker Pattern**: Resilient service communication with retry mechanisms
 
 ### Data Privacy & Security
 - **Encryption**: AES-256 encryption for sensitive student data
@@ -100,10 +133,14 @@ project-iso/
 - **Dashboard Visualization**: Interactive charts and performance metrics
 
 ### AI & Machine Learning
-- **Compliance Prediction**: ML models predicting ISO 21001 compliance levels
-- **Cluster Analysis**: Pattern recognition in learner experiences
-- **Sentiment Analysis**: Automated processing of qualitative feedback
-- **Risk Assessment**: Automated compliance risk scoring and recommendations
+- **Flask AI Service Integration**: Python-based microservice with 8 ML models
+- **Real-time Analytics Dashboard**: `/admin/ai-insights` with live predictions
+- **Comprehensive Risk Assessment**: Multi-dimensional ISO 21001 compliance analysis
+- **Predictive Performance Modeling**: Early identification of at-risk students
+- **Sentiment & NLP Analysis**: Advanced text analysis of student feedback
+- **Student Segmentation**: Intelligent clustering for targeted interventions
+- **Trend Forecasting**: Time series analysis for proactive quality management
+- **Service Health Monitoring**: Real-time status tracking with 6 key metrics
 
 ### Administration
 - **Admin Dashboard**: Comprehensive analytics and management interface
@@ -171,6 +208,23 @@ php artisan db:seed --class=AdminSeeder
 npm run build
 ```
 
+8. **Start Flask AI Service (Optional but Recommended):**
+```bash
+# Navigate to AI service directory
+cd ai-service
+
+# Using Docker (Recommended)
+docker-compose up -d
+
+# Or manually with Python
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python app.py
+```
+
+The system will work with PHP-ML fallback if Flask service is not running.
+
 ## Configuration
 
 ### Environment Variables
@@ -185,6 +239,19 @@ APP_URL=http://localhost:8000
 # Database Configuration
 DB_CONNECTION=sqlite
 DB_DATABASE=/absolute/path/to/database/database.sqlite
+
+# Flask AI Service Configuration
+FLASK_AI_SERVICE_URL=http://localhost:5000
+FLASK_AI_API_KEY=your-optional-api-key
+AI_TIMEOUT_SECONDS=30
+AI_MAX_RETRIES=3
+AI_ENABLE_CACHE=true
+AI_FALLBACK_TO_PHP=true
+
+# AI Model Configuration
+AI_COMPLIANCE_MODEL_ENABLED=true
+AI_SENTIMENT_MODEL_ENABLED=true
+AI_CLUSTER_MODEL_ENABLED=true
 
 # Sanctum for API Authentication
 SANCTUM_STATEFUL_DOMAINS=localhost,127.0.0.1
@@ -274,6 +341,7 @@ npm run build
 4. **Survey Form** (`/survey`): ISO 21001 survey completion
 5. **Thank You** (`/thank-you`): Survey completion confirmation
 6. **Admin Dashboard** (`/admin/dashboard`): Analytics and management
+7. **AI Insights Dashboard** (`/admin/ai-insights`): Advanced ML analytics with 8 models
 
 ## API Documentation
 
@@ -586,7 +654,21 @@ php artisan queue:work
 - **ISO 21001 System Documentation**: `docs/iso-21001-system-documentation.md`
 - **Data Model Documentation**: `docs/stem-data-model.md`
 - **Frontend Documentation**: `frontend-docs.md`
+- **Flask AI Integration**: `README-FLAK-AI-INTEGRATION.md`
+- **AI Service Documentation**: `ai-service/README.md`
 - **API Documentation**: See API section above
+
+## AI Service Commands
+
+```bash
+# Test Flask AI service connectivity
+php artisan ai:test-flask
+
+# Test specific features
+php artisan ai:test-flask --compliance  # Test compliance prediction
+php artisan ai:test-flask --sentiment   # Test sentiment analysis
+php artisan ai:test-flask --service-only # Test service health only
+```
 
 ## License
 
