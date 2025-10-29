@@ -116,6 +116,10 @@ class StudentClusterer:
 
         return best_k, best_score
 
+    def train(self, data, k=None, algorithm='kmeans'):
+        """Train clustering model (alias for cluster method for consistency with training pipeline)"""
+        return self.cluster(data, k, algorithm)
+
     def cluster(self, data, k=None, algorithm='kmeans'):
         """Perform clustering on student data"""
         try:
@@ -343,4 +347,35 @@ class StudentClusterer:
         if high_performers:
             insights.append(f"Found {len(high_performers)} high-performing clusters - identify and scale best practices")
 
+        # ISO 21001 specific insights
+        insights.extend(self._generate_iso21001_insights(clusters))
+
         return insights
+
+    def _generate_iso21001_insights(self, clusters):
+        """Generate ISO 21001 specific insights from clustering"""
+        iso_insights = []
+
+        # Analyze learner needs across clusters
+        learner_needs_scores = [c.get('average_satisfaction', 0) for c in clusters]
+        if learner_needs_scores:
+            avg_learner_needs = sum(learner_needs_scores) / len(learner_needs_scores)
+            if avg_learner_needs < 3.5:
+                iso_insights.append("ISO 21001:7.1 - Learner needs assessment indicates areas for improvement across clusters")
+
+        # Safety and wellbeing analysis
+        safety_concern_clusters = sum(1 for c in clusters if any('safety' in char.lower() for char in c.get('characteristics', [])))
+        if safety_concern_clusters > 0:
+            iso_insights.append(f"ISO 21001:7.2 - {safety_concern_clusters} clusters show safety concerns requiring attention")
+
+        # Performance differentiation
+        performance_variance = np.var([c.get('average_performance', 0) for c in clusters])
+        if performance_variance > 0.5:
+            iso_insights.append("ISO 21001:7.1.2 - Significant performance variance indicates need for differentiated support strategies")
+
+        # Intervention prioritization
+        high_risk_count = sum(1 for c in clusters if c.get('risk_profile', {}).get('risk_level') == 'High Risk')
+        if high_risk_count > 0:
+            iso_insights.append(f"ISO 21001:7.3 - {high_risk_count} high-risk clusters identified for priority intervention planning")
+
+        return iso_insights

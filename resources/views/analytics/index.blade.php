@@ -557,6 +557,12 @@
             <div class="analytics-header">
                 <h1>Advanced ISO 21001 Analytics Dashboard</h1>
                 <p>Comprehensive Quality Education Metrics, Insights & Trends</p>
+                <div id="date-range-display" style="margin-top: 15px; padding: 12px 24px; background: rgba(66, 133, 244, 0.1); border-radius: 25px; display: inline-block; font-weight: 600; color: #333; font-size: 15px;">
+                    <svg style="width: 18px; height: 18px; vertical-align: middle; margin-right: 8px; fill: rgba(66, 133, 244, 1);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"/>
+                    </svg>
+                    <span id="date-range-text">Showing All Data</span>
+                </div>
             </div>
 
             @if($noData)
@@ -789,6 +795,9 @@
             // Set default to current week but don't filter by it
             setCurrentWeekAsDefault();
 
+            // Update date range display on load
+            updateDateRangeDisplay();
+
             initializeCharts();
             loadComplianceRisk();
             loadTimeSeriesData();
@@ -804,6 +813,9 @@
             document.getElementById('week-filter').value = '';
             document.getElementById('date_from').value = '';
             document.getElementById('date_to').value = '';
+
+            // Update display to show "All Data"
+            updateDateRangeDisplay();
         });
 
         function initializeCharts() {
@@ -1748,6 +1760,72 @@
             document.getElementById('date_to').value = weekEnd.toISOString().split('T')[0];
         }
 
+        // Update Date Range Display
+        function updateDateRangeDisplay() {
+            const dateFrom = document.getElementById('date_from').value;
+            const dateTo = document.getElementById('date_to').value;
+            const weekFilter = document.getElementById('week-filter');
+            const dateRangeText = document.getElementById('date-range-text');
+
+            if (!dateFrom && !dateTo) {
+                // No date filters applied
+                dateRangeText.innerHTML = '<strong>Showing All Data</strong>';
+                dateRangeText.parentElement.style.background = 'rgba(66, 133, 244, 0.1)';
+                dateRangeText.parentElement.style.color = '#333';
+            } else if (dateFrom && dateTo) {
+                // Both dates provided
+                const startDate = new Date(dateFrom);
+                const endDate = new Date(dateTo);
+
+                const formatDate = (date) => {
+                    const options = { month: 'short', day: 'numeric', year: 'numeric' };
+                    return date.toLocaleDateString('en-US', options);
+                };
+
+                const weekText = weekFilter.value ? ` (${weekFilter.options[weekFilter.selectedIndex].text})` : '';
+
+                dateRangeText.innerHTML = `<strong>Date Range:</strong> ${formatDate(startDate)} - ${formatDate(endDate)}${weekText}`;
+                dateRangeText.parentElement.style.background = 'rgba(40, 167, 69, 0.1)';
+                dateRangeText.parentElement.style.color = '#155724';
+            } else if (dateFrom) {
+                // Only start date
+                const startDate = new Date(dateFrom);
+                const formatDate = (date) => {
+                    const options = { month: 'short', day: 'numeric', year: 'numeric' };
+                    return date.toLocaleDateString('en-US', options);
+                };
+
+                dateRangeText.innerHTML = `<strong>From:</strong> ${formatDate(startDate)} onwards`;
+                dateRangeText.parentElement.style.background = 'rgba(255, 193, 7, 0.1)';
+                dateRangeText.parentElement.style.color = '#856404';
+            } else if (dateTo) {
+                // Only end date
+                const endDate = new Date(dateTo);
+                const formatDate = (date) => {
+                    const options = { month: 'short', day: 'numeric', year: 'numeric' };
+                    return date.toLocaleDateString('en-US', options);
+                };
+
+                dateRangeText.innerHTML = `<strong>Up to:</strong> ${formatDate(endDate)}`;
+                dateRangeText.parentElement.style.background = 'rgba(255, 193, 7, 0.1)';
+                dateRangeText.parentElement.style.color = '#856404';
+            }
+
+            // Add additional filter info
+            const track = document.getElementById('track').value;
+            const gradeLevel = document.getElementById('grade_level').value;
+            const semester = document.getElementById('semester').value;
+
+            const additionalFilters = [];
+            if (track) additionalFilters.push(`Track: ${track}`);
+            if (gradeLevel) additionalFilters.push(`Grade: ${gradeLevel}`);
+            if (semester) additionalFilters.push(`Semester: ${semester}`);
+
+            if (additionalFilters.length > 0) {
+                dateRangeText.innerHTML += ` <span style="opacity: 0.7; font-size: 13px;">| ${additionalFilters.join(' • ')}</span>`;
+            }
+        }
+
         // Setup Filter Handlers
         function setupFilterHandlers() {
             // Quick filter buttons
@@ -1798,12 +1876,18 @@
                     // Clear quick filter active state
                     document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
 
+                    // Update date range display
+                    updateDateRangeDisplay();
+
                     // Automatically apply filters when week is selected
                     applyFilters();
                 } else {
                     // If no week selected, clear dates and show all data
                     document.getElementById('date_from').value = '';
                     document.getElementById('date_to').value = '';
+
+                    // Update date range display
+                    updateDateRangeDisplay();
 
                     // Automatically apply to show all data
                     applyFilters();
@@ -1817,6 +1901,10 @@
                     filterElement.addEventListener('change', function() {
                         // Clear quick filter active state when other filters are used
                         document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
+
+                        // Update date range display
+                        updateDateRangeDisplay();
+
                         applyFilters();
                     });
                 }
@@ -1830,6 +1918,10 @@
                         // Clear quick filter and week filter when manually changing dates
                         document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
                         document.getElementById('week-filter').value = '';
+
+                        // Update date range display
+                        updateDateRangeDisplay();
+
                         applyFilters();
                     });
                 }
@@ -1847,6 +1939,9 @@
 
                 // Remove active state from quick filter buttons
                 document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
+
+                // Update date range display to show "All Data"
+                updateDateRangeDisplay();
 
                 // Apply filters to show all data
                 applyFilters();

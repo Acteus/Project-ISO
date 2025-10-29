@@ -38,7 +38,8 @@ class AIService
 
                 if ($flaskResult && isset($flaskResult['success']) && $flaskResult['success']) {
                     Log::info('Flask AI service compliance prediction successful');
-                    return $flaskResult['data'];
+                    // Flask returns data under 'prediction' key, not 'data'
+                    return $flaskResult['prediction'] ?? $flaskResult['data'] ?? $flaskResult;
                 }
             } catch (\Exception $e) {
                 Log::warning('Flask AI service compliance prediction failed, falling back to PHP', [
@@ -190,7 +191,8 @@ class AIService
 
                 if ($flaskResult && isset($flaskResult['success']) && $flaskResult['success']) {
                     Log::info('Flask AI service clustering successful');
-                    return $flaskResult['data'];
+                    // Flask returns data under 'clustering_result' key, not 'data'
+                    return $flaskResult['clustering_result'] ?? $flaskResult['data'] ?? $flaskResult;
                 }
             } catch (\Exception $e) {
                 Log::warning('Flask AI service clustering failed, falling back to PHP', [
@@ -302,7 +304,8 @@ class AIService
 
                 if ($flaskResult && isset($flaskResult['success']) && $flaskResult['success']) {
                     Log::info('Flask AI service sentiment analysis successful');
-                    return $flaskResult['data'];
+                    // Flask returns data under 'sentiment_analysis' key, not 'data'
+                    return $flaskResult['sentiment_analysis'] ?? $flaskResult['data'] ?? $flaskResult;
                 }
             } catch (\Exception $e) {
                 Log::warning('Flask AI service sentiment analysis failed, falling back to PHP', [
@@ -409,13 +412,14 @@ class AIService
         }
 
         // Try Flask service first if available
-        if ($this->useFlaskService && config('ai.models.performance_predictor.enabled', true)) {
+        if ($this->useFlaskService && config('ai.models.compliance_predictor.enabled', true)) {
             try {
                 $flaskResult = $this->flaskClient->predictPerformance($responseData);
 
                 if ($flaskResult && isset($flaskResult['success']) && $flaskResult['success']) {
                     Log::info('Flask AI service performance prediction successful');
-                    return $flaskResult['data'];
+                    // Flask returns data under 'prediction' key, not 'data'
+                    return $flaskResult['prediction'] ?? $flaskResult['data'] ?? $flaskResult;
                 }
             } catch (\Exception $e) {
                 Log::warning('Flask AI service performance prediction failed, falling back to PHP', [
@@ -489,13 +493,14 @@ class AIService
         }
 
         // Try Flask service first if available
-        if ($this->useFlaskService && config('ai.models.dropout_predictor.enabled', true)) {
+        if ($this->useFlaskService && config('ai.models.compliance_predictor.enabled', true)) {
             try {
                 $flaskResult = $this->flaskClient->predictDropoutRisk($responseData);
 
                 if ($flaskResult && isset($flaskResult['success']) && $flaskResult['success']) {
                     Log::info('Flask AI service dropout risk prediction successful');
-                    return $flaskResult['data'];
+                    // Flask returns data under 'prediction' key, not 'data'
+                    return $flaskResult['prediction'] ?? $flaskResult['data'] ?? $flaskResult;
                 }
             } catch (\Exception $e) {
                 Log::warning('Flask AI service dropout risk prediction failed, falling back to PHP', [
@@ -594,13 +599,14 @@ class AIService
         }
 
         // Try Flask service first if available
-        if ($this->useFlaskService && config('ai.models.risk_assessment.enabled', true)) {
+        if ($this->useFlaskService && config('ai.models.compliance_predictor.enabled', true)) {
             try {
                 $flaskResult = $this->flaskClient->assessRisk($responseData);
 
                 if ($flaskResult && isset($flaskResult['success']) && $flaskResult['success']) {
                     Log::info('Flask AI service risk assessment successful');
-                    return $flaskResult['data'];
+                    // Flask returns data under 'assessment' key, not 'data'
+                    return $flaskResult['assessment'] ?? $flaskResult['data'] ?? $flaskResult;
                 }
             } catch (\Exception $e) {
                 Log::warning('Flask AI service risk assessment failed, falling back to PHP', [
@@ -710,13 +716,14 @@ class AIService
         }
 
         // Try Flask service first if available
-        if ($this->useFlaskService && config('ai.models.trend_predictor.enabled', true)) {
+        if ($this->useFlaskService && config('ai.models.compliance_predictor.enabled', true)) {
             try {
                 $flaskResult = $this->flaskClient->predictSatisfactionTrend($responseData);
 
                 if ($flaskResult && isset($flaskResult['success']) && $flaskResult['success']) {
                     Log::info('Flask AI service satisfaction trend prediction successful');
-                    return $flaskResult['data'];
+                    // Flask returns data under 'trend_prediction' key, not 'data'
+                    return $flaskResult['trend_prediction'] ?? $flaskResult['data'] ?? $flaskResult;
                 }
             } catch (\Exception $e) {
                 Log::warning('Flask AI service satisfaction trend prediction failed, falling back to PHP', [

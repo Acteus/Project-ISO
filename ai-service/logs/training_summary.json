@@ -1,0 +1,469 @@
+{
+  "timestamp": "2025-10-29T15:14:37.778796",
+  "training_samples": 1105,
+  "results": {
+    "compliance_predictor": {
+      "success": true,
+      "training_history": {
+        "loss": [
+          0.494398295879364,
+          0.24725334346294403,
+          0.13497795164585114,
+          0.08393625169992447,
+          0.06666606664657593,
+          0.051528941839933395,
+          0.044741299003362656,
+          0.04249867796897888,
+          0.03964623808860779,
+          0.03273482248187065,
+          0.034334804862737656,
+          0.024684196338057518,
+          0.026615429669618607,
+          0.026125771924853325,
+          0.02786589227616787,
+          0.020963246002793312,
+          0.028905311599373817,
+          0.01668614335358143,
+          0.025924017652869225,
+          0.018895233049988747,
+          0.01783103123307228,
+          0.017702309414744377,
+          0.01701953634619713,
+          0.02070445753633976,
+          0.013014943338930607,
+          0.019963374361395836,
+          0.01899712346494198,
+          0.012493135407567024,
+          0.018246173858642578,
+          0.018701402470469475,
+          0.01672249287366867,
+          0.015874559059739113
+        ],
+        "accuracy": [
+          0.8812217116355896,
+          0.9649321436882019,
+          0.9626696705818176,
+          0.9728506803512573,
+          0.9785068035125732,
+          0.9841628670692444,
+          0.9819004535675049,
+          0.983031690120697,
+          0.9864253401756287,
+          0.9886877536773682,
+          0.9852941036224365,
+          0.9932126402854919,
+          0.9886877536773682,
+          0.9920814633369446,
+          0.9920814633369446,
+          0.9943438768386841,
+          0.9864253401756287,
+          0.9920814633369446,
+          0.9875565767288208,
+          0.9920814633369446,
+          0.9943438768386841,
+          0.9943438768386841,
+          0.9943438768386841,
+          0.9920814633369446,
+          0.9943438768386841,
+          0.9898189902305603,
+          0.9932126402854919,
+          0.9954751133918762,
+          0.9932126402854919,
+          0.9920814633369446,
+          0.9932126402854919,
+          0.9932126402854919
+        ],
+        "auc": [
+          0.9757099151611328,
+          0.9934794902801514,
+          0.9944533109664917,
+          0.9980067014694214,
+          0.9984569549560547,
+          0.9992185831069946,
+          0.999320387840271,
+          0.999272346496582,
+          0.999142050743103,
+          0.9995639324188232,
+          0.9993912577629089,
+          0.9998188614845276,
+          0.9996886253356934,
+          0.999725341796875,
+          0.9995894432067871,
+          0.9997735023498535,
+          0.9994252324104309,
+          0.9998725652694702,
+          0.9995894432067871,
+          0.9998244643211365,
+          0.9998273253440857,
+          0.999855637550354,
+          0.9998470544815063,
+          0.9997282028198242,
+          0.9999207258224487,
+          0.9997592568397522,
+          0.9998046159744263,
+          0.9999547004699707,
+          0.999801754951477,
+          0.9997848272323608,
+          0.9997933506965637,
+          0.9998499155044556
+        ],
+        "val_loss": [
+          0.33316344022750854,
+          0.17658066749572754,
+          0.11614087224006653,
+          0.08119115233421326,
+          0.06701426953077316,
+          0.058564506471157074,
+          0.05251742899417877,
+          0.04322070628404617,
+          0.0416257306933403,
+          0.044841088354587555,
+          0.03710828721523285,
+          0.03183281421661377,
+          0.04501062631607056,
+          0.033935870975255966,
+          0.03310461342334747,
+          0.02806934528052807,
+          0.024837302044034004,
+          0.028473088517785072,
+          0.02342827431857586,
+          0.02988959476351738,
+          0.02144763432443142,
+          0.02107871137559414,
+          0.026895437389612198,
+          0.03028208389878273,
+          0.03505588695406914,
+          0.03326311707496643,
+          0.03416958451271057,
+          0.02985663153231144,
+          0.03527339920401573,
+          0.04069085419178009,
+          0.04048803076148033,
+          0.02811269834637642
+        ],
+        "val_accuracy": [
+          0.9502262473106384,
+          0.9502262473106384,
+          0.9547511339187622,
+          0.959276020526886,
+          0.9683257937431335,
+          0.9683257937431335,
+          0.9728506803512573,
+          0.9819004535675049,
+          0.9864253401756287,
+          0.9819004535675049,
+          0.9819004535675049,
+          0.9909502267837524,
+          0.9773755669593811,
+          0.9864253401756287,
+          0.9819004535675049,
+          0.9864253401756287,
+          0.9819004535675049,
+          0.9864253401756287,
+          0.9909502267837524,
+          0.9864253401756287,
+          0.9864253401756287,
+          0.9909502267837524,
+          0.9819004535675049,
+          0.9773755669593811,
+          0.9728506803512573,
+          0.9773755669593811,
+          0.9819004535675049,
+          0.9909502267837524,
+          0.9819004535675049,
+          0.9728506803512573,
+          0.9773755669593811,
+          0.9819004535675049
+        ],
+        "val_auc": [
+          0.9966117739677429,
+          0.9974695444107056,
+          0.9978556036949158,
+          0.9984989166259766,
+          0.9987990856170654,
+          0.9987132549285889,
+          0.9992280006408691,
+          0.9995711445808411,
+          0.9995710849761963,
+          0.9993996620178223,
+          0.9994853138923645,
+          0.9998285174369812,
+          0.9993995428085327,
+          0.9995712041854858,
+          0.9995282292366028,
+          0.9996568560600281,
+          0.9996568560600281,
+          0.9998284578323364,
+          0.9997426271438599,
+          0.9996997714042664,
+          0.9998283982276917,
+          0.9997855424880981,
+          0.9996568560600281,
+          0.9993137717247009,
+          0.9991421699523926,
+          0.9991850852966309,
+          0.9991850852966309,
+          0.9996569156646729,
+          0.9992279410362244,
+          0.9992280006408691,
+          0.9992280602455139,
+          0.9994853734970093
+        ]
+      },
+      "final_accuracy": 0.9932126402854919,
+      "final_val_accuracy": 0.9819004535675049
+    },
+    "student_clusterer": {
+      "success": true,
+      "num_clusters": 3,
+      "algorithm": "kmeans",
+      "clusters": [
+        {
+          "cluster_id": 1,
+          "size": 526,
+          "percentage": 47.6,
+          "average_satisfaction": 3.88,
+          "average_performance": 2.55,
+          "average_attendance": 85.14,
+          "average_participation": 0.0,
+          "characteristics": [
+            "Moderate satisfaction learners",
+            "Average academic performers",
+            "Moderate attendance",
+            "Low safety perception"
+          ],
+          "risk_profile": {
+            "risk_level": "Low Risk",
+            "risk_factors": [
+              "Safety concerns"
+            ],
+            "risk_score": 1
+          },
+          "recommended_interventions": [
+            "Enhance safety protocols and student support services"
+          ]
+        },
+        {
+          "cluster_id": 2,
+          "size": 307,
+          "percentage": 27.78,
+          "average_satisfaction": 2.65,
+          "average_performance": 1.62,
+          "average_attendance": 75.77,
+          "average_participation": 0.0,
+          "characteristics": [
+            "Low satisfaction learners",
+            "Low academic performers",
+            "Moderate attendance",
+            "Low safety perception"
+          ],
+          "risk_profile": {
+            "risk_level": "High Risk",
+            "risk_factors": [
+              "Low satisfaction",
+              "Poor academic performance",
+              "Safety concerns"
+            ],
+            "risk_score": 3
+          },
+          "recommended_interventions": [
+            "Implement targeted satisfaction improvement programs",
+            "Provide academic support and tutoring services",
+            "Enhance safety protocols and student support services"
+          ]
+        },
+        {
+          "cluster_id": 3,
+          "size": 272,
+          "percentage": 24.62,
+          "average_satisfaction": 4.19,
+          "average_performance": 3.3,
+          "average_attendance": 92.65,
+          "average_participation": 0.0,
+          "characteristics": [
+            "High satisfaction learners",
+            "Average academic performers",
+            "Regular attendees",
+            "Low safety perception"
+          ],
+          "risk_profile": {
+            "risk_level": "Low Risk",
+            "risk_factors": [
+              "Safety concerns"
+            ],
+            "risk_score": 1
+          },
+          "recommended_interventions": [
+            "Enhance safety protocols and student support services"
+          ]
+        }
+      ],
+      "metrics": {
+        "silhouette_score": 0.31,
+        "calinski_harabasz_score": 780.861,
+        "total_samples": 1105,
+        "noise_points": 0
+      },
+      "insights": [
+        "Identified 1 at-risk clusters requiring immediate attention",
+        "ISO 21001:7.2 - 3 clusters show safety concerns requiring attention",
+        "ISO 21001:7.3 - 1 high-risk clusters identified for priority intervention planning"
+      ],
+      "model_used": "KMEANS Clustering"
+    },
+    "sentiment_analyzer": {
+      "success": true,
+      "accuracy": 0.6359102244389028,
+      "precision": 0.6390967448107208,
+      "recall": 0.6359102244389028,
+      "f1_score": 0.5972487363175795,
+      "classification_report": {
+        "negative": {
+          "precision": 0.6666666666666666,
+          "recall": 0.046511627906976744,
+          "f1-score": 0.08695652173913045,
+          "support": 43.0
+        },
+        "neutral": {
+          "precision": 0.6354515050167224,
+          "recall": 0.8370044052863436,
+          "f1-score": 0.7224334600760457,
+          "support": 227.0
+        },
+        "positive": {
+          "precision": 0.6363636363636364,
+          "recall": 0.48091603053435117,
+          "f1-score": 0.5478260869565218,
+          "support": 131.0
+        },
+        "accuracy": 0.6359102244389028,
+        "macro avg": {
+          "precision": 0.6461606026823418,
+          "recall": 0.4548106879092238,
+          "f1-score": 0.4524053562572326,
+          "support": 401.0
+        },
+        "weighted avg": {
+          "precision": 0.6390967448107208,
+          "recall": 0.6359102244389028,
+          "f1-score": 0.5972487363175795,
+          "support": 401.0
+        }
+      }
+    },
+    "performance_predictor": {
+      "success": true,
+      "model_type": "random_forest",
+      "mse": 0.0417,
+      "r2_score": 0.9093,
+      "feature_importance": {
+        "curriculum_relevance": 0.0045,
+        "learning_pace": 0.005,
+        "support_availability": 0.0045,
+        "learning_style": 0.0052,
+        "teaching_quality": 0.0077,
+        "environment": 0.0044,
+        "peer_interaction": 0.0032,
+        "academic_progress": 0.0091,
+        "skill_development": 0.0145,
+        "critical_thinking": 0.0164,
+        "problem_solving": 0.029,
+        "attendance": 0.0233,
+        "participation": 0.7677,
+        "satisfaction": 0.1054
+      }
+    },
+    "dropout_predictor": {
+      "success": true,
+      "model_type": "random_forest",
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "auc_score": 1.0,
+      "classification_report": {
+        "0": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 181.0
+        },
+        "1": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 40.0
+        },
+        "accuracy": 1.0,
+        "macro avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 221.0
+        },
+        "weighted avg": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 221.0
+        }
+      }
+    },
+    "risk_assessment": {
+      "success": true,
+      "mae": 0.4546,
+      "r2_score": 0.991,
+      "feature_importance": {
+        "curriculum_relevance": 0.0001,
+        "learning_pace": 0.0009,
+        "support_availability": 0.0001,
+        "learning_style": 0.0003,
+        "teaching_quality": 0.0001,
+        "environment": 0.0002,
+        "peer_interaction": 0.0005,
+        "extracurricular": 0.0001,
+        "academic_progress": 0.2872,
+        "skill_development": 0.0003,
+        "critical_thinking": 0.0001,
+        "problem_solving": 0.0001,
+        "physical_safety": 0.0001,
+        "psychological_safety": 0.0009,
+        "bullying_prevention": 0.0006,
+        "emergency_preparedness": 0.0001,
+        "mental_health": 0.0006,
+        "stress_management": 0.0004,
+        "physical_health": 0.0002,
+        "wellbeing": 0.0001,
+        "attendance": 0.0147,
+        "participation": 0.0009,
+        "satisfaction": 0.6818,
+        "grade_average": 0.0097
+      }
+    },
+    "satisfaction_trend": {
+      "success": true,
+      "model_type": "gradient_boosting",
+      "mae": 0.2223,
+      "mse": 0.2253,
+      "r2_score": 0.6513,
+      "feature_importance": {
+        "curriculum_relevance": 0.0176,
+        "learning_pace": 0.0366,
+        "support_availability": 0.0247,
+        "learning_style": 0.0247,
+        "teaching_quality": 0.08,
+        "environment": 0.0204,
+        "peer_interaction": 0.0367,
+        "extracurricular": 0.0207,
+        "academic_progress": 0.0793,
+        "skill_development": 0.0154,
+        "critical_thinking": 0.143,
+        "problem_solving": 0.501
+      },
+      "time_series_model": {
+        "success": false,
+        "error": "Insufficient time series data"
+      }
+    }
+  }
+}
