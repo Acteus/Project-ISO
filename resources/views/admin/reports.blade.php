@@ -264,6 +264,181 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
         }
+
+        /* QR Codes Section Styles */
+        .qr-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .section-header h2 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .section-header p {
+            margin: 0;
+            color: #666;
+            font-size: 16px;
+        }
+
+        .qr-codes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .qr-code-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .qr-code-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: rgba(66,133,244,1);
+        }
+
+        .qr-image {
+            flex-shrink: 0;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+
+        .qr-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .qr-info h4 {
+            margin: 0 0 8px 0;
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .qr-info p {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .qr-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .scan-count {
+            font-size: 12px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .qr-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            color: white;
+        }
+
+        .no-qr-codes {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .no-data-message h3 {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 20px;
+        }
+
+        .no-data-message p {
+            margin: 0 0 20px 0;
+            color: #999;
+        }
+
+        .qr-section-footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
     </style>
 </head>
 <body>
@@ -430,6 +605,65 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- QR Codes Section -->
+            <div class="qr-section">
+                <div class="section-header">
+                    <h2>QR Code Integration</h2>
+                    <p>Include QR codes in reports for easy survey access</p>
+                </div>
+
+                <!-- QR Codes Grid -->
+                <div class="qr-codes-grid">
+                    @if(isset($qrCodes) && count($qrCodes) > 0)
+                        @foreach($qrCodes->take(6) as $qrCode)
+                        <div class="qr-code-card">
+                            <div class="qr-image">
+                                @if($qrCode->file_path)
+                                    <img src="{{ $qrCode->file_url }}" alt="QR Code" style="width: 100px; height: 100px; object-fit: contain;">
+                                @else
+                                    <div style="width: 100px; height: 100px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #666; font-size: 12px;">No QR Code</div>
+                                @endif
+                            </div>
+                            <div class="qr-info">
+                                <h4>{{ $qrCode->name }}</h4>
+                                <p>{{ $qrCode->track }} Track |
+                                   @if($qrCode->grade_level)Grade {{ $qrCode->grade_level }} | @endif
+                                   @if($qrCode->section)Section {{ $qrCode->section }} | @endif
+                                   {{ $qrCode->academic_year }}
+                                </p>
+                                <div class="qr-status">
+                                    <span class="status-badge {{ $qrCode->is_active ? 'status-active' : 'status-inactive' }}">
+                                        {{ $qrCode->is_active ? 'Active' : 'Inactive' }}
+                                    </span>
+                                    @if($qrCode->scan_count > 0)
+                                        <span class="scan-count">{{ $qrCode->scan_count }} scans</span>
+                                    @endif
+                                </div>
+                                <div class="qr-actions">
+                                    <a href="{{ route('admin.qr-codes.show', $qrCode->id) }}" class="btn btn-sm btn-info">View</a>
+                                    <a href="{{ route('admin.qr-codes.download', $qrCode->id) }}" class="btn btn-sm btn-success">Download</a>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    @else
+                        <div class="no-qr-codes">
+                            <div class="no-data-message">
+                                <h3>No QR Codes Found</h3>
+                                <p>Create QR codes to include in reports for easy survey access.</p>
+                                <a href="{{ route('admin.qr-codes.create') }}" class="btn btn-primary">Create QR Code</a>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                @if(isset($qrCodes) && count($qrCodes) > 6)
+                    <div class="qr-section-footer">
+                        <a href="{{ route('admin.qr-codes.index') }}" class="btn btn-secondary">View All QR Codes ({{ $qrCodes->total() }})</a>
+                    </div>
+                @endif
             </div>
         </div>
     </main>

@@ -9,6 +9,7 @@ use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\VisualizationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\QrCodeController;
 
 // Public routes
 Route::get('/', function () {
@@ -58,6 +59,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // AI Insights Routes
     Route::get('/ai-insights', [StudentController::class, 'aiInsights'])->name('ai.insights');
+
+    // QR Code Management Routes
+    Route::resource('qr-codes', QrCodeController::class);
+    Route::post('/qr-codes/batch-generate', [QrCodeController::class, 'batchGenerate'])->name('qr-codes.batch-generate');
+    Route::get('/qr-codes/{id}/download', [QrCodeController::class, 'download'])->name('qr-codes.download');
+    Route::get('/qr-codes/statistics', [QrCodeController::class, 'statistics'])->name('qr-codes.statistics');
+    Route::get('/qr-codes/export', [QrCodeController::class, 'export'])->name('qr-codes.export');
 });
 
 // Survey routes
@@ -84,6 +92,9 @@ Route::get('/survey/contact', function () {
 Route::get('/thank-you', function () {
     return view('survey.thankyou');
 })->name('survey.thankyou');
+
+// QR Code public access route
+Route::get('/qr/{id}', [QrCodeController::class, 'showPublic'])->name('qr.show');
 
 // Serve static assets from public directory
 Route::get('/css/{filename}', function ($filename) {

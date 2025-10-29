@@ -288,6 +288,11 @@
             box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
         }
 
+        .action-card.qr-codes .action-card-icon {
+            background: linear-gradient(135deg, #FF5722, #FF9800);
+            box-shadow: 0 4px 15px rgba(255, 87, 34, 0.3);
+        }
+
         .action-card-icon svg {
             width: 40px;
             height: 40px;
@@ -428,6 +433,17 @@
                     <h3>View Detailed Analytics</h3>
                     <p>Access comprehensive survey analytics, trends, and insights from the ISO 21001 quality education system.</p>
                     <a href="{{ route('api.survey.analytics') }}" class="btn btn-primary" target="_blank">View Analytics</a>
+                </div>
+
+                <div class="action-card qr-codes">
+                    <div class="action-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2M8,17C8,15 10,15 10,13C10,11 8,11 8,9C8,7 10,7 10,5C10,3 8,3 6,3H4C2.9,3 2,3.9 2,5V9C2,11.09 3.09,12 4,12H8M13,15C13,17 11,17 11,19C11,21 13,21 13,23C13,25 11,25 9,25H5C3.9,25 3,24.1 3,23V19C3,16.91 4.09,16 5,16H9C10.09,16 11,16.91 11,18V19H13C15.09,19 16,17.09 16,15H13M13,7H9C7.9,7 7,7.9 7,9V11C7,12.09 8.09,13 9,13H11C12.09,13 13,12.09 13,11V9Z"/>
+                        </svg>
+                    </div>
+                    <h3>QR Code Management</h3>
+                    <p>Generate and manage QR codes for easy survey access via mobile devices. Create individual or batch QR codes for CSS sections.</p>
+                    <a href="{{ route('admin.qr-codes.index') }}" class="btn btn-primary">Manage QR Codes</a>
                 </div>
 
                 <div class="action-card analytics" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">

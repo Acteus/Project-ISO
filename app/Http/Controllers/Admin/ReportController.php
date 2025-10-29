@@ -7,6 +7,7 @@ use App\Mail\WeeklyProgressReport;
 use App\Mail\MonthlyComplianceReport;
 use App\Models\Admin;
 use App\Models\WeeklyMetric;
+use App\Models\QrCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -16,7 +17,8 @@ class ReportController extends Controller
     public function index()
     {
         $admins = Admin::all();
-        return view('admin.reports', compact('admins'));
+        $qrCodes = QrCode::orderBy('created_at', 'desc')->paginate(6);
+        return view('admin.reports', compact('admins', 'qrCodes'));
     }
 
     public function sendWeeklyReport(Request $request)
