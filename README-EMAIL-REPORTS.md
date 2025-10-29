@@ -12,17 +12,6 @@ All emails are sent using the same SMTP configuration defined in your `.env` fil
 
 Your system is configured with the following settings:
 
-```env
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=kwadrateam@gmail.com
-MAIL_PASSWORD="drgi qjzk njfh sopv"
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="kwadrateam@gmail.com"
-MAIL_FROM_NAME="Jose Rizal University"
-```
-
 ## How It Works
 
 ### 1. Google SMTP Settings
