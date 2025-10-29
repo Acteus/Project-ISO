@@ -552,6 +552,65 @@ class AIController extends Controller
                     }
                     break;
 
+                case 'risk_assessment':
+                    // Get comprehensive data for risk assessment across all ISO 21001 dimensions
+                    $recentResponse = \App\Models\SurveyResponse::latest()->first();
+                    if ($recentResponse) {
+                        $data = [
+                            // All ISO 21001 compliance indices
+                            'learner_needs_index' => floatval(($recentResponse->curriculum_relevance_rating + $recentResponse->learning_pace_appropriateness + $recentResponse->individual_support_availability + $recentResponse->learning_style_accommodation) / 4),
+                            'satisfaction_score' => floatval(($recentResponse->teaching_quality_rating + $recentResponse->learning_environment_rating + $recentResponse->peer_interaction_satisfaction + $recentResponse->extracurricular_satisfaction) / 4),
+                            'success_index' => floatval(($recentResponse->academic_progress_rating + $recentResponse->skill_development_rating + $recentResponse->critical_thinking_improvement + $recentResponse->problem_solving_confidence) / 4),
+                            'safety_index' => floatval(($recentResponse->physical_safety_rating + $recentResponse->psychological_safety_rating + $recentResponse->bullying_prevention_effectiveness + $recentResponse->emergency_preparedness_rating) / 4),
+                            'wellbeing_index' => floatval(($recentResponse->mental_health_support_rating + $recentResponse->stress_management_support + $recentResponse->physical_health_support + $recentResponse->overall_wellbeing_rating) / 4),
+                            'overall_satisfaction' => floatval($recentResponse->overall_satisfaction),
+                            // Additional risk factors
+                            'attendance_rate' => $recentResponse->attendance_rate ?? 85,
+                            'academic_progress_rating' => $recentResponse->academic_progress_rating,
+                            'physical_safety_rating' => $recentResponse->physical_safety_rating,
+                            'psychological_safety_rating' => $recentResponse->psychological_safety_rating,
+                            'mental_health_support_rating' => $recentResponse->mental_health_support_rating
+                        ];
+                        $result = $flaskClient->assessRisk($data);
+                    }
+                    break;
+
+                case 'predictive':
+                    // Get data for predictive analytics (performance forecasting)
+                    $recentResponse = \App\Models\SurveyResponse::latest()->first();
+                    if ($recentResponse) {
+                        $data = [
+                            'curriculum_relevance_rating' => $recentResponse->curriculum_relevance_rating,
+                            'learning_pace_appropriateness' => $recentResponse->learning_pace_appropriateness,
+                            'individual_support_availability' => $recentResponse->individual_support_availability,
+                            'teaching_quality_rating' => $recentResponse->teaching_quality_rating,
+                            'academic_progress_rating' => $recentResponse->academic_progress_rating,
+                            'skill_development_rating' => $recentResponse->skill_development_rating,
+                            'attendance_rate' => $recentResponse->attendance_rate ?? 85,
+                            'participation_score' => $recentResponse->participation_score ?? 80,
+                            'overall_satisfaction' => $recentResponse->overall_satisfaction
+                        ];
+                        $result = $flaskClient->predictPerformance($data);
+                    }
+                    break;
+
+                case 'trend_analysis':
+                    // Get historical data for satisfaction trend analysis
+                    $recentResponses = \App\Models\SurveyResponse::latest()->take(10)->get();
+                    if ($recentResponses->isNotEmpty()) {
+                        $data = [
+                            'satisfaction_scores' => $recentResponses->pluck('overall_satisfaction')->toArray(),
+                            'teaching_quality_scores' => $recentResponses->pluck('teaching_quality_rating')->toArray(),
+                            'learning_environment_scores' => $recentResponses->pluck('learning_environment_rating')->toArray(),
+                            'current_satisfaction' => $recentResponses->avg('overall_satisfaction'),
+                            'timestamps' => $recentResponses->pluck('created_at')->map(function($date) {
+                                return $date->timestamp;
+                            })->toArray()
+                        ];
+                        $result = $flaskClient->predictSatisfactionTrend($data);
+                    }
+                    break;
+
                 case 'comprehensive':
                     // Get multiple responses for comprehensive analytics to ensure all models can run
                     $responses = \App\Models\SurveyResponse::latest()->take(10)->get();
