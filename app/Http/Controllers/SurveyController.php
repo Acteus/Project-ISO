@@ -172,6 +172,7 @@ class SurveyController extends Controller
             // If request explicitly wants JSON (has Accept: application/json header)
             if ($request->header('Accept') === 'application/json' || $request->wantsJson()) {
                 return response()->json([
+                    'success' => false,
                     'message' => 'No survey responses found',
                     'data' => [
                         'total_responses' => 0,
@@ -255,8 +256,16 @@ class SurveyController extends Controller
         $avgGrade = $responses->avg('grade_average') ?? 0;
         $avgAttendance = $responses->avg('attendance_rate') ?? 0;
 
+        // Get date range from responses
+        $oldestResponse = $responses->min('created_at');
+        $newestResponse = $responses->max('created_at');
+
         $analytics = [
             'total_responses' => $responses->count(),
+            'date_range' => [
+                'oldest' => $oldestResponse,
+                'newest' => $newestResponse,
+            ],
             'iso_21001_indices' => [
                 'learner_needs_index' => $learnerNeedsIndex,
                 'satisfaction_score' => $satisfactionScore,
@@ -290,6 +299,7 @@ class SurveyController extends Controller
         // If request explicitly wants JSON (has Accept: application/json header)
         if ($request->header('Accept') === 'application/json' || $request->wantsJson()) {
             return response()->json([
+                'success' => true,
                 'message' => 'ISO 21001 Analytics retrieved successfully',
                 'data' => $analytics
             ]);

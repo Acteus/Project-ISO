@@ -348,6 +348,8 @@
                 <!-- Desktop navigation -->
                 <nav class="desktop-nav">
                     <a href="{{ route('admin.dashboard') }}" class="nav-link active">Dashboard</a>
+                    <a href="{{ route('api.survey.analytics') }}" class="nav-link" target="_blank">Analytics</a>
+                    <a href="{{ route('admin.ai.insights') }}" class="nav-link">AI Insights</a>
                     <a href="{{ route('admin.reports') }}" class="nav-link">Reports</a>
                     <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                         @csrf
@@ -426,6 +428,17 @@
                     <h3>View Detailed Analytics</h3>
                     <p>Access comprehensive survey analytics, trends, and insights from the ISO 21001 quality education system.</p>
                     <a href="{{ route('api.survey.analytics') }}" class="btn btn-primary" target="_blank">View Analytics</a>
+                </div>
+
+                <div class="action-card analytics" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                    <div class="action-card-icon" style="background: linear-gradient(135deg, #6f42c1, #5a32a3); box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
+                        </svg>
+                    </div>
+                    <h3>AI Insights Dashboard</h3>
+                    <p>Access advanced AI-powered analytics, compliance predictions, and machine learning insights.</p>
+                    <a href="{{ route('admin.ai.insights') }}" class="btn btn-primary" style="background: linear-gradient(90deg, #6f42c1, #5a32a3);">AI Insights</a>
                 </div>
 
                 <div class="action-card export">

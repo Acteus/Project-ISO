@@ -62,4 +62,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/export/csv', [ExportController::class, 'exportCsv']);
     Route::get('/export/pdf', [ExportController::class, 'exportPdf']);
     Route::get('/export/analytics-report', [ExportController::class, 'exportAnalyticsReport']);
+
+    // AI Service Status and Analysis routes
+    Route::get('/ai/service-status', [AIController::class, 'getServiceStatus']);
+    Route::get('/ai/metrics', [AIController::class, 'getAIMetrics']);
+    Route::post('/ai/analyze/{type}', [AIController::class, 'runAnalysis']);
 });
