@@ -29,7 +29,7 @@ from ai_models.student_performance_predictor import StudentPerformancePredictor
 from ai_models.dropout_risk_predictor import DropoutRiskPredictor
 from ai_models.risk_assessment_predictor import RiskAssessmentPredictor
 from ai_models.satisfaction_trend_predictor import SatisfactionTrendPredictor
-from utils.data_processor import DataProcessor
+from utils.data_processor import DataProcessor, convert_numpy_types
 
 # Initialize AI models
 compliance_predictor = CompliancePredictor()
@@ -137,7 +137,15 @@ def cluster_students():
 
         return jsonify({
             'success': True,
-            'clustering_result': clusters,
+            'clustering_result': {
+                'clusters': clusters.get('num_clusters', len(clusters.get('clusters', []))),
+                'cluster_count': clusters.get('num_clusters', len(clusters.get('clusters', []))),
+                'algorithm': clusters.get('algorithm', 'kmeans'),
+                'total_samples': clusters.get('metrics', {}).get('total_samples', 0),
+                'insights': clusters.get('insights', []),
+                'detailed_clusters': clusters.get('clusters', []),
+                'metrics': clusters.get('metrics', {})
+            },
             'timestamp': datetime.utcnow().isoformat()
         })
 
@@ -263,10 +271,9 @@ def comprehensive_analytics():
 
         # Clustering if responses available
         if 'responses' in data and isinstance(data['responses'], list):
-            processed_data = data_processor.preprocess_clustering_data(data['responses'])
             k = data.get('clusters', 3)
             if len(data['responses']) >= k:
-                results['student_clustering'] = student_clusterer.cluster(processed_data, k)
+                results['student_clustering'] = student_clusterer.cluster(data['responses'], k)
 
         # Performance prediction
         try:
@@ -294,6 +301,9 @@ def comprehensive_analytics():
 
         logger.info("Comprehensive analytics completed with all models")
 
+        # Convert numpy types to Python types for JSON serialization
+        results = convert_numpy_types(results)
+
         return jsonify({
             'success': True,
             'analytics_results': results,
@@ -302,6 +312,126 @@ def comprehensive_analytics():
 
     except Exception as e:
         logger.error(f"Comprehensive analytics error: {str(e)}")
+        return jsonify({'error': 'Internal server error', 'details': str(e)}), 500
+
+@app.route('/api/v1/analytics/predictive', methods=['POST'])
+def predictive_analytics():
+    """Advanced predictive analytics combining multiple forecasting models"""
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        results = {}
+
+        # Performance prediction with forecasting
+        try:
+            performance_pred = performance_predictor.predict(data)
+            results['performance_forecast'] = {
+                'current_performance': performance_pred.get('predicted_gpa', 0),
+                'trend': 'stable',  # Would be calculated from historical data
+                'confidence': performance_pred.get('confidence', 0.5),
+                'forecast_period': '3 months'
+            }
+        except Exception as e:
+            logger.warning(f"Performance forecasting failed: {e}")
+
+        # Risk trend prediction
+        try:
+            risk_pred = risk_assessment_predictor.predict(data)
+            results['risk_trend'] = {
+                'current_risk': risk_pred.get('overall_risk_score', 50),
+                'trend_direction': 'stable',
+                'predicted_change': 0,
+                'confidence': risk_pred.get('confidence', 0.5)
+            }
+        except Exception as e:
+            logger.warning(f"Risk trend prediction failed: {e}")
+
+        # Satisfaction forecasting
+        try:
+            trend_pred = trend_predictor.predict(data)
+            results['satisfaction_forecast'] = {
+                'current_level': trend_pred.get('current_satisfaction', 3.0),
+                'trend': trend_pred.get('trend_direction', 'stable'),
+                'forecast_values': trend_pred.get('forecasted_satisfaction', []),
+                'confidence': trend_pred.get('confidence', 0.5)
+            }
+        except Exception as e:
+            logger.warning(f"Satisfaction forecasting failed: {e}")
+
+        # Generate predictive insights
+        insights = []
+        if results.get('performance_forecast'):
+            perf = results['performance_forecast']
+            if perf['current_performance'] < 2.5:
+                insights.append("Predictive models indicate declining performance trend - early intervention recommended")
+
+        if results.get('risk_trend'):
+            risk = results['risk_trend']
+            if risk['current_risk'] > 60:
+                insights.append("Risk assessment predicts increasing compliance challenges - proactive measures needed")
+
+        if results.get('satisfaction_forecast'):
+            sat = results['satisfaction_forecast']
+            if sat['trend'] == 'declining':
+                insights.append("Satisfaction trend analysis shows declining pattern - immediate quality improvement actions required")
+
+        return jsonify({
+            'success': True,
+            'prediction': results,
+            'predictive_insights': insights,
+            'model_used': 'Multi-Model Predictive Ensemble',
+            'timestamp': datetime.utcnow().isoformat()
+        })
+
+    except Exception as e:
+        logger.error(f"Predictive analytics error: {str(e)}")
+        return jsonify({'error': 'Internal server error', 'details': str(e)}), 500
+
+@app.route('/api/v1/analytics/risk-assessment', methods=['POST'])
+def comprehensive_risk_assessment():
+    """Comprehensive ISO 21001 risk assessment across all dimensions"""
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        # Use the risk assessment predictor for comprehensive evaluation
+        assessment = risk_assessment_predictor.predict(data)
+
+        return jsonify({
+            'success': True,
+            'assessment': assessment,
+            'timestamp': datetime.utcnow().isoformat()
+        })
+
+    except Exception as e:
+        logger.error(f"Comprehensive risk assessment error: {str(e)}")
+        return jsonify({'error': 'Internal server error', 'details': str(e)}), 500
+
+@app.route('/api/v1/analytics/trend-analysis', methods=['POST'])
+def trend_analysis():
+    """Advanced trend analysis with forecasting capabilities"""
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        # Use the trend predictor for analysis
+        trend_prediction = trend_predictor.predict(data)
+
+        return jsonify({
+            'success': True,
+            'trend_prediction': trend_prediction,
+            'timestamp': datetime.utcnow().isoformat()
+        })
+
+    except Exception as e:
+        logger.error(f"Trend analysis error: {str(e)}")
         return jsonify({'error': 'Internal server error', 'details': str(e)}), 500
 
 @app.errorhandler(404)

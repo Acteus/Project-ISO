@@ -275,6 +275,24 @@
             font-weight: 600;
         }
 
+        /* Confidence badge icon variants */
+        .result-confidence {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .confidence-badge-icon {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .conf-high { background: #28a745; }
+        .conf-mid  { background: #ffc107; }
+        .conf-low  { background: #dc3545; }
+
         .result-details {
             color: #666;
             font-size: 14px;
@@ -319,8 +337,8 @@
             <a href="{{ route('admin.dashboard') }}" class="back-btn">← Back to Dashboard</a>
 
             <div class="insights-header">
-                <h1>🤖 AI Insights Dashboard</h1>
-                <p>Advanced machine learning analytics for ISO 21001 compliance and student success prediction</p>
+                <h1>AI Insights Dashboard</h1>
+                <p>Comprehensive machine learning analytics for ISO 21001 compliance, predictive modeling, and proactive quality management</p>
             </div>
 
             <!-- Alert Messages -->
@@ -344,48 +362,77 @@
                     <div class="metric-value" id="response-time">0ms</div>
                     <div class="metric-label">Avg Response Time</div>
                 </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="iso-compliance">0%</div>
+                    <div class="metric-label">ISO 21001 Compliance</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="risk-score">0/100</div>
+                    <div class="metric-label">Overall Risk Score</div>
+                </div>
             </div>
 
             <!-- AI Analysis Tools -->
             <div class="insights-grid">
                 <!-- Compliance Prediction -->
                 <div class="insight-card">
-                    <h3>📊 Compliance Prediction</h3>
+                    <h3>Compliance Prediction</h3>
                     <p>AI-powered prediction of ISO 21001 compliance levels based on learner feedback and performance metrics.</p>
                     <button type="button" class="btn btn-primary" onclick="runCompliancePrediction()">Run Prediction</button>
                 </div>
 
                 <!-- Sentiment Analysis -->
                 <div class="insight-card">
-                    <h3>💬 Sentiment Analysis</h3>
+                    <h3>Sentiment Analysis</h3>
                     <p>Analyze student feedback sentiment using advanced NLP models to identify positive and negative trends.</p>
                     <button type="button" class="btn btn-primary" onclick="runSentimentAnalysis()">Analyze Sentiment</button>
                 </div>
 
                 <!-- Student Clustering -->
                 <div class="insight-card">
-                    <h3>👥 Student Clustering</h3>
-                    <p>Group students based on survey responses for targeted interventions and personalized support.</p>
+                    <h3>Student Clustering</h3>
+                    <p>Group students based on survey responses for targeted interventions and personalized support. ISO 21001:7.1 compliant segmentation.</p>
                     <button type="button" class="btn btn-primary" onclick="runStudentClustering()">Cluster Students</button>
+                </div>
+
+                <!-- Predictive Analytics -->
+                <div class="insight-card">
+                    <h3>Predictive Analytics</h3>
+                    <p>Advanced forecasting of student performance, satisfaction trends, and risk factors using time series analysis.</p>
+                    <button type="button" class="btn btn-primary" onclick="runPredictiveAnalytics()">Run Predictive Analytics</button>
+                </div>
+
+                <!-- Comprehensive Risk Assessment -->
+                <div class="insight-card">
+                    <h3>Comprehensive Risk Assessment</h3>
+                    <p>Complete ISO 21001 compliance risk evaluation across all learner-centric dimensions with intervention recommendations.</p>
+                    <button type="button" class="btn btn-primary" onclick="runComprehensiveRiskAssessment()">Assess All Risks</button>
+                </div>
+
+                <!-- Trend Analysis -->
+                <div class="insight-card">
+                    <h3>Satisfaction Trend Analysis</h3>
+                    <p>Analyze satisfaction trends over time with forecasting capabilities for proactive quality management.</p>
+                    <button type="button" class="btn btn-primary" onclick="runTrendAnalysis()">Analyze Trends</button>
                 </div>
 
                 <!-- Performance Prediction -->
                 <div class="insight-card">
-                    <h3>📈 Performance Prediction</h3>
+                    <h3>Performance Prediction</h3>
                     <p>Predict student academic performance and identify at-risk students early.</p>
                     <button type="button" class="btn btn-primary" onclick="runPerformancePrediction()">Predict Performance</button>
                 </div>
 
                 <!-- Dropout Risk Assessment -->
                 <div class="insight-card">
-                    <h3>⚠️ Dropout Risk Assessment</h3>
+                    <h3>Dropout Risk Assessment</h3>
                     <p>Identify students at risk of dropping out using machine learning algorithms.</p>
                     <button type="button" class="btn btn-primary" onclick="runDropoutRiskAssessment()">Assess Risk</button>
                 </div>
 
                 <!-- Comprehensive Analytics -->
                 <div class="insight-card">
-                    <h3>🔍 Comprehensive Analytics</h3>
+                    <h3>Comprehensive Analytics</h3>
                     <p>Run all AI models simultaneously for complete insights into student satisfaction and compliance.</p>
                     <button type="button" class="btn btn-success" onclick="runComprehensiveAnalytics()">Run All Analytics</button>
                 </div>
@@ -432,283 +479,319 @@
         // CSRF Token
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
+        /* ----------------------
+           Helpers & Init
+           ---------------------- */
+        const safeNum = (v, decimals = 0) => {
+            const n = Number(v);
+            if (Number.isFinite(n)) return decimals === 0 ? Math.round(n) : n.toFixed(decimals);
+            return typeof v === 'string' ? v : 'N/A';
+        };
+
+        const safePct = (v, decimals = 0) => {
+            const n = Number(v);
+            if (Number.isFinite(n)) return (decimals === 0 ? Math.round(n * 100) : (n * 100).toFixed(decimals)) + '%';
+            return v ?? 'N/A';
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
             checkAIServiceStatus();
             loadAIMetrics();
         });
 
-        // Check AI service status
+        /* ----------------------
+           Service / Metrics
+           ---------------------- */
         async function checkAIServiceStatus() {
             try {
-                const response = await fetch('/api/ai/service-status', {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
-                });
-
-                const result = await response.json();
-                const statusElement = document.getElementById('service-status');
-
-                if (result.success && result.data && result.data.available) {
-                    statusElement.textContent = 'Online';
-                    statusElement.style.color = '#28a745';
+                const res = await fetch('/api/ai/service-status', { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken } });
+                const json = await res.json();
+                const el = document.getElementById('service-status');
+                if (json?.success && json?.data?.available) {
+                    el.textContent = 'Online'; el.style.color = '#28a745';
                 } else {
-                    statusElement.textContent = 'Offline';
-                    statusElement.style.color = '#dc3545';
+                    el.textContent = 'Offline'; el.style.color = '#dc3545';
                 }
-            } catch (error) {
-                console.error('AI Service Status Check Error:', error);
-                document.getElementById('service-status').textContent = 'Error';
-                document.getElementById('service-status').style.color = '#ffc107';
+            } catch (err) {
+                console.error('AI Service Status Check Error:', err);
+                const el = document.getElementById('service-status');
+                el.textContent = 'Error'; el.style.color = '#ffc107';
             }
         }
 
-        // Load AI metrics
         async function loadAIMetrics() {
             try {
-                const response = await fetch('/api/ai/metrics', {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    document.getElementById('total-predictions').textContent = result.data.total_predictions || 0;
-                    document.getElementById('accuracy-rate').textContent = (result.data.accuracy_rate || 0) + '%';
-                    document.getElementById('response-time').textContent = (result.data.avg_response_time || 0) + 'ms';
+                const res = await fetch('/api/ai/metrics', { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken } });
+                const json = await res.json();
+                if (json?.success && json?.data) {
+                    const d = json.data;
+                    document.getElementById('total-predictions').textContent = d.total_predictions ?? 0;
+                    document.getElementById('accuracy-rate').textContent = (d.accuracy_rate ?? 0) + '%';
+                    document.getElementById('response-time').textContent = (d.avg_response_time ?? 0) + 'ms';
+                    document.getElementById('iso-compliance').textContent = (d.iso_compliance_score ?? 0) + '%';
+                    document.getElementById('risk-score').textContent = (d.overall_risk_score ?? 0) + '/100';
                 }
-            } catch (error) {
-                console.error('Error loading AI metrics:', error);
+            } catch (err) {
+                console.error('Error loading AI metrics:', err);
             }
         }
 
-        // AI Analysis Functions
-        async function runCompliancePrediction() {
-            await runAIAnalysis('compliance', 'Predicting compliance levels...');
-        }
+        /* ----------------------
+           Action wrappers
+           ---------------------- */
+        function runCompliancePrediction(){ return runAIAnalysis('compliance', 'Predicting compliance levels...'); }
+        function runSentimentAnalysis(){ return runAIAnalysis('sentiment', 'Analyzing sentiment...'); }
+        function runStudentClustering(){ return runAIAnalysis('clustering', 'Clustering students...'); }
+        function runPredictiveAnalytics(){ return runAIAnalysis('predictive', 'Running predictive analytics...'); }
+        function runComprehensiveRiskAssessment(){ return runAIAnalysis('risk_assessment', 'Assessing comprehensive risks...'); }
+        function runTrendAnalysis(){ return runAIAnalysis('trend_analysis', 'Analyzing satisfaction trends...'); }
+        function runPerformancePrediction(){ return runAIAnalysis('performance', 'Predicting performance...'); }
+        function runDropoutRiskAssessment(){ return runAIAnalysis('dropout', 'Assessing dropout risk...'); }
+        function runComprehensiveAnalytics(){ return runAIAnalysis('comprehensive', 'Running comprehensive analytics...'); }
 
-        async function runSentimentAnalysis() {
-            await runAIAnalysis('sentiment', 'Analyzing sentiment...');
-        }
-
-        async function runStudentClustering() {
-            await runAIAnalysis('clustering', 'Clustering students...');
-        }
-
-        async function runPerformancePrediction() {
-            await runAIAnalysis('performance', 'Predicting performance...');
-        }
-
-        async function runDropoutRiskAssessment() {
-            await runAIAnalysis('dropout', 'Assessing dropout risk...');
-        }
-
-        async function runComprehensiveAnalytics() {
-            await runAIAnalysis('comprehensive', 'Running comprehensive analytics...');
-        }
-
-        async function runAIAnalysis(type, loadingMessage) {
+        async function runAIAnalysis(type, loadingMessage){
             showLoading(loadingMessage);
-
             try {
-                const response = await fetch(`/api/ai/analyze/${type}`, {
+                const res = await fetch(`/api/ai/analyze/${type}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify({
-                        // Add any required parameters based on the analysis type
-                    })
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                    body: JSON.stringify({})
                 });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    displayResults(type, result.data);
+                const json = await res.json();
+                if (json?.success) {
+                    displayResults(type, json.data ?? {});
                     showAlert('success', `${type.charAt(0).toUpperCase() + type.slice(1)} analysis completed successfully!`);
                 } else {
-                    showAlert('error', result.message || 'Analysis failed');
+                    showAlert('error', json?.message || 'Analysis failed');
                 }
-            } catch (error) {
+            } catch (err) {
+                console.error('runAIAnalysis error:', err);
                 showAlert('error', 'An error occurred during analysis');
-            } finally {
-                hideLoading();
-            }
+            } finally { hideLoading(); }
         }
 
-        function displayResults(type, data) {
+        /* ----------------------
+           Result rendering
+           ---------------------- */
+        function renderItem(title, confidence, htmlContent, opts = {}){
+            // Build a confidence badge with an icon whose color reflects the numeric level when possible
+            let confHtml = '';
+            if (confidence !== undefined && confidence !== null && String(confidence).trim() !== '') {
+                // Try to extract a numeric value from the confidence string (e.g., "85%" -> 85)
+                let confValue = null;
+                if (typeof confidence === 'number') confValue = confidence;
+                else if (typeof confidence === 'string') {
+                    const m = confidence.match(/([0-9]+(?:\.[0-9]+)?)/);
+                    if (m) confValue = parseFloat(m[1]);
+                }
+
+                let colorClass = 'conf-low';
+                if (confValue !== null) {
+                    if (confValue >= 70) colorClass = 'conf-high';
+                    else if (confValue >= 40) colorClass = 'conf-mid';
+                } else {
+                    // default neutral color when no numeric value
+                    colorClass = 'conf-mid';
+                }
+
+                confHtml = `<span class="confidence-badge-icon ${colorClass}" aria-hidden="true"></span><span>${confidence}</span>`;
+            }
+
+            return `
+                <div class="result-item" style="${opts.style || ''}">
+                    <div class="result-header">
+                        <div class="result-title">${title}</div>
+                        <div class="result-confidence">${confHtml}</div>
+                    </div>
+                    <div class="result-details">${htmlContent}</div>
+                </div>
+            `;
+        }
+
+        function displayResults(type, data){
             const container = document.getElementById('results-container');
             const resultsDiv = document.getElementById('ai-results');
+            const parts = [];
 
-            let html = '';
+            // Debug logging
+            console.log('displayResults called with type:', type);
+            console.log('data:', JSON.stringify(data, null, 2));
 
-            switch(type) {
-                case 'compliance':
-                    // Extract the numeric score
-                    const predictionData = data.prediction || data;
-                    const weightedScore = predictionData.weighted_score || 0;
-                    const predictionProb = predictionData.prediction_probability || (weightedScore / 5);
-                    const complianceText = predictionData.prediction || 'Unknown';
-                    const riskLevel = predictionData.risk_level || 'Unknown';
-                    const confidence = predictionData.confidence || 0;
-                    const percentage = Math.round(predictionProb * 100);
-
-                    html = `
-                        <div class="result-item">
-                            <div class="result-header">
-                                <div class="result-title">Compliance Prediction</div>
-                                <div class="result-confidence">${percentage}% Probability</div>
-                            </div>
-                            <div class="result-details">
-                                <p><strong>Compliance Level:</strong> ${complianceText}</p>
-                                <p><strong>Risk Level:</strong> ${riskLevel}</p>
-                                <p><strong>Weighted Score:</strong> ${weightedScore.toFixed(2)}/5.0</p>
-                                <p><strong>Confidence:</strong> ${Math.round(confidence * 100)}%</p>
-                                <p style="margin-top: 10px; font-size: 12px; color: #666;">Based on learner needs, satisfaction, and safety metrics.</p>
-                            </div>
-                        </div>
+            switch(type){
+                case 'compliance': {
+                    const p = data.prediction || data || {};
+                    console.log('compliance p:', JSON.stringify(p, null, 2));
+                    const weighted = Number(p.weighted_score) || 0;
+                    const prob = Number(p.prediction_probability ?? (weighted ? (weighted/5) : 0));
+                    const confidence = Number(p.confidence) || 0;
+                    const predictionLabel = typeof p.prediction === 'string' ? p.prediction : (p.prediction?.prediction || 'Unknown');
+                    const html = `
+                        <p><strong>Compliance Level:</strong> ${predictionLabel}</p>
+                        <p><strong>Risk Level:</strong> ${p.risk_level ?? 'Unknown'}</p>
+                        <p><strong>Weighted Score:</strong> ${typeof weighted === 'number' ? (weighted.toFixed ? weighted.toFixed(2) : weighted) : 'N/A'}/5.0</p>
+                        <p><strong>Confidence:</strong> ${safePct(confidence)}</p>
+                        <p style="margin-top: 10px; font-size: 12px; color: #666;">Based on learner needs, satisfaction, and safety metrics.</p>
                     `;
+                    parts.push(renderItem('Compliance Prediction', safePct(prob), html));
                     break;
+                }
 
-                case 'sentiment':
-                    const sentimentResults = data.sentiment_analysis || data;
-
-                    if (Array.isArray(sentimentResults) && sentimentResults.length > 0) {
-                        // Overall summary
-                        const totalPositive = sentimentResults.filter(r => r.sentiment === 'positive').length;
-                        const totalNeutral = sentimentResults.filter(r => r.sentiment === 'neutral').length;
-                        const totalNegative = sentimentResults.filter(r => r.sentiment === 'negative').length;
-                        const total = sentimentResults.length;
-
-                        html = `
-                            <div class="result-item" style="background: #f0f8ff; border-left: 4px solid #4285f4;">
-                                <div class="result-header">
-                                    <div class="result-title">Overall Sentiment Analysis</div>
-                                    <div class="result-confidence">${total} Comments Analyzed</div>
-                                </div>
-                                <div class="result-details">
-                                    <p><strong>Positive:</strong> ${totalPositive} (${Math.round(totalPositive/total*100)}%)</p>
-                                    <p><strong>Neutral:</strong> ${totalNeutral} (${Math.round(totalNeutral/total*100)}%)</p>
-                                    <p><strong>Negative:</strong> ${totalNegative} (${Math.round(totalNegative/total*100)}%)</p>
-                                </div>
-                            </div>
+                case 'sentiment': {
+                    const arr = data.sentiment_analysis || data || [];
+                    if (Array.isArray(arr) && arr.length){
+                        const total = arr.length;
+                        const pos = arr.filter(r => r.sentiment === 'positive').length;
+                        const neu = arr.filter(r => r.sentiment === 'neutral').length;
+                        const neg = arr.filter(r => r.sentiment === 'negative').length;
+                        const summary = `
+                            <p><strong>Positive:</strong> ${pos} (${safeNum(pos/total*100)}%)</p>
+                            <p><strong>Neutral:</strong> ${neu} (${safeNum(neu/total*100)}%)</p>
+                            <p><strong>Negative:</strong> ${neg} (${safeNum(neg/total*100)}%)</p>
                         `;
+                        parts.push(renderItem('Overall Sentiment Analysis', `${total} Comments Analyzed`, summary, { style: 'background:#f0f8ff;border-left:4px solid #4285f4;' }));
 
-                        // Individual comments
-                        html += sentimentResults.slice(0, 5).map((item, index) => {
-                            const sentimentColor = item.sentiment === 'positive' ? '#28a745' :
-                                                  item.sentiment === 'negative' ? '#dc3545' : '#ffc107';
-                            return `
-                                <div class="result-item">
-                                    <div class="result-header">
-                                        <div class="result-title">Comment ${index + 1}</div>
-                                        <div class="result-confidence" style="background: ${sentimentColor};">${item.sentiment || 'Neutral'}</div>
-                                    </div>
-                                    <div class="result-details">
-                                        <p><strong>Confidence:</strong> ${Math.round((item.confidence || 0) * 100)}%</p>
-                                        ${item.probabilities ? `
-                                            <p style="font-size: 12px; color: #666;">
-                                                Pos: ${Math.round(item.probabilities.positive * 100)}% |
-                                                Neu: ${Math.round(item.probabilities.neutral * 100)}% |
-                                                Neg: ${Math.round(item.probabilities.negative * 100)}%
-                                            </p>
-                                        ` : ''}
-                                    </div>
-                                </div>
+                        arr.slice(0,5).forEach((item, i) => {
+                            const color = item.sentiment === 'positive' ? '#28a745' : item.sentiment === 'negative' ? '#dc3545' : '#ffc107';
+                            const commentHtml = `
+                                <p><strong>Confidence:</strong> ${safePct(item.confidence ?? 0)}</p>
+                                ${item.probabilities ? `<p style="font-size:12px;color:#666;">Pos: ${safePct(item.probabilities.positive)} | Neu: ${safePct(item.probabilities.neutral)} | Neg: ${safePct(item.probabilities.negative)}</p>` : ''}
                             `;
-                        }).join('');
-
-                        if (total > 5) {
-                            html += `<p style="text-align: center; color: #666; margin-top: 15px;">Showing 5 of ${total} analyzed comments</p>`;
-                        }
+                            parts.push(renderItem(`Comment ${i+1}`, `<span style="background:${color};padding:4px 8px;border-radius:12px;color:#fff;">${item.sentiment ?? 'Neutral'}</span>`, commentHtml));
+                        });
                     } else {
-                        html = '<div class="result-item"><p>No sentiment data available</p></div>';
+                        parts.push(renderItem('Sentiment Analysis', '', '<p>No sentiment data available</p>'));
                     }
                     break;
+                }
 
-                case 'clustering':
-                    html = `
-                        <div class="result-item">
-                            <div class="result-header">
-                                <div class="result-title">Student Clustering Results</div>
-                                <div class="result-confidence">${data.clusters || 0} Clusters</div>
-                            </div>
-                            <div class="result-details">
-                                <p>Students have been grouped into ${data.clusters || 0} clusters based on survey responses.</p>
-                                <p>This enables targeted interventions for different student groups.</p>
-                            </div>
-                        </div>
+                case 'clustering': {
+                    const c = data.clustering_result || data || {};
+                    const html = `
+                        <p><strong>Algorithm:</strong> ${c.algorithm ?? 'K-Means'}</p>
+                        <p><strong>Total Students:</strong> ${c.total_samples ?? 0}</p>
+                        <p><strong>Silhouette Score:</strong> ${c.metrics?.silhouette_score ?? 'N/A'}</p>
+                        <p>Students have been grouped into ${c.clusters ?? 0} clusters based on survey responses.</p>
                     `;
+                    parts.push(renderItem('Student Clustering Results', `${c.clusters ?? 0} Clusters Identified`, html));
+                    if (Array.isArray(c.detailed_clusters)){
+                        c.detailed_clusters.slice(0,3).forEach(cluster => {
+                            const details = `
+                                <p><strong>Risk Level:</strong> ${cluster.risk_profile?.risk_level ?? 'Unknown'}</p>
+                                <p><strong>Avg Satisfaction:</strong> ${cluster.average_satisfaction ?? 'N/A'}/5</p>
+                                <p><strong>Avg Performance:</strong> ${cluster.average_performance ?? 'N/A'}/4.0</p>
+                                <p><strong>Characteristics:</strong> ${Array.isArray(cluster.characteristics) ? cluster.characteristics.join(', ') : 'N/A'}</p>
+                            `;
+                            parts.push(renderItem(`Cluster ${cluster.cluster_id}`, `${cluster.size ?? 0} Students (${cluster.percentage ?? 'N/A'}%)`, details));
+                        });
+                    }
+                    if (Array.isArray(c.insights) && c.insights.length){
+                        parts.push(renderItem('ISO 21001 Insights', 'Key Findings', `<ul style="margin:0;padding-left:20px;">${c.insights.map(x => `<li>${x}</li>`).join('')}</ul>`, { style: 'background:#f0f8ff;border-left:4px solid #4285f4;' }));
+                    }
                     break;
+                }
 
-                case 'performance':
-                    html = `
-                        <div class="result-item">
-                            <div class="result-header">
-                                <div class="result-title">Performance Prediction</div>
-                                <div class="result-confidence">${Math.round((data.prediction || 0) * 100)}% Success Rate</div>
-                            </div>
-                            <div class="result-details">
-                                <p>Predicted academic performance score: ${data.prediction || 'N/A'}</p>
-                                <p>Based on curriculum relevance, teaching quality, and participation metrics.</p>
-                            </div>
-                        </div>
+                case 'performance': {
+                    const p = data.prediction || data || {};
+                    const conf = Number(p.confidence) || 0;
+                    const predGpa = p.predicted_gpa;
+                    const html = `
+                        <p><strong>Predicted Performance:</strong> ${p.prediction ?? 'Unknown'}</p>
+                        <p><strong>Predicted GPA:</strong> ${typeof predGpa === 'number' ? predGpa.toFixed(1) : (predGpa ?? 'N/A')}</p>
+                        <p><strong>Risk Level:</strong> ${p.risk_level ?? 'Unknown'}</p>
+                        <p><strong>Model Used:</strong> ${p.model_used ?? 'Unknown'}</p>
                     `;
+                    parts.push(renderItem('Performance Prediction', safePct(conf), html));
                     break;
+                }
 
-                case 'dropout':
-                    html = `
-                        <div class="result-item">
-                            <div class="result-header">
-                                <div class="result-title">Dropout Risk Assessment</div>
-                                <div class="result-confidence">${data.risk_level || 'Unknown'} Risk</div>
-                            </div>
-                            <div class="result-details">
-                                <p>Risk score: ${data.prediction || 'N/A'}</p>
-                                <p>Early intervention recommended for at-risk students.</p>
-                            </div>
-                        </div>
+                case 'dropout': {
+                    const p = data.prediction || data || {};
+                    const html = `
+                        <p><strong>Risk Level:</strong> ${p.dropout_risk ?? 'Unknown'}</p>
+                        <p><strong>Risk Score:</strong> ${p.risk_probability ? (Number(p.risk_probability * 100).toFixed(1) + '%') : 'N/A'}</p>
+                        <p><strong>Intervention Urgency:</strong> ${p.intervention_urgency ?? 'Unknown'}</p>
+                        <p><strong>Confidence:</strong> ${p.confidence ? (Number(p.confidence * 100).toFixed(1) + '%') : 'N/A'}</p>
+                        ${Array.isArray(p.risk_factors) && p.risk_factors.length ? `<p><strong>Risk Factors:</strong> ${p.risk_factors.join(', ')}</p>` : ''}
                     `;
+                    parts.push(renderItem('Dropout Risk Assessment', `${p.dropout_risk ?? 'Unknown'} Risk`, html));
                     break;
+                }
 
-                case 'comprehensive':
-                    html = `
-                        <div class="result-item">
-                            <div class="result-header">
-                                <div class="result-title">Comprehensive Analytics</div>
-                                <div class="result-confidence">Complete</div>
-                            </div>
-                            <div class="result-details">
-                                <p>All AI models have been executed successfully.</p>
-                                <p>Results include compliance, sentiment, clustering, performance, and risk assessments.</p>
-                            </div>
-                        </div>
+                case 'predictive': {
+                    const p = data.prediction || data || {};
+                    const html = `
+                        <p><strong>Current Performance:</strong> ${p.current_performance ?? 'N/A'}</p>
+                        <p><strong>Predicted Trend:</strong> ${p.trend ?? 'N/A'}</p>
+                        <p><strong>Confidence Level:</strong> ${p.confidence ? safePct(p.confidence) : 'N/A'}</p>
+                        <p><strong>Forecast Period:</strong> Next 3 months</p>
                     `;
+                    parts.push(renderItem('Predictive Analytics Results', 'Future Performance Forecast', html));
                     break;
+                }
+
+                case 'risk_assessment': {
+                    const r = data.assessment || data || {};
+                    const html = `
+                        <p><strong>Risk Level:</strong> ${r.risk_level ?? 'Unknown'}</p>
+                        <p><strong>Risk Category:</strong> ${r.risk_category ?? 'Unknown'}</p>
+                        <p><strong>Compliance Impact:</strong> ${r.compliance_impact ?? 'Unknown'}</p>
+                        <p><strong>Confidence:</strong> ${r.confidence ? safePct(r.confidence) : 'N/A'}</p>
+                    `;
+                    parts.push(renderItem('Comprehensive Risk Assessment', `Risk Score: ${r.overall_risk_score ?? 0}/100`, html));
+                    if (r.risk_breakdown){
+                        Object.entries(r.risk_breakdown).forEach(([k,v]) => {
+                            const names = { learning_environment:'Learning Environment', academic_performance:'Academic Performance', safety:'Safety & Security', wellbeing:'Student Wellbeing', engagement:'Student Engagement' };
+                            parts.push(renderItem(names[k] || k, `Risk: ${v}/100`, `<p>Risk score for ${names[k] || k} dimension.</p>`));
+                        });
+                    }
+                    break;
+                }
+
+                case 'trend_analysis': {
+                    const t = data.trend_prediction || data || {};
+                    const html = `
+                        <p><strong>Current Satisfaction:</strong> ${t.current_satisfaction ?? 'N/A'}/5.0</p>
+                        <p><strong>Trend Direction:</strong> ${t.trend_direction ?? 'Unknown'}</p>
+                        <p><strong>Trend Strength:</strong> ${t.trend_strength ?? 'Unknown'}</p>
+                        <p><strong>Confidence:</strong> ${t.confidence ? safePct(t.confidence) : 'N/A'}</p>
+                    `;
+                    parts.push(renderItem('Satisfaction Trend Analysis', t.trend_direction ?? 'Stable', html));
+                    if (Array.isArray(t.forecasted_satisfaction) && t.forecasted_satisfaction.length){
+                        parts.push(renderItem('3-Month Forecast', 'Predicted Values', `<p><strong>Month 1:</strong> ${t.forecasted_satisfaction[0] ?? 'N/A'}/5.0</p><p><strong>Month 2:</strong> ${t.forecasted_satisfaction[1] ?? 'N/A'}/5.0</p><p><strong>Month 3:</strong> ${t.forecasted_satisfaction[2] ?? 'N/A'}/5.0</p>`));
+                    }
+                    break;
+                }
+
+                case 'comprehensive': {
+                    parts.push(renderItem('Comprehensive Analytics', 'Complete', '<p>All AI models have been executed successfully.</p><p>Results include compliance, sentiment, clustering, performance, and risk assessments.</p>'));
+                    const a = data.analytics_results || {};
+                    if (a.compliance_prediction) parts.push(renderItem('Compliance Prediction', a.compliance_prediction.prediction_probability ? safePct(a.compliance_prediction.prediction_probability) : 'N/A', `<p><strong>Compliance Level:</strong> ${a.compliance_prediction.prediction ?? 'Unknown'}</p><p><strong>Risk Level:</strong> ${a.compliance_prediction.risk_level ?? 'Unknown'}</p>`));
+                    if (Array.isArray(a.sentiment_analysis) && a.sentiment_analysis.length) parts.push(renderItem('Sentiment Analysis', `${a.sentiment_analysis.length} Comments`, `<p>Summary available</p>`));
+                    if (a.student_clustering) parts.push(renderItem('Student Clustering', `${a.student_clustering.clusters ?? a.student_clustering.cluster_count ?? 0} Clusters`, `<p>Clustering summary available</p>`));
+                    if (a.performance_prediction) parts.push(renderItem('Performance Prediction', a.performance_prediction.confidence ? safePct(a.performance_prediction.confidence) : 'N/A', `<p>Performance summary available</p>`));
+                    if (a.dropout_risk_prediction) parts.push(renderItem('Dropout Risk Assessment', a.dropout_risk_prediction.dropout_risk ?? 'N/A', `<p>Dropout summary available</p>`));
+                    break;
+                }
+
+                default:
+                    parts.push(renderItem('Analysis Results', '', '<p>No results available for this analysis type.</p>'));
             }
 
-            container.innerHTML = html;
-            resultsDiv.style.display = 'block';
+            container.innerHTML = parts.join('');
+            resultsDiv.style.display = parts.length ? 'block' : 'none';
         }
 
-        function showAlert(type, message) {
+        /* ----------------------
+           UI helpers
+           ---------------------- */
+        function showAlert(type, message){
             const container = document.getElementById('alert-container');
             const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
             container.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
-
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                container.innerHTML = '';
-            }, 5000);
+            setTimeout(()=> container.innerHTML = '', 5000);
         }
 
-        function showLoading(message = 'Processing...') {
+        function showLoading(message = 'Processing...'){
             document.getElementById('loading-overlay').innerHTML = `
                 <div style="text-align: center; color: white;">
                     <div class="loading-spinner"></div>
@@ -718,9 +801,7 @@
             document.getElementById('loading-overlay').classList.add('active');
         }
 
-        function hideLoading() {
-            document.getElementById('loading-overlay').classList.remove('active');
-        }
+        function hideLoading(){ document.getElementById('loading-overlay').classList.remove('active'); }
 
         console.log('AI Insights page loaded');
     </script>

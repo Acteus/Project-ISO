@@ -16,6 +16,7 @@ import joblib
 import os
 import logging
 from datetime import datetime, timedelta
+from utils.data_processor import convert_numpy_types
 
 logger = logging.getLogger(__name__)
 
@@ -221,7 +222,8 @@ class SatisfactionTrendPredictor:
         try:
             if not self.is_trained:
                 # Fallback to rule-based prediction
-                return self._rule_based_prediction(data, forecast_periods)
+                result = self._rule_based_prediction(data, forecast_periods)
+                return convert_numpy_types(result)
 
             # Preprocess input data
             X_scaled, _, _ = self.preprocess_data(data, include_time_features=False)
@@ -247,7 +249,7 @@ class SatisfactionTrendPredictor:
             # Calculate confidence
             confidence = self._calculate_trend_confidence(data, current_prediction)
 
-            return {
+            result = {
                 'current_satisfaction': round(float(current_prediction), 2),
                 'trend_direction': trend_analysis['direction'],
                 'trend_strength': trend_analysis['strength'],
@@ -264,9 +266,13 @@ class SatisfactionTrendPredictor:
                 'recommendations': self._generate_trend_recommendations(trend_analysis, current_prediction)
             }
 
+            # Convert all numpy types to Python native types for JSON serialization
+            return convert_numpy_types(result)
+
         except Exception as e:
             logger.error(f"Prediction failed: {e}")
-            return self._rule_based_prediction(data, forecast_periods)
+            result = self._rule_based_prediction(data, forecast_periods)
+            return convert_numpy_types(result)
 
     def _rule_based_prediction(self, data, forecast_periods=3):
         """Fallback rule-based satisfaction trend prediction"""
@@ -362,8 +368,8 @@ class SatisfactionTrendPredictor:
                 else:
                     trend_analysis['strength'] = 'weak'
 
-                trend_analysis['change_rate'] = round(slope, 4)
-                trend_analysis['volatility'] = round(np.std(values_array), 4)
+                trend_analysis['change_rate'] = round(float(slope), 4)
+                trend_analysis['volatility'] = round(float(np.std(values_array)), 4)
 
                 # Check for seasonal patterns (simplified)
                 if len(values_array) >= 12:
@@ -374,9 +380,10 @@ class SatisfactionTrendPredictor:
 
                     if len(monthly_avg) >= 3:
                         seasonal_variation = np.std(monthly_avg)
-                        trend_analysis['seasonal_pattern'] = seasonal_variation > 0.3
+                        trend_analysis['seasonal_pattern'] = bool(seasonal_variation > 0.3)
 
-        return trend_analysis
+        # Convert all numpy types to Python native types
+        return convert_numpy_types(trend_analysis)
 
     def _calculate_trend_confidence(self, data, prediction):
         """Calculate confidence in trend prediction"""
