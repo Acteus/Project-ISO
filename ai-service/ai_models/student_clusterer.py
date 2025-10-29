@@ -116,6 +116,10 @@ class StudentClusterer:
 
         return best_k, best_score
 
+    def train(self, data, k=None, algorithm='kmeans'):
+        """Train clustering model (alias for cluster method for consistency with training pipeline)"""
+        return self.cluster(data, k, algorithm)
+
     def cluster(self, data, k=None, algorithm='kmeans'):
         """Perform clustering on student data"""
         try:
