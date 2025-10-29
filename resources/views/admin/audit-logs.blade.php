@@ -9,376 +9,458 @@
         body {
             background: linear-gradient(135deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
             min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .survey-main {
-            background-image: none !important;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
         }
 
-        .dashboard-container {
+        .logs-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 30px;
+        }
+
+        .logs-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            color: #333;
+            padding: 40px 30px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(66, 133, 244, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logs-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #4285F4, #FF8C00, #FFD700);
+        }
+
+        .logs-header h1 {
+            margin: 0 0 20px 0;
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1.3;
+            color: #2c3e50;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .logs-header p {
+            margin: 0;
+            font-size: 18px;
+            line-height: 1.6;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            color: #5a6c7d;
+            font-weight: 500;
         }
 
         .back-btn {
-            background: white;
-            color: black;
-            padding: 10px 20px;
-            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            color: #333;
+            padding: 12px 24px;
+            border-radius: 12px;
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 700;
             transition: all 0.3s ease;
-            border: 2px solid white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             display: inline-block;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .back-btn:hover {
-            background: rgba(255, 255, 255, 0.9);
-            color: black;
-        }
-
-        .page-header {
-            background: white;
-            color: black;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .page-header h1 {
-            margin: 0 0 15px 0;
-            font-size: 28px;
-            font-weight: 700;
-            line-height: 1.2;
-            color: black;
-        }
-
-        .page-header p {
-            margin: 0;
-            font-size: 16px;
-            line-height: 1.5;
-            color: #666;
-        }
-
-        .filters-section {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-
-        .filters-section h3 {
-            margin-top: 0;
+            background: rgba(255, 255, 255, 1);
             color: #333;
-            border-bottom: 2px solid rgba(66, 133, 244, 1);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
-        .filter-grid {
+        .logs-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
         }
 
-        .filter-group {
-            display: flex;
-            flex-direction: column;
+        .log-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
-        .filter-group label {
-            font-weight: 600;
-            color: #555;
-            margin-bottom: 8px;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .log-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #4285F4, #FF8C00, #FFD700);
         }
 
-        .filter-group select,
-        .filter-group input[type="date"] {
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.3s ease;
+        .log-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.2);
         }
 
-        .filter-group select:focus,
-        .filter-group input[type="date"]:focus {
-            border-color: rgba(66, 133, 244, 1);
-            outline: none;
-        }
-
-        .filter-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        .audit-logs-section {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-
-        .audit-logs-section h3 {
-            margin-top: 0;
-            color: #333;
-            border-bottom: 2px solid rgba(66, 133, 244, 1);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        .audit-log-item {
-            padding: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
+        .log-item {
+            padding: 20px 25px;
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 16px;
             margin-bottom: 15px;
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.03), rgba(255, 140, 0, 0.03));
             transition: all 0.3s ease;
-            background: #fafafa;
         }
 
-        .audit-log-item:hover {
-            background: #f5f5f5;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        .log-item:hover {
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.08), rgba(255, 140, 0, 0.08));
             transform: translateX(5px);
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.15);
         }
 
-        .audit-header {
+        .log-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .log-header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .audit-action {
-            font-weight: 700;
-            font-size: 16px;
-            color: #333;
-            display: flex;
             align-items: center;
-            gap: 10px;
+            margin-bottom: 12px;
         }
 
-        .audit-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 15px;
-            font-size: 12px;
+        .log-action {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+
+        .log-timestamp {
+            color: #5a6c7d;
+            font-size: 13px;
             font-weight: 600;
-            text-transform: uppercase;
         }
 
-        .badge-login {
-            background: #28a745;
-            color: white;
-        }
-
-        .badge-logout {
-            background: #dc3545;
-            color: white;
-        }
-
-        .badge-registration {
-            background: #17a2b8;
-            color: white;
-        }
-
-        .badge-submit {
-            background: #007bff;
-            color: white;
-        }
-
-        .badge-view {
-            background: #6c757d;
-            color: white;
-        }
-
-        .badge-default {
-            background: #ffc107;
-            color: #333;
-        }
-
-        .audit-timestamp {
+        .log-details {
             color: #666;
             font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            line-height: 1.6;
         }
 
-        .audit-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #e0e0e0;
-        }
-
-        .audit-detail-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .audit-detail-label {
-            font-weight: 600;
-            color: #666;
+        .log-ip {
+            background: rgba(66, 133, 244, 0.1);
+            padding: 4px 10px;
+            border-radius: 12px;
             font-size: 12px;
+            font-weight: 600;
+            color: #4285F4;
+            margin-top: 8px;
+            display: inline-block;
+        }
+
+        .action-type {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 5px;
         }
 
-        .audit-detail-value {
-            color: #333;
-            font-size: 14px;
-        }
+        .action-login { background: linear-gradient(135deg, #28a745, #20c997); color: white; }
+        .action-logout { background: linear-gradient(135deg, #6c757d, #5a6268); color: white; }
+        .action-submit { background: linear-gradient(135deg, #17a2b8, #138496); color: white; }
+        .action-access { background: linear-gradient(135deg, #ffc107, #ff9800); color: #333; }
+        .action-error { background: linear-gradient(135deg, #dc3545, #e74c3c); color: white; }
+        .action-export { background: linear-gradient(135deg, #6f42c1, #5a32a3); color: white; }
 
-        .audit-description {
-            margin-top: 10px;
-            color: #555;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .pagination-wrapper {
-            display: flex;
-            justify-content: center;
-            margin-top: 30px;
-        }
-
-        .pagination {
-            display: flex;
-            gap: 5px;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .pagination li {
-            display: inline-block;
-        }
-
-        .pagination a,
-        .pagination span {
-            display: block;
-            padding: 8px 15px;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-            text-decoration: none;
-            color: #333;
-            transition: all 0.3s ease;
-        }
-
-        .pagination a:hover {
-            background: rgba(66, 133, 244, 1);
-            border-color: rgba(66, 133, 244, 1);
-            color: white;
-        }
-
-        .pagination .active span {
-            background: rgba(66, 133, 244, 1);
-            border-color: rgba(66, 133, 244, 1);
-            color: white;
-            font-weight: 700;
-        }
-
-        .pagination .disabled span {
-            color: #ccc;
-            cursor: not-allowed;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .btn-primary {
-            background: #4285F4;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
-        }
-
-        .no-data {
-            text-align: center;
-            color: #666;
-            font-style: italic;
-            padding: 40px 20px;
-        }
-
-        .stats-grid {
+        .stats-bar {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
             margin-bottom: 30px;
         }
 
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .stat-item {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 25px;
+            border-radius: 18px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
             text-align: center;
-            border-left: 4px solid rgba(66, 133, 244, 1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4285F4, #FF8C00, #FFD700);
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(66, 133, 244, 0.2);
         }
 
         .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: rgba(66, 133, 244, 1);
-            margin-bottom: 5px;
+            font-size: 36px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #4285F4, #FF8C00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .stat-label {
             font-size: 14px;
-            color: #666;
+            color: #5a6c7d;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1.5px;
+            font-weight: 600;
         }
 
-        .icon {
-            width: 16px;
-            height: 16px;
-            display: inline-block;
+        .logs-table-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .logs-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .logs-table thead {
+            background: linear-gradient(135deg, #4285F4, #FF8C00);
+        }
+
+        .logs-table th {
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 700;
+            color: white;
+            border-bottom: none;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .logs-table td {
+            padding: 18px 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            vertical-align: middle;
+            transition: all 0.3s ease;
+        }
+
+        .logs-table tbody tr {
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .logs-table tbody tr:hover {
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.08), rgba(255, 140, 0, 0.08));
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.15);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .pagination a,
+        .pagination span {
+            padding: 12px 16px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 10px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .pagination a:hover {
+            background: linear-gradient(135deg, #4285F4, #1e88e5);
+            color: white;
+            border-color: #4285F4;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.3);
+        }
+
+        .pagination .active {
+            background: linear-gradient(135deg, #4285F4, #1e88e5);
+            color: white;
+            border-color: #4285F4;
+            font-weight: 700;
+        }
+
+        .pagination .disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            background: rgba(200, 200, 200, 0.5);
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+            font-style: italic;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .footer {
+            margin-top: 60px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            text-align: center;
+            color: #5a6c7d;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #4285F4;
+            transform: translateY(-1px);
         }
 
         .logout-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        /* Header styling enhancement */
+        .header {
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(255, 140, 0, 0.1));
+            z-index: -1;
+        }
+
+        .logo a {
+            color: white !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            font-weight: 800;
+        }
+
+        .nav-link {
+            color: white !important;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-link:hover {
+            color: #FFD700 !important;
+            transform: translateY(-2px);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-link.active {
+            color: #FFD700 !important;
+            font-weight: 700;
+            text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .logs-container {
+                padding: 20px;
+            }
+
+            .logs-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 15px;
+            }
+
+            .logs-table-container {
+                padding: 20px;
+            }
+
+            .logs-table {
+                font-size: 14px;
+            }
+
+            .logs-table th,
+            .logs-table td {
+                padding: 12px 8px;
+            }
         }
     </style>
 </head>
@@ -394,10 +476,11 @@
                 <!-- Desktop navigation -->
                 <nav class="desktop-nav">
                     <a href="{{ route('admin.dashboard') }}" class="nav-link">Dashboard</a>
+                    <a href="{{ route('admin.audit.logs') }}" class="nav-link active">Audit Logs</a>
                     <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                         @csrf
-                        <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
-                            <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(135deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 700; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;">
+                            <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 8px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                 <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
                             </svg>
                             Logout
@@ -409,194 +492,160 @@
     </header>
 
     <main class="survey-main">
-        <div class="dashboard-container">
+        <div class="logs-container">
             <a href="{{ route('admin.dashboard') }}" class="back-btn">← Back to Dashboard</a>
 
-            <!-- Page Header -->
-            <div class="page-header">
-                <h1>📋 Audit Logs</h1>
-                <p>Review system activity and ensure compliance with ISO 21001 traceability requirements</p>
+            <div class="logs-header">
+                <h1>System Audit Logs</h1>
+                <p>Comprehensive audit trail for ISO 21001 compliance and system security monitoring</p>
             </div>
 
-            <!-- Statistics -->
-            <div class="stats-grid">
-                <div class="stat-card">
+            <!-- Stats Bar -->
+            <div class="stats-bar">
+                <div class="stat-item">
                     <div class="stat-value">{{ $auditLogs->total() }}</div>
-                    <div class="stat-label">Total Events</div>
+                    <div class="stat-label">Total Audit Events</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value">{{ \App\Models\AuditLog::whereDate('created_at', today())->count() }}</div>
-                    <div class="stat-label">Today's Events</div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ $auditLogs->currentPage() }}</div>
+                    <div class="stat-label">Current Page</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value">{{ \App\Models\AuditLog::where('action', 'LIKE', '%login%')->count() }}</div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ $auditLogs->lastPage() }}</div>
+                    <div class="stat-label">Total Pages</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ \App\Models\AuditLog::where('action', 'login')->count() }}</div>
                     <div class="stat-label">Login Events</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value">{{ \App\Models\AuditLog::where('action', 'submit_survey_response')->count() }}</div>
-                    <div class="stat-label">Survey Submissions</div>
-                </div>
             </div>
 
-            <!-- Filters Section -->
-            <div class="filters-section">
-                <h3>🔍 Filter Audit Logs</h3>
-                <form method="GET" action="{{ route('admin.audit.logs') }}">
-                    <div class="filter-grid">
-                        <div class="filter-group">
-                            <label for="action">Action Type</label>
-                            <select name="action" id="action">
-                                <option value="">All Actions</option>
-                                @foreach($actions as $actionOption)
-                                    <option value="{{ $actionOption }}" {{ $action == $actionOption ? 'selected' : '' }}>
-                                        {{ ucwords(str_replace('_', ' ', $actionOption)) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label for="date_from">Date From</label>
-                            <input type="date" name="date_from" id="date_from" value="{{ $dateFrom }}">
-                        </div>
-                        <div class="filter-group">
-                            <label for="date_to">Date To</label>
-                            <input type="date" name="date_to" id="date_to" value="{{ $dateTo }}">
-                        </div>
-                    </div>
-                    <div class="filter-actions">
-                        <a href="{{ route('admin.audit.logs') }}" class="btn btn-secondary">Clear Filters</a>
-                        <button type="submit" class="btn btn-primary">Apply Filters</button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Audit Logs List -->
-            <div class="audit-logs-section">
-                <h3>📜 Activity Log</h3>
+            <!-- Logs Table -->
+            <div class="logs-table-container">
                 @if($auditLogs->count() > 0)
-                    @foreach($auditLogs as $log)
-                        <div class="audit-log-item">
-                            <div class="audit-header">
-                                <div class="audit-action">
-                                    @php
-                                        $badgeClass = 'badge-default';
-                                        if (str_contains($log->action, 'login')) {
-                                            $badgeClass = 'badge-login';
-                                        } elseif (str_contains($log->action, 'logout')) {
-                                            $badgeClass = 'badge-logout';
-                                        } elseif (str_contains($log->action, 'registration')) {
-                                            $badgeClass = 'badge-registration';
-                                        } elseif (str_contains($log->action, 'submit')) {
-                                            $badgeClass = 'badge-submit';
-                                        } elseif (str_contains($log->action, 'view')) {
-                                            $badgeClass = 'badge-view';
-                                        }
-                                    @endphp
-                                    <span class="audit-badge {{ $badgeClass }}">{{ ucwords(str_replace('_', ' ', $log->action)) }}</span>
-                                </div>
-                                <div class="audit-timestamp">
-                                    <span class="icon">🕐</span>
-                                    {{ $log->created_at->format('M j, Y g:i A') }}
-                                </div>
-                            </div>
-
-                            <div class="audit-description">
-                                {{ $log->description }}
-                            </div>
-
-                            <div class="audit-details">
-                                <div class="audit-detail-item">
-                                    <span class="audit-detail-label">User</span>
-                                    <span class="audit-detail-value">
-                                        @if($log->user)
-                                            {{ $log->user->name }} ({{ $log->user->student_id }})
-                                        @else
-                                            System / Admin
-                                        @endif
-                                    </span>
-                                </div>
-                                <div class="audit-detail-item">
-                                    <span class="audit-detail-label">IP Address</span>
-                                    <span class="audit-detail-value">{{ $log->ip_address ?? 'N/A' }}</span>
-                                </div>
-                                <div class="audit-detail-item">
-                                    <span class="audit-detail-label">Event ID</span>
-                                    <span class="audit-detail-value">#{{ $log->id }}</span>
-                                </div>
-                                @if($log->new_values)
-                                    <div class="audit-detail-item">
-                                        <span class="audit-detail-label">Additional Data</span>
-                                        <span class="audit-detail-value">
-                                            @if(is_array($log->new_values))
-                                                {{ implode(', ', array_map(fn($k, $v) => "$k: $v", array_keys($log->new_values), $log->new_values)) }}
-                                            @else
-                                                {{ $log->new_values }}
-                                            @endif
+                    <table class="logs-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Action</th>
+                                <th>User</th>
+                                <th>Details</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($auditLogs as $log)
+                                <tr>
+                                    <td>
+                                        <div style="display: flex; flex-direction: column;">
+                                            <span style="font-weight: 600; color: #2c3e50;">{{ $log->created_at->format('M j, Y') }}</span>
+                                            <small style="color: #666; font-size: 12px;">{{ $log->created_at->format('g:i:s A') }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="action-type action-{{ str_replace('_', '', $log->action) }}">
+                                            {{ ucfirst(str_replace('_', ' ', $log->action)) }}
                                         </span>
-                                    </div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 600; color: #2c3e50;">
+                                            {{ $log->user_type ?? 'System' }}
+                                        </div>
+                                        @if($log->user_id)
+                                            <small style="color: #666;">ID: {{ $log->user_id }}</small>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div style="color: #5a6c7d; font-size: 14px; line-height: 1.5;">
+                                            {{ $log->description ?? 'No description available' }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="log-ip">{{ $log->ip_address ?? 'Unknown' }}</span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+
+                    <!-- Pagination -->
+                    <div class="pagination">
+                        @if ($auditLogs->onFirstPage())
+                            <span class="disabled">« Previous</span>
+                        @else
+                            <a href="{{ $auditLogs->previousPageUrl() }}">« Previous</a>
+                        @endif
+
+                        @foreach(range(1, $auditLogs->lastPage()) as $page)
+                            @if($page == $auditLogs->currentPage())
+                                <span class="active">{{ $page }}</span>
+                            @else
+                                <a href="{{ $auditLogs->url($page) }}">{{ $page }}</a>
+                            @endif
+                        @endforeach
+
+                        @if ($auditLogs->hasMorePages())
+                            <a href="{{ $auditLogs->nextPageUrl() }}">Next »</a>
+                        @else
+                            <span class="disabled">Next »</span>
+                        @endif
+                    </div>
+                @else
+                    <div class="no-data">
+                        <h3>No audit logs found</h3>
+                        <p>System activity will be recorded here for compliance tracking.</p>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Recent Activity Summary -->
+            @if($auditLogs->count() > 0)
+            <div class="logs-grid">
+                <div class="log-card">
+                    <h3 style="color: #2c3e50; font-size: 20px; font-weight: 700; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid transparent; border-image: linear-gradient(90deg, #4285F4, #FF8C00) 1;">Recent Login Activity</h3>
+                    @php
+                        $recentLogins = \App\Models\AuditLog::where('action', 'login')->latest()->take(5)->get();
+                    @endphp
+
+                    @foreach($recentLogins as $login)
+                        <div class="log-item">
+                            <div class="log-header">
+                                <div class="log-action">Login Event</div>
+                                <div class="log-timestamp">{{ $login->created_at->format('M j, g:i A') }}</div>
+                            </div>
+                            <div class="log-details">
+                                {{ $login->description ?? 'User logged in' }}
+                                @if($login->ip_address)
+                                    <div class="log-ip">IP: {{ $login->ip_address }}</div>
                                 @endif
                             </div>
                         </div>
                     @endforeach
+                </div>
 
-                    <!-- Pagination -->
-                    <div class="pagination-wrapper">
-                        <ul class="pagination">
-                            {{-- Previous Page Link --}}
-                            @if ($auditLogs->onFirstPage())
-                                <li class="disabled"><span>&laquo; Previous</span></li>
-                            @else
-                                <li><a href="{{ $auditLogs->appends(request()->query())->previousPageUrl() }}">&laquo; Previous</a></li>
-                            @endif
+                <div class="log-card">
+                    <h3 style="color: #2c3e50; font-size: 20px; font-weight: 700; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid transparent; border-image: linear-gradient(90deg, #FF8C00, #FFD700) 1;">Recent Survey Submissions</h3>
+                    @php
+                        $recentSubmissions = \App\Models\AuditLog::where('action', 'submit_survey_response')->latest()->take(5)->get();
+                    @endphp
 
-                            {{-- Pagination Elements --}}
-                            @php
-                                $currentPage = $auditLogs->currentPage();
-                                $lastPage = $auditLogs->lastPage();
-                                $start = max(1, $currentPage - 2);
-                                $end = min($lastPage, $currentPage + 2);
-                            @endphp
-
-                            {{-- First Page --}}
-                            @if($start > 1)
-                                <li><a href="{{ $auditLogs->appends(request()->query())->url(1) }}">1</a></li>
-                                @if($start > 2)
-                                    <li class="disabled"><span>...</span></li>
+                    @foreach($recentSubmissions as $submission)
+                        <div class="log-item">
+                            <div class="log-header">
+                                <div class="log-action">Survey Submission</div>
+                                <div class="log-timestamp">{{ $submission->created_at->format('M j, g:i A') }}</div>
+                            </div>
+                            <div class="log-details">
+                                {{ $submission->description ?? 'Survey response submitted' }}
+                                @if($submission->ip_address)
+                                    <div class="log-ip">IP: {{ $submission->ip_address }}</div>
                                 @endif
-                            @endif
-
-                            {{-- Page Numbers --}}
-                            @for ($page = $start; $page <= $end; $page++)
-                                @if ($page == $currentPage)
-                                    <li class="active"><span>{{ $page }}</span></li>
-                                @else
-                                    <li><a href="{{ $auditLogs->appends(request()->query())->url($page) }}">{{ $page }}</a></li>
-                                @endif
-                            @endfor
-
-                            {{-- Last Page --}}
-                            @if($end < $lastPage)
-                                @if($end < $lastPage - 1)
-                                    <li class="disabled"><span>...</span></li>
-                                @endif
-                                <li><a href="{{ $auditLogs->appends(request()->query())->url($lastPage) }}">{{ $lastPage }}</a></li>
-                            @endif
-
-                            {{-- Next Page Link --}}
-                            @if ($auditLogs->hasMorePages())
-                                <li><a href="{{ $auditLogs->appends(request()->query())->nextPageUrl() }}">Next &raquo;</a></li>
-                            @else
-                                <li class="disabled"><span>Next &raquo;</span></li>
-                            @endif
-                        </ul>
-                    </div>
-                @else
-                    <div class="no-data">
-                        <p>No audit logs found matching your criteria.</p>
-                        <p>Try adjusting your filters or check back later.</p>
-                    </div>
-                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
+            @endif
         </div>
     </main>
 
@@ -605,14 +654,14 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-main">
-                    <h3 class="footer-title">ISO Learner-Centric Quality Education</h3>
-                    <p class="footer-description">
+                    <h3 class="footer-title" style="color: #2c3e50; font-weight: 700; margin-bottom: 15px;">ISO Learner-Centric Quality Education</h3>
+                    <p class="footer-description" style="color: #5a6c7d; font-size: 16px; line-height: 1.6;">
                         Empowering CSS Students through Learner-Centric Quality Education
                     </p>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <p class="footer-copyright">
+            <div class="footer-bottom" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1);">
+                <p class="footer-copyright" style="color: #6c757d; font-weight: 500;">
                     © <span id="currentYear"></span> JRU Senior High School. All rights reserved.
                 </p>
             </div>
@@ -624,8 +673,35 @@
         // Set current year
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-        console.log('Audit logs page loaded');
+        // Add smooth animations on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.stat-item, .log-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // Animate log items
+            const logItems = document.querySelectorAll('.log-item');
+            logItems.forEach((item, index) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateX(-20px)';
+
+                setTimeout(() => {
+                    item.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateX(0)';
+                }, index * 50);
+            });
+        });
+
+        console.log('Enhanced Audit Logs page loaded');
     </script>
 </body>
 </html>
-

@@ -20,7 +20,7 @@ body {
 
 /* Header Styles */
 .header {
-    background-color: #312e81;
+    background: linear-gradient(135deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
     color: white;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
@@ -41,6 +41,12 @@ body {
 
 .desktop-nav {
     display: none;
+    gap: 2rem;
+}
+
+/* Show desktop nav on admin pages */
+.header .desktop-nav {
+    display: flex !important;
     gap: 2rem;
 }
 

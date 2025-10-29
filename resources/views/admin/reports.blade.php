@@ -7,225 +7,362 @@
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
+        /* Enhanced Modern Report Management Styles */
         body {
             background: linear-gradient(135deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
             min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .survey-main {
-            background-image: none !important;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
         }
 
         .reports-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 30px;
         }
 
         .reports-header {
-            background: white;
-            color: black;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            color: #333;
+            padding: 40px 30px;
+            border-radius: 20px;
+            margin-bottom: 40px;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 60px rgba(66, 133, 244, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reports-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #4285F4, #FF8C00, #FFD700);
         }
 
         .reports-header h1 {
-            margin: 0 0 15px 0;
-            font-size: 28px;
-            font-weight: 700;
-            line-height: 1.2;
-            color: black;
+            margin: 0 0 20px 0;
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1.3;
+            color: #2c3e50;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .reports-header p {
             margin: 0;
-            font-size: 16px;
-            line-height: 1.5;
-            color: #666;
+            font-size: 18px;
+            line-height: 1.6;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            color: #5a6c7d;
+            font-weight: 500;
         }
 
         .back-btn {
-            background: white;
-            color: black;
-            padding: 10px 20px;
-            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            color: #333;
+            padding: 12px 24px;
+            border-radius: 12px;
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 700;
             transition: all 0.3s ease;
-            border: 2px solid white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             display: inline-block;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .back-btn:hover {
-            background: rgba(255, 255, 255, 0.9);
-            color: black;
+            background: rgba(255, 255, 255, 1);
+            color: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
         .reports-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 30px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
         }
 
         .report-card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 35px 30px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .report-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #4285F4, #FF8C00, #FFD700);
         }
 
         .report-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.2);
         }
 
         .report-card h3 {
             margin-top: 0;
-            color: #333;
+            color: #2c3e50;
             font-size: 24px;
-            border-bottom: 3px solid rgba(66,133,244,1);
+            font-weight: 700;
+            margin-bottom: 15px;
             padding-bottom: 15px;
+            border-bottom: 3px solid transparent;
+            border-image: linear-gradient(90deg, #4285F4, #FF8C00) 1;
+        }
+
+        .report-card p {
+            color: #5a6c7d;
+            margin-bottom: 25px;
+            font-size: 16px;
+            line-height: 1.6;
+            font-weight: 500;
         }
 
         .report-form {
-            margin-top: 20px;
+            margin-top: 25px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .form-group label {
             display: block;
-            font-weight: 600;
-            color: #555;
-            margin-bottom: 8px;
-            font-size: 14px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .form-group select,
         .form-group input[type="email"],
         .form-group input[type="date"] {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid rgba(0,0,0,0.1);
+            border-radius: 12px;
             font-size: 14px;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
         }
 
         .form-group select:focus,
         .form-group input:focus {
-            border-color: rgba(66,133,244,1);
+            border-color: #4285F4;
             outline: none;
+            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+            background: rgba(255, 255, 255, 1);
         }
 
+        /* Enhanced Button System */
         .btn {
-            padding: 12px 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 28px;
             border: none;
-            border-radius: 8px;
-            font-weight: 600;
+            border-radius: 12px;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
         }
 
         .btn-primary {
-            background: rgba(66,133,244,1);
+            background: linear-gradient(135deg, #4285F4, #1e88e5);
             color: white;
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.4);
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(66,133,244,0.4);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(66, 133, 244, 0.6);
+            color: white;
         }
 
         .btn-secondary {
-            background: #6c757d;
+            background: linear-gradient(135deg, #6c757d, #5a6268);
             color: white;
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
         }
 
         .btn-secondary:hover {
-            background: #5a6268;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(108,117,125,0.4);
-        }
-
-        .btn-success {
-            background: #28a745;
+            background: linear-gradient(135deg, #5a6268, #495057);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(108, 117, 125, 0.6);
             color: white;
         }
 
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+        }
+
         .btn-success:hover {
-            background: #218838;
+            background: linear-gradient(135deg, #218838, #1fa87a);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(40, 167, 69, 0.6);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: white;
+            box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
+        }
+
+        .btn-info:hover {
+            background: linear-gradient(135deg, #138496, #117a8b);
+            color: white;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(40,167,69,0.4);
+            box-shadow: 0 6px 20px rgba(23, 162, 184, 0.4);
         }
 
         .preview-section {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-            border-left: 4px solid rgba(66,133,244,1);
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.08), rgba(255, 140, 0, 0.08));
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 25px;
+            border-left: 5px solid #4285F4;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .preview-section h4 {
             margin-top: 0;
-            color: #333;
-            font-size: 18px;
+            color: #2c3e50;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
         }
 
         .preview-data {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
         }
 
         .preview-item {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 12px;
             text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .preview-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
 
         .preview-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: rgba(66,133,244,1);
-            margin-bottom: 5px;
+            font-size: 28px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #4285F4, #FF8C00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .preview-label {
-            font-size: 12px;
-            color: #666;
+            font-size: 13px;
+            color: #5a6c7d;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            font-weight: 600;
         }
 
         .alert {
-            padding: 15px;
-            border-radius: 8px;
+            padding: 20px 25px;
+            border-radius: 16px;
             margin-bottom: 20px;
-            border-left: 4px solid;
+            border: none;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
         }
 
         .alert-success {
-            background: #d4edda;
-            border-color: #28a745;
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(32, 201, 151, 0.1));
+            border-left: 5px solid #28a745;
             color: #155724;
         }
 
         .alert-error {
-            background: #f8d7da;
-            border-color: #dc3545;
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(232, 62, 97, 0.1));
+            border-left: 5px solid #dc3545;
             color: #721c24;
         }
 
@@ -237,6 +374,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
             z-index: 9999;
             justify-content: center;
             align-items: center;
@@ -247,10 +385,10 @@
         }
 
         .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid rgba(66,133,244,1);
+            width: 60px;
+            height: 60px;
+            border: 6px solid rgba(255,255,255,0.3);
+            border-top: 6px solid rgba(66, 133, 244, 1);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -260,71 +398,72 @@
             100% { transform: rotate(360deg); }
         }
 
-        .logout-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
-        }
-
         /* QR Codes Section Styles */
         .qr-section {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 35px 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .section-header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 35px;
         }
 
         .section-header h2 {
-            margin: 0 0 10px 0;
-            color: #333;
-            font-size: 24px;
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 28px;
+            font-weight: 700;
         }
 
         .section-header p {
             margin: 0;
-            color: #666;
+            color: #5a6c7d;
             font-size: 16px;
+            font-weight: 500;
         }
 
         .qr-codes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .qr-code-card {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.03), rgba(255, 140, 0, 0.03));
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            padding: 25px;
             display: flex;
             align-items: center;
-            gap: 15px;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
+            gap: 20px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .qr-code-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            border-color: rgba(66,133,244,1);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            border-color: #4285F4;
         }
 
         .qr-image {
             flex-shrink: 0;
-            width: 100px;
-            height: 100px;
+            width: 110px;
+            height: 110px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: white;
-            border-radius: 8px;
-            border: 2px solid #ddd;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 2px solid rgba(0,0,0,0.1);
         }
 
         .qr-info {
@@ -333,111 +472,83 @@
         }
 
         .qr-info h4 {
-            margin: 0 0 8px 0;
-            color: #333;
-            font-size: 16px;
-            font-weight: 600;
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            font-size: 18px;
+            font-weight: 700;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .qr-info p {
-            margin: 0 0 10px 0;
-            color: #666;
-            font-size: 13px;
-            line-height: 1.4;
+            margin: 0 0 15px 0;
+            color: #5a6c7d;
+            font-size: 14px;
+            line-height: 1.5;
         }
 
         .qr-status {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 12px;
+            margin-bottom: 15px;
         }
 
         .status-badge {
-            padding: 3px 8px;
-            border-radius: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
         }
 
         .status-active {
-            background: #d4edda;
-            color: #155724;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
         }
 
         .status-inactive {
-            background: #f8d7da;
-            color: #721c24;
+            background: linear-gradient(135deg, #dc3545, #e74c3c);
+            color: white;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
         }
 
         .scan-count {
             font-size: 12px;
             color: #666;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .qr-actions {
             display: flex;
-            gap: 8px;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-            border-radius: 5px;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .btn-info {
-            background: #17a2b8;
-            color: white;
-        }
-
-        .btn-info:hover {
-            background: #138496;
-            color: white;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
-            color: white;
+            gap: 10px;
         }
 
         .no-qr-codes {
             text-align: center;
-            padding: 40px 20px;
+            padding: 50px 20px;
         }
 
         .no-data-message h3 {
-            margin: 0 0 10px 0;
-            color: #666;
-            font-size: 20px;
+            margin: 0 0 15px 0;
+            color: #5a6c7d;
+            font-size: 24px;
+            font-weight: 600;
         }
 
         .no-data-message p {
-            margin: 0 0 20px 0;
-            color: #999;
+            margin: 0 0 25px 0;
+            color: #6c757d;
+            font-size: 16px;
         }
 
         .qr-section-footer {
             text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
+            padding-top: 25px;
+            border-top: 1px solid rgba(0,0,0,0.1);
         }
 
         /* Test Email Modal Styles */
@@ -449,7 +560,8 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
             animation: fadeIn 0.3s ease;
         }
 
@@ -460,13 +572,15 @@
         }
 
         .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 35px;
+            border-radius: 20px;
             max-width: 500px;
             width: 90%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             animation: slideUp 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         @keyframes fadeIn {
@@ -475,7 +589,7 @@
         }
 
         @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
+            from { transform: translateY(30px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
 
@@ -483,57 +597,163 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(0,0,0,0.1);
         }
 
         .modal-header h3 {
             margin: 0;
-            color: #333;
-            font-size: 22px;
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 700;
         }
 
         .close-modal {
             background: none;
             border: none;
-            font-size: 28px;
+            font-size: 32px;
             color: #999;
             cursor: pointer;
             line-height: 1;
             padding: 0;
-            width: 30px;
-            height: 30px;
+            width: 35px;
+            height: 35px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
         }
 
         .close-modal:hover {
             color: #333;
+            background: rgba(0,0,0,0.05);
         }
 
         .modal-body {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .modal-body p {
-            color: #666;
-            margin-bottom: 15px;
+            color: #5a6c7d;
+            margin-bottom: 20px;
             line-height: 1.6;
+            font-size: 16px;
         }
 
         .email-config-info {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            font-size: 13px;
-            color: #555;
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05));
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #5a6c7d;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .email-config-info strong {
-            color: #333;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+
+        .footer {
+            margin-top: 60px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            text-align: center;
+            color: #5a6c7d;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        /* Header styling enhancement */
+        .header {
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(255, 140, 0, 0.1));
+            z-index: -1;
+        }
+
+        .logo a {
+            color: white !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            font-weight: 800;
+        }
+
+        .nav-link {
+            color: white !important;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-link:hover {
+            color: #FFD700 !important;
+            transform: translateY(-2px);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-link.active {
+            color: #FFD700 !important;
+            font-weight: 700;
+            text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .reports-container {
+                padding: 20px;
+            }
+
+            .reports-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .qr-codes-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .report-card {
+                padding: 25px 20px;
+            }
+
+            .qr-code-card {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
         }
     </style>
 </head>
@@ -552,8 +772,8 @@
                     <a href="{{ route('admin.reports') }}" class="nav-link active">Reports</a>
                     <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                         @csrf
-                        <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
-                            <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(135deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 700; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;">
+                            <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 8px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                 <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
                             </svg>
                             Logout
@@ -571,9 +791,12 @@
             <div class="reports-header">
                 <h1>Report Management</h1>
                 <p>Send weekly progress reports and monthly compliance reports to administrators via Google SMTP</p>
-                <div style="margin-top: 15px;">
-                    <button type="button" onclick="showTestEmailModal()" class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px;">
-                        📧 Test Email Configuration
+                <div style="margin-top: 25px;">
+                    <button type="button" onclick="showTestEmailModal()" class="btn btn-secondary" style="padding: 12px 20px; font-size: 14px;">
+                        <svg style="width: 18px; height: 18px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                        </svg>
+                        Test Email Configuration
                     </button>
                 </div>
             </div>
@@ -586,7 +809,7 @@
                 <!-- Weekly Progress Report -->
                 <div class="report-card">
                     <h3>Weekly Progress Report</h3>
-                    <p style="color: #666; margin-bottom: 20px;">Send automated weekly progress summaries with key metrics and insights.</p>
+                    <p style="color: #666; margin-bottom: 25px;">Send automated weekly progress summaries with key metrics and insights.</p>
 
                     <form id="weekly-report-form" class="report-form">
                         <div class="form-group">
@@ -636,7 +859,7 @@
                             </select>
                         </div>
 
-                        <div style="display: flex; gap: 10px;">
+                        <div style="display: flex; gap: 12px;">
                             <button type="button" class="btn btn-secondary" onclick="previewWeeklyReport()">Preview Report</button>
                             <button type="submit" class="btn btn-primary">Send Weekly Report</button>
                         </div>
@@ -654,7 +877,7 @@
                 <!-- Monthly Compliance Report -->
                 <div class="report-card">
                     <h3>Monthly Compliance Report</h3>
-                    <p style="color: #666; margin-bottom: 20px;">Send comprehensive monthly compliance reports with detailed analytics and trends.</p>
+                    <p style="color: #666; margin-bottom: 25px;">Send comprehensive monthly compliance reports with detailed analytics and trends.</p>
 
                     <form id="monthly-report-form" class="report-form">
                         <div class="form-group">
@@ -692,7 +915,7 @@
                             </select>
                         </div>
 
-                        <div style="display: flex; gap: 10px;">
+                        <div style="display: flex; gap: 12px;">
                             <button type="button" class="btn btn-secondary" onclick="previewMonthlyReport()">Preview Report</button>
                             <button type="submit" class="btn btn-success">Send Monthly Report</button>
                         </div>
@@ -724,7 +947,7 @@
                                 @if($qrCode->file_path)
                                     <img src="{{ $qrCode->file_url }}" alt="QR Code" style="width: 100px; height: 100px; object-fit: contain;">
                                 @else
-                                    <div style="width: 100px; height: 100px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #666; font-size: 12px;">No QR Code</div>
+                                    <div style="width: 100px; height: 100px; background: rgba(240, 240, 240, 0.8); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; color: #666; font-size: 12px; border-radius: 8px;">No QR Code</div>
                                 @endif
                             </div>
                             <div class="qr-info">
@@ -794,10 +1017,10 @@
                         <strong>Current Configuration:</strong><br>
                         Host: {{ config('mail.mailers.smtp.host') }}<br>
                         Port: {{ config('mail.mailers.smtp.port') }}<br>
-                        From: {{ config('mail.from.name') }} &lt;{{ config('mail.from.address') }}&gt;
+                        From: {{ config('mail.from.name') }} <{{ config('mail.from.address') }}>
                     </div>
 
-                    <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <div style="margin-top: 25px; display: flex; gap: 12px;">
                         <button type="submit" class="btn btn-primary" style="flex: 1;">Send Test Email</button>
                         <button type="button" class="btn btn-secondary" onclick="closeTestEmailModal()" style="flex: 1;">Cancel</button>
                     </div>
@@ -807,18 +1030,18 @@
     </div>
 
     <!-- Footer -->
-    <footer class="footer" style="margin-top: 50px; padding: 20px; background: #f8f9fa; text-align: center; color: #666;">
+    <footer class="footer">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-main">
-                    <h3 class="footer-title">ISO Learner-Centric Quality Education</h3>
-                    <p class="footer-description">
+                    <h3 class="footer-title" style="color: #2c3e50; font-weight: 700; margin-bottom: 15px;">ISO Learner-Centric Quality Education</h3>
+                    <p class="footer-description" style="color: #5a6c7d; font-size: 16px; line-height: 1.6;">
                         Empowering CSS Students through Learner-Centric Quality Education
                     </p>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <p class="footer-copyright">
+            <div class="footer-bottom" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1);">
+                <p class="footer-copyright" style="color: #6c757d; font-weight: 500;">
                     © <span id="currentYear"></span> JRU Senior High School. All rights reserved.
                 </p>
             </div>
@@ -1145,7 +1368,7 @@
             }
         });
 
-        console.log('Report management page loaded');
+        console.log('Enhanced Report management page loaded');
     </script>
 </body>
 </html>
