@@ -6,6 +6,22 @@
     <title>Create QR Code - ISO Quality Education</title>
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     <style>
+        /* Page Transition Animation */
+        @keyframes pageEnter {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        body {
+            animation: pageEnter 0.5s ease-out;
+        }
+
         body {
             background: linear-gradient(135deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
             min-height: 100vh;

@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'api/survey/submit',
         ]);
+
+        // Register cache response middleware
+        $middleware->alias([
+            'cache.response' => \App\Http\Middleware\CacheResponse::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

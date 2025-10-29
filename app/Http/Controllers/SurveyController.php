@@ -139,38 +139,24 @@ class SurveyController extends Controller
             ]);
         }
 
-        $query = SurveyResponse::query();
+        // Generate cache key based on query parameters
+        $cacheKey = 'analytics:' . md5(json_encode([
+            'track' => $track,
+            'grade_level' => $gradeLevel,
+            'academic_year' => $academicYear,
+            'semester' => $semester,
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
+        ]));
 
-        if ($track) {
-            $query->where('track', $track);
-        }
+        // Cache analytics data for 5 minutes (300 seconds)
+        $analytics = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($track, $gradeLevel, $academicYear, $semester, $dateFrom, $dateTo) {
+            return $this->calculateAnalytics($track, $gradeLevel, $academicYear, $semester, $dateFrom, $dateTo);
+        });
 
-        if ($gradeLevel) {
-            $query->where('grade_level', $gradeLevel);
-        }
-
-        if ($academicYear) {
-            $query->where('academic_year', $academicYear);
-        }
-
-        if ($semester) {
-            $query->where('semester', $semester);
-        }
-
-        // Date range filtering
-        if ($dateFrom && $dateTo) {
-            $query->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
-        } elseif ($dateFrom) {
-            $query->where('created_at', '>=', $dateFrom . ' 00:00:00');
-        } elseif ($dateTo) {
-            $query->where('created_at', '<=', $dateTo . ' 23:59:59');
-        }
-
-        $responses = $query->get();
-
-        if ($responses->isEmpty()) {
-            // If request explicitly wants JSON (has Accept: application/json header)
-            if ($request->header('Accept') === 'application/json' || $request->wantsJson()) {
+        // Determine response format based on request type (after caching)
+        if ($request->header('Accept') === 'application/json' || $request->wantsJson()) {
+            if ($analytics === null) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No survey responses found',
@@ -208,11 +194,54 @@ class SurveyController extends Controller
                 ]);
             }
 
-            // Otherwise return view with no data
-            return view('analytics.index', [
-                'analytics' => null,
-                'noData' => true
+            return response()->json([
+                'success' => true,
+                'message' => 'ISO 21001 Analytics retrieved successfully',
+                'data' => $analytics
             ]);
+        }
+
+        // Return HTML view
+        return view('analytics.index', [
+            'analytics' => $analytics,
+            'noData' => $analytics === null
+        ]);
+    }
+
+    private function calculateAnalytics($track, $gradeLevel, $academicYear, $semester, $dateFrom, $dateTo)
+    {
+        $query = SurveyResponse::query();
+
+        if ($track) {
+            $query->where('track', $track);
+        }
+
+        if ($gradeLevel) {
+            $query->where('grade_level', $gradeLevel);
+        }
+
+        if ($academicYear) {
+            $query->where('academic_year', $academicYear);
+        }
+
+        if ($semester) {
+            $query->where('semester', $semester);
+        }
+
+        // Date range filtering
+        if ($dateFrom && $dateTo) {
+            $query->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59']);
+        } elseif ($dateFrom) {
+            $query->where('created_at', '>=', $dateFrom . ' 00:00:00');
+        } elseif ($dateTo) {
+            $query->where('created_at', '<=', $dateTo . ' 23:59:59');
+        }
+
+        $responses = $query->get();
+
+        if ($responses->isEmpty()) {
+            // Return null to indicate no data
+            return null;
         }
 
         // ISO 21001 Composite Scores
@@ -296,20 +325,8 @@ class SurveyController extends Controller
             'consent_rate' => round(($responses->where('consent_given', true)->count() / $responses->count()) * 100, 2),
         ];
 
-        // If request explicitly wants JSON (has Accept: application/json header)
-        if ($request->header('Accept') === 'application/json' || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'ISO 21001 Analytics retrieved successfully',
-                'data' => $analytics
-            ]);
-        }
-
-        // Otherwise return HTML view with charts
-        return view('analytics.index', [
-            'analytics' => $analytics,
-            'noData' => false
-        ]);
+        // Return the analytics data array
+        return $analytics;
     }
 
     public function getAllResponses(Request $request)

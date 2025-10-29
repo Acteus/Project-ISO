@@ -239,14 +239,22 @@ class StudentController extends Controller
             return redirect()->route('student.login');
         }
 
-        // Get survey analytics data
-        $totalResponses = \App\Models\SurveyResponse::count();
-        $recentResponses = \App\Models\SurveyResponse::latest()->take(5)->get();
-        $responsesByTrack = \App\Models\SurveyResponse::selectRaw('track, COUNT(*) as count')
-            ->groupBy('track')
-            ->get();
+        // Cache dashboard data for 3 minutes
+        $cacheKey = 'dashboard:admin:' . $admin->id;
+        $dashboardData = \Illuminate\Support\Facades\Cache::remember($cacheKey, 180, function () {
+            return [
+                'totalResponses' => \App\Models\SurveyResponse::count(),
+                'recentResponses' => \App\Models\SurveyResponse::latest()->take(5)->get(),
+                'responsesByTrack' => \App\Models\SurveyResponse::selectRaw('track, COUNT(*) as count')
+                    ->groupBy('track')
+                    ->get(),
+            ];
+        });
 
-        return view('admin.dashboard', compact('admin', 'totalResponses', 'recentResponses', 'responsesByTrack'));
+        return view('admin.dashboard', array_merge(
+            ['admin' => $admin],
+            $dashboardData
+        ));
     }
 
     public function viewResponse($id)
