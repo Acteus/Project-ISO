@@ -439,6 +439,102 @@
             padding-top: 20px;
             border-top: 1px solid #eee;
         }
+
+        /* Test Email Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 22px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #999;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-body p {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .email-config-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .email-config-info strong {
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -474,7 +570,12 @@
 
             <div class="reports-header">
                 <h1>Report Management</h1>
-                <p>Send weekly progress reports and monthly compliance reports to administrators</p>
+                <p>Send weekly progress reports and monthly compliance reports to administrators via Google SMTP</p>
+                <div style="margin-top: 15px;">
+                    <button type="button" onclick="showTestEmailModal()" class="btn btn-secondary" style="padding: 8px 16px; font-size: 14px;">
+                        📧 Test Email Configuration
+                    </button>
+                </div>
             </div>
 
             <!-- Alert Messages -->
@@ -671,6 +772,38 @@
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loading-overlay">
         <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Test Email Modal -->
+    <div class="modal" id="test-email-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📧 Test Email Configuration</h3>
+                <button type="button" class="close-modal" onclick="closeTestEmailModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Send a test email to verify that your Google SMTP configuration is working correctly.</p>
+
+                <form id="test-email-form">
+                    <div class="form-group">
+                        <label for="test_email">Recipient Email Address</label>
+                        <input type="email" id="test_email" name="test_email" required placeholder="Enter email address to test">
+                    </div>
+
+                    <div class="email-config-info">
+                        <strong>Current Configuration:</strong><br>
+                        Host: {{ config('mail.mailers.smtp.host') }}<br>
+                        Port: {{ config('mail.mailers.smtp.port') }}<br>
+                        From: {{ config('mail.from.name') }} &lt;{{ config('mail.from.address') }}&gt;
+                    </div>
+
+                    <div style="margin-top: 20px; display: flex; gap: 10px;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">Send Test Email</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeTestEmailModal()" style="flex: 1;">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- Footer -->
@@ -956,6 +1089,61 @@
         function hideLoading() {
             document.getElementById('loading-overlay').classList.remove('active');
         }
+
+        // Test Email Modal Functions
+        function showTestEmailModal() {
+            document.getElementById('test-email-modal').classList.add('active');
+        }
+
+        function closeTestEmailModal() {
+            document.getElementById('test-email-modal').classList.remove('active');
+            document.getElementById('test-email-form').reset();
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('test-email-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTestEmailModal();
+            }
+        });
+
+        // Test Email Form Submission
+        document.getElementById('test-email-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const testEmail = document.getElementById('test_email').value;
+
+            showLoading();
+            closeTestEmailModal();
+
+            try {
+                const response = await fetch('/admin/reports/test-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        test_email: testEmail
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('success', result.message + ' Check your inbox at: ' + testEmail);
+                    console.log('Email configuration verified:', result.config);
+                } else {
+                    showAlert('error', result.message);
+                }
+            } catch (error) {
+                console.error('Test email error:', error);
+                showAlert('error', 'An error occurred while sending the test email.');
+            } finally {
+                hideLoading();
+            }
+        });
 
         console.log('Report management page loaded');
     </script>

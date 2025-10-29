@@ -21,6 +21,66 @@ class ReportController extends Controller
         return view('admin.reports', compact('admins', 'qrCodes'));
     }
 
+    /**
+     * Test email configuration by sending a test email
+     */
+    public function testEmail(Request $request)
+    {
+        $request->validate([
+            'test_email' => 'required|email',
+        ]);
+
+        try {
+            // Get mail configuration
+            $mailConfig = [
+                'host' => config('mail.mailers.smtp.host'),
+                'port' => config('mail.mailers.smtp.port'),
+                'username' => config('mail.mailers.smtp.username'),
+                'from_address' => config('mail.from.address'),
+                'from_name' => config('mail.from.name'),
+            ];
+
+            // Send test email
+            Mail::mailer('smtp')->raw(
+                "This is a test email from Jose Rizal University ISO 21001 System.\n\n" .
+                "If you received this email, your email configuration is working correctly!\n\n" .
+                "Mail Configuration:\n" .
+                "- Host: {$mailConfig['host']}\n" .
+                "- Port: {$mailConfig['port']}\n" .
+                "- From: {$mailConfig['from_name']} <{$mailConfig['from_address']}>\n\n" .
+                "This email was sent at: " . now()->format('Y-m-d H:i:s'),
+                function ($message) use ($request, $mailConfig) {
+                    $message->to($request->test_email)
+                            ->subject('Test Email - ISO 21001 System')
+                            ->from($mailConfig['from_address'], $mailConfig['from_name']);
+                }
+            );
+
+            Log::info('Test email sent successfully', [
+                'recipient' => $request->test_email,
+                'mail_config' => $mailConfig
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Test email sent successfully! Please check your inbox.',
+                'config' => $mailConfig
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to send test email', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'recipient' => $request->test_email
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send test email: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function sendWeeklyReport(Request $request)
     {
         $request->validate([
@@ -40,31 +100,39 @@ class ReportController extends Controller
                 ], 404);
             }
 
-            // Send the email using WeeklyMetric objects
+            // Send the email using WeeklyMetric objects and Google SMTP
             $weeklyMetric = $weeklyData['metric'];
             $previousMetric = $weeklyData['previous_metric'];
-            Mail::to($request->recipient_email)->send(new WeeklyProgressReport($weeklyMetric, $previousMetric));
 
-            Log::info('Weekly progress report sent', [
+            // Explicitly use SMTP mailer (configured with Google SMTP in .env)
+            Mail::mailer('smtp')
+                ->to($request->recipient_email)
+                ->send(new WeeklyProgressReport($weeklyMetric, $previousMetric));
+
+            Log::info('Weekly progress report sent via Google SMTP', [
                 'recipient' => $request->recipient_email,
                 'month' => $request->month,
-                'week_number' => $request->week_number
+                'week_number' => $request->week_number,
+                'mail_host' => config('mail.mailers.smtp.host'),
+                'mail_from' => config('mail.from.address')
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Weekly progress report sent successfully!'
+                'message' => 'Weekly progress report sent successfully via email!'
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Failed to send weekly report', [
+            Log::error('Failed to send weekly report via Google SMTP', [
                 'error' => $e->getMessage(),
-                'recipient' => $request->recipient_email
+                'trace' => $e->getTraceAsString(),
+                'recipient' => $request->recipient_email,
+                'mail_host' => config('mail.mailers.smtp.host')
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send report. Please try again.'
+                'message' => 'Failed to send email report: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -87,28 +155,34 @@ class ReportController extends Controller
                 ], 404);
             }
 
-            // Send the email
-            Mail::to($request->recipient_email)->send(new MonthlyComplianceReport($monthlyData));
+            // Send the email using Google SMTP
+            Mail::mailer('smtp')
+                ->to($request->recipient_email)
+                ->send(new MonthlyComplianceReport($monthlyData));
 
-            Log::info('Monthly compliance report sent', [
+            Log::info('Monthly compliance report sent via Google SMTP', [
                 'recipient' => $request->recipient_email,
-                'month' => $request->month
+                'month' => $request->month,
+                'mail_host' => config('mail.mailers.smtp.host'),
+                'mail_from' => config('mail.from.address')
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Monthly compliance report sent successfully!'
+                'message' => 'Monthly compliance report sent successfully via email!'
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Failed to send monthly report', [
+            Log::error('Failed to send monthly report via Google SMTP', [
                 'error' => $e->getMessage(),
-                'recipient' => $request->recipient_email
+                'trace' => $e->getTraceAsString(),
+                'recipient' => $request->recipient_email,
+                'mail_host' => config('mail.mailers.smtp.host')
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send report. Please try again.'
+                'message' => 'Failed to send email report: ' . $e->getMessage()
             ], 500);
         }
     }

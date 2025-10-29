@@ -52,6 +52,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/reports/send-monthly', [App\Http\Controllers\Admin\ReportController::class, 'sendMonthlyReport'])->name('reports.send-monthly');
     Route::post('/reports/preview-weekly', [App\Http\Controllers\Admin\ReportController::class, 'previewWeeklyReport'])->name('reports.preview-weekly');
     Route::post('/reports/preview-monthly', [App\Http\Controllers\Admin\ReportController::class, 'previewMonthlyReport'])->name('reports.preview-monthly');
+    Route::post('/reports/test-email', [App\Http\Controllers\Admin\ReportController::class, 'testEmail'])->name('reports.test-email');
 
     // Goal Management Routes
     Route::resource('goals', App\Http\Controllers\Admin\GoalController::class);
