@@ -646,10 +646,10 @@ class VisualizationService
         $compliancePercentage = round(($complianceScore / 5) * 100, 2);
 
         // Determine risk level
-        if ($complianceScore >= 4.2) {
+        if ($complianceScore >= 4.5) {
             $riskLevel = 'Low';
             $riskScore = 1;
-        } elseif ($complianceScore >= 3.5) {
+        } elseif ($complianceScore >= 3.0) {
             $riskLevel = 'Medium';
             $riskScore = 2;
         } else {

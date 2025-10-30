@@ -324,16 +324,12 @@ class RiskAssessmentPredictor:
 
     def _categorize_risk(self, risk_score):
         """Categorize risk level based on score"""
-        if risk_score >= 75:
-            return 'Critical', 'High Risk', 'Severe'
-        elif risk_score >= 60:
-            return 'High', 'High Risk', 'Significant'
-        elif risk_score >= 40:
-            return 'Moderate', 'Medium Risk', 'Moderate'
-        elif risk_score >= 25:
-            return 'Low', 'Low Risk', 'Minor'
+        if risk_score >= 70:
+            return 'High', 'High Risk', 'Severe'
+        elif risk_score >= 30:
+            return 'Medium', 'Medium Risk', 'Moderate'
         else:
-            return 'Minimal', 'Very Low Risk', 'Negligible'
+            return 'Low', 'Low Risk', 'Minor'
 
     def _calculate_assessment_confidence(self, data, risk_score):
         """Calculate confidence in the risk assessment"""

@@ -93,8 +93,8 @@ return [
         ],
 
         'risk_thresholds' => [
-            'high_compliance' => 4.2,
-            'moderate_compliance' => 3.5,
+            'high_compliance' => 4.5,
+            'moderate_compliance' => 3.0,
             'low_compliance' => 3.0,
         ],
 
