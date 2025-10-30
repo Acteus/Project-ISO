@@ -39,6 +39,22 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .insights-content {
+            min-width: 0; /* Fix for grid overflow */
+        }
+
+        .insights-sidebar {
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            margin-top: 90px; /* Align with insights-header */
         }
 
         .insights-header {
@@ -342,22 +358,78 @@
         .ai-results {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            padding: 30px;
+            padding: 25px;
             border-radius: 20px;
             box-shadow: 0 15px 40px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
             border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            animation: slideInRight 0.4s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         .ai-results h3 {
             margin-top: 0;
             color: #2c3e50;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
             border-bottom: 3px solid transparent;
             border-image: linear-gradient(90deg, #4285F4, #FF8C00) 1;
-            padding-bottom: 15px;
-            margin-bottom: 25px;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .results-close-btn {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .results-close-btn:hover {
+            transform: rotate(90deg) scale(1.1);
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        .ai-results-placeholder {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .ai-results-placeholder svg {
+            width: 64px;
+            height: 64px;
+            fill: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .ai-results-placeholder p {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
         }
 
         .result-item {
@@ -500,6 +572,21 @@
         }
 
         /* Responsive design */
+        @media (max-width: 1200px) {
+            .insights-container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .insights-sidebar {
+                position: relative;
+                top: auto;
+                max-height: none;
+                order: -1; /* Move results to top on mobile */
+                margin-top: 0; /* Remove top margin on mobile */
+            }
+        }
+
         @media (max-width: 768px) {
             .insights-container {
                 padding: 20px;
@@ -550,124 +637,139 @@
 
     <main class="survey-main">
         <div class="insights-container">
-            <a href="{{ route('admin.dashboard') }}" class="back-btn">← Back to Dashboard</a>
+            <!-- Main Content Area -->
+            <div class="insights-content">
+                <a href="{{ route('admin.dashboard') }}" class="back-btn">← Back to Dashboard</a>
 
-            <div class="insights-header">
-                <h1>AI Insights Dashboard</h1>
-                <p>Comprehensive machine learning analytics for ISO 21001 compliance, predictive modeling, and proactive quality management</p>
-                <div id="data-range-display" style="margin-top: 25px; padding: 15px 30px; background: rgba(66, 133, 244, 0.1); backdrop-filter: blur(10px); border-radius: 25px; display: inline-block; font-weight: 600; color: #333; font-size: 14px; border: 1px solid rgba(255, 255, 255, 0.3);">
-                    <svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 10px; fill: rgba(66, 133, 244, 1);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
-                    </svg>
-                    <span id="data-range-text">Loading data range...</span>
+                <div class="insights-header">
+                    <h1>AI Insights Dashboard</h1>
+                    <p>Comprehensive machine learning analytics for ISO 21001 compliance, predictive modeling, and proactive quality management</p>
+                    <div id="data-range-display" style="margin-top: 25px; padding: 15px 30px; background: rgba(66, 133, 244, 0.1); backdrop-filter: blur(10px); border-radius: 25px; display: inline-block; font-weight: 600; color: #333; font-size: 14px; border: 1px solid rgba(255, 255, 255, 0.3);">
+                        <svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 10px; fill: rgba(66, 133, 244, 1);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+                        </svg>
+                        <span id="data-range-text">Loading data range...</span>
+                    </div>
+                    <div id="data-stats-display" style="margin-top: 15px; padding: 10px 25px; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border-radius: 20px; display: inline-block; font-size: 13px; color: #555; margin-left: 10px;">
+                        <span id="data-stats-text">Analyzing <strong id="total-responses-count">0</strong> survey responses</span>
+                    </div>
                 </div>
-                <div id="data-stats-display" style="margin-top: 15px; padding: 10px 25px; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border-radius: 20px; display: inline-block; font-size: 13px; color: #555; margin-left: 10px;">
-                    <span id="data-stats-text">Analyzing <strong id="total-responses-count">0</strong> survey responses</span>
+
+                <!-- Alert Messages -->
+                <div id="alert-container"></div>
+
+                <!-- AI Metrics Overview -->
+                <div class="ai-metrics">
+                    <div class="metric-card">
+                        <div class="metric-value" id="service-status">Checking...</div>
+                        <div class="metric-label">AI Service Status</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="total-predictions">0</div>
+                        <div class="metric-label">AI Predictions Today</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="accuracy-rate">0%</div>
+                        <div class="metric-label">Model Accuracy</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="response-time">0ms</div>
+                        <div class="metric-label">Avg Response Time</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="iso-compliance">0%</div>
+                        <div class="metric-label">ISO 21001 Compliance</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="risk-score">0/100</div>
+                        <div class="metric-label">Overall Risk Score</div>
+                    </div>
+                </div>
+
+                <!-- AI Analysis Tools -->
+                <div class="insights-grid">
+                    <!-- Compliance Prediction -->
+                    <div class="insight-card">
+                        <h3>Compliance Prediction</h3>
+                        <p>AI-powered prediction of ISO 21001 compliance levels based on learner feedback and performance metrics.</p>
+                        <button type="button" class="btn btn-primary" onclick="runCompliancePrediction()">Run Prediction</button>
+                    </div>
+
+                    <!-- Sentiment Analysis -->
+                    <div class="insight-card">
+                        <h3>Sentiment Analysis</h3>
+                        <p>Analyze student feedback sentiment using advanced NLP models to identify positive and negative trends.</p>
+                        <button type="button" class="btn btn-primary" onclick="runSentimentAnalysis()">Analyze Sentiment</button>
+                    </div>
+
+                    <!-- Student Clustering -->
+                    <div class="insight-card">
+                        <h3>Student Clustering</h3>
+                        <p>Group students based on survey responses for targeted interventions and personalized support. ISO 21001:7.1 compliant segmentation.</p>
+                        <button type="button" class="btn btn-primary" onclick="runStudentClustering()">Cluster Students</button>
+                    </div>
+
+                    <!-- Predictive Analytics -->
+                    <div class="insight-card">
+                        <h3>Predictive Analytics</h3>
+                        <p>Advanced forecasting of student performance, satisfaction trends, and risk factors using time series analysis.</p>
+                        <button type="button" class="btn btn-primary" onclick="runPredictiveAnalytics()">Run Predictive Analytics</button>
+                    </div>
+
+                    <!-- Comprehensive Risk Assessment -->
+                    <div class="insight-card">
+                        <h3>Comprehensive Risk Assessment</h3>
+                        <p>Complete ISO 21001 compliance risk evaluation across all learner-centric dimensions with intervention recommendations.</p>
+                        <button type="button" class="btn btn-primary" onclick="runComprehensiveRiskAssessment()">Assess All Risks</button>
+                    </div>
+
+                    <!-- Trend Analysis -->
+                    <div class="insight-card">
+                        <h3>Satisfaction Trend Analysis</h3>
+                        <p>Analyze satisfaction trends over time with forecasting capabilities for proactive quality management.</p>
+                        <button type="button" class="btn btn-primary" onclick="runTrendAnalysis()">Analyze Trends</button>
+                    </div>
+
+                    <!-- Performance Prediction -->
+                    <div class="insight-card">
+                        <h3>Performance Prediction</h3>
+                        <p>Predict student academic performance and identify at-risk students early.</p>
+                        <button type="button" class="btn btn-primary" onclick="runPerformancePrediction()">Predict Performance</button>
+                    </div>
+
+                    <!-- Dropout Risk Assessment -->
+                    <div class="insight-card">
+                        <h3>Dropout Risk Assessment</h3>
+                        <p>Identify students at risk of dropping out using machine learning algorithms.</p>
+                        <button type="button" class="btn btn-primary" onclick="runDropoutRiskAssessment()">Assess Risk</button>
+                    </div>
+
+                    <!-- Comprehensive Analytics -->
+                    <div class="insight-card">
+                        <h3>Comprehensive Analytics</h3>
+                        <p>Run all AI models simultaneously for complete insights into student satisfaction and compliance.</p>
+                        <button type="button" class="btn btn-success" onclick="runComprehensiveAnalytics()">Run All Analytics</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Alert Messages -->
-            <div id="alert-container"></div>
-
-            <!-- AI Metrics Overview -->
-            <div class="ai-metrics">
-                <div class="metric-card">
-                    <div class="metric-value" id="service-status">Checking...</div>
-                    <div class="metric-label">AI Service Status</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="total-predictions">0</div>
-                    <div class="metric-label">AI Predictions Today</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="accuracy-rate">0%</div>
-                    <div class="metric-label">Model Accuracy</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="response-time">0ms</div>
-                    <div class="metric-label">Avg Response Time</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="iso-compliance">0%</div>
-                    <div class="metric-label">ISO 21001 Compliance</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value" id="risk-score">0/100</div>
-                    <div class="metric-label">Overall Risk Score</div>
-                </div>
-            </div>
-
-            <!-- AI Analysis Tools -->
-            <div class="insights-grid">
-                <!-- Compliance Prediction -->
-                <div class="insight-card">
-                    <h3>Compliance Prediction</h3>
-                    <p>AI-powered prediction of ISO 21001 compliance levels based on learner feedback and performance metrics.</p>
-                    <button type="button" class="btn btn-primary" onclick="runCompliancePrediction()">Run Prediction</button>
-                </div>
-
-                <!-- Sentiment Analysis -->
-                <div class="insight-card">
-                    <h3>Sentiment Analysis</h3>
-                    <p>Analyze student feedback sentiment using advanced NLP models to identify positive and negative trends.</p>
-                    <button type="button" class="btn btn-primary" onclick="runSentimentAnalysis()">Analyze Sentiment</button>
-                </div>
-
-                <!-- Student Clustering -->
-                <div class="insight-card">
-                    <h3>Student Clustering</h3>
-                    <p>Group students based on survey responses for targeted interventions and personalized support. ISO 21001:7.1 compliant segmentation.</p>
-                    <button type="button" class="btn btn-primary" onclick="runStudentClustering()">Cluster Students</button>
-                </div>
-
-                <!-- Predictive Analytics -->
-                <div class="insight-card">
-                    <h3>Predictive Analytics</h3>
-                    <p>Advanced forecasting of student performance, satisfaction trends, and risk factors using time series analysis.</p>
-                    <button type="button" class="btn btn-primary" onclick="runPredictiveAnalytics()">Run Predictive Analytics</button>
-                </div>
-
-                <!-- Comprehensive Risk Assessment -->
-                <div class="insight-card">
-                    <h3>Comprehensive Risk Assessment</h3>
-                    <p>Complete ISO 21001 compliance risk evaluation across all learner-centric dimensions with intervention recommendations.</p>
-                    <button type="button" class="btn btn-primary" onclick="runComprehensiveRiskAssessment()">Assess All Risks</button>
-                </div>
-
-                <!-- Trend Analysis -->
-                <div class="insight-card">
-                    <h3>Satisfaction Trend Analysis</h3>
-                    <p>Analyze satisfaction trends over time with forecasting capabilities for proactive quality management.</p>
-                    <button type="button" class="btn btn-primary" onclick="runTrendAnalysis()">Analyze Trends</button>
-                </div>
-
-                <!-- Performance Prediction -->
-                <div class="insight-card">
-                    <h3>Performance Prediction</h3>
-                    <p>Predict student academic performance and identify at-risk students early.</p>
-                    <button type="button" class="btn btn-primary" onclick="runPerformancePrediction()">Predict Performance</button>
-                </div>
-
-                <!-- Dropout Risk Assessment -->
-                <div class="insight-card">
-                    <h3>Dropout Risk Assessment</h3>
-                    <p>Identify students at risk of dropping out using machine learning algorithms.</p>
-                    <button type="button" class="btn btn-primary" onclick="runDropoutRiskAssessment()">Assess Risk</button>
-                </div>
-
-                <!-- Comprehensive Analytics -->
-                <div class="insight-card">
-                    <h3>Comprehensive Analytics</h3>
-                    <p>Run all AI models simultaneously for complete insights into student satisfaction and compliance.</p>
-                    <button type="button" class="btn btn-success" onclick="runComprehensiveAnalytics()">Run All Analytics</button>
-                </div>
-            </div>
-
-            <!-- AI Results Display -->
-            <div id="ai-results" class="ai-results" style="display: none;">
-                <h3>AI Analysis Results</h3>
-                <div id="results-container">
-                    <!-- Results will be populated here -->
+            <!-- Sticky Results Sidebar -->
+            <div class="insights-sidebar">
+                <div id="ai-results" class="ai-results">
+                    <h3>
+                        <span>📊 AI Analysis Results</span>
+                        <button class="results-close-btn" onclick="clearResults()" title="Clear Results">×</button>
+                    </h3>
+                    <div id="results-container">
+                        <!-- Empty State -->
+                        <div class="ai-results-placeholder">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                            </svg>
+                            <p>Run an analysis to see results</p>
+                            <p style="font-size: 13px; color: #bbb; margin-top: 10px;">Click any analysis button to get started</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -914,6 +1016,19 @@
                         <div class="result-confidence">${confHtml}</div>
                     </div>
                     <div class="result-details">${htmlContent}</div>
+                </div>
+            `;
+        }
+
+        function clearResults() {
+            const container = document.getElementById('results-container');
+            container.innerHTML = `
+                <div class="ai-results-placeholder">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                    </svg>
+                    <p>Run an analysis to see results</p>
+                    <p style="font-size: 13px; color: #bbb; margin-top: 10px;">Click any analysis button to get started</p>
                 </div>
             `;
         }
@@ -1204,7 +1319,12 @@
             }
 
             container.innerHTML = parts.join('');
-            resultsDiv.style.display = parts.length ? 'block' : 'none';
+
+            // Scroll to top of results
+            const resultsDiv = document.getElementById('ai-results');
+            if (resultsDiv) {
+                resultsDiv.scrollTop = 0;
+            }
         }
 
         /* ----------------------
