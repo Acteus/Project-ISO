@@ -16,8 +16,12 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
             min-height: 100vh;
+        }
+
+        .survey-main {
+            background-image: none !important;
             padding: 20px;
         }
 
@@ -28,54 +32,87 @@
 
         .dashboard-header {
             background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
         }
 
         .dashboard-header h1 {
-            font-size: 28px;
+            font-size: 36px;
             color: #333;
             margin-bottom: 10px;
+            font-weight: 700;
         }
 
         .dashboard-header p {
             color: #666;
-            font-size: 14px;
+            font-size: 18px;
         }
 
         .back-button {
             display: inline-block;
-            padding: 10px 20px;
+            padding: 12px 30px;
             background: white;
-            color: #667eea;
+            color: black;
             text-decoration: none;
-            border-radius: 8px;
+            border-radius: 25px;
             margin-bottom: 20px;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid white;
         }
 
         .back-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            color: black;
+            background: rgba(255, 255, 255, 0.9);
         }
 
         /* Filters */
         .filters-section {
             background: white;
             border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
         }
 
         .filters-section h3 {
             margin-bottom: 20px;
             color: #333;
-            font-size: 18px;
+            font-size: 22px;
+            border-bottom: 3px solid rgba(66,133,244,1);
+            padding-bottom: 10px;
+        }
+
+        /* Quick Date Filters */
+        .quick-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .quick-filter-btn {
+            padding: 8px 16px;
+            border: 2px solid rgba(66,133,244,1);
+            background: white;
+            color: rgba(66,133,244,1);
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 13px;
+        }
+
+        .quick-filter-btn:hover,
+        .quick-filter-btn.active {
+            background: rgba(66,133,244,1);
+            color: white;
         }
 
         .filters-grid {
@@ -106,7 +143,7 @@
         .filter-group select:focus,
         .filter-group input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: rgba(66,133,244,1);
         }
 
         .filter-actions {
@@ -126,13 +163,13 @@
         }
 
         .btn-primary {
-            background: #667eea;
+            background: rgba(66,133,244,1);
             color: white;
         }
 
         .btn-primary:hover {
-            background: #5568d3;
             transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(66,133,244,0.4);
         }
 
         .btn-secondary {
@@ -141,7 +178,8 @@
         }
 
         .btn-secondary:hover {
-            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108,117,125,0.4);
         }
 
         /* Stats Cards */
@@ -156,27 +194,41 @@
             background: white;
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             text-align: center;
-            transition: transform 0.3s;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, rgba(66,133,244,1), rgba(255,215,0,1));
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
         .stat-value {
-            font-size: 36px;
+            font-size: 42px;
             font-weight: 700;
-            color: #667eea;
-            margin-bottom: 8px;
+            color: rgba(66,133,244,1);
+            margin-bottom: 10px;
         }
 
         .stat-label {
-            font-size: 13px;
+            font-size: 14px;
             color: #666;
             text-transform: uppercase;
             letter-spacing: 1px;
+            font-weight: 600;
         }
 
         /* Charts */
@@ -203,9 +255,9 @@
         .chart-card h3 {
             margin-bottom: 20px;
             color: #333;
-            font-size: 18px;
-            border-bottom: 3px solid #667eea;
-            padding-bottom: 10px;
+            font-size: 20px;
+            border-bottom: 3px solid rgba(66,133,244,1);
+            padding-bottom: 15px;
         }
 
         .chart-wrapper {
@@ -267,7 +319,7 @@
             content: "→";
             position: absolute;
             left: 0;
-            color: #667eea;
+            color: rgba(66,133,244,1);
             font-weight: bold;
         }
 
@@ -286,8 +338,8 @@
             width: 50px;
             height: 50px;
             margin: 0 auto 20px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid rgba(66,133,244,1);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -317,19 +369,38 @@
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <a href="{{ route('admin.dashboard') }}" class="back-button">← Back to Dashboard</a>
+    <main class="survey-main">
+        <div class="dashboard-container">
+            <a href="{{ route('admin.dashboard') }}" class="back-button">← Back to Dashboard</a>
 
-        <div class="dashboard-header">
-            <h1>ISO 21001 Quality Education Analytics</h1>
-            <p>Comprehensive metrics and insights for Computer System Servicing (CSS) program</p>
-        </div>
+            <div class="dashboard-header">
+                <h1>ISO 21001 Quality Education Analytics</h1>
+                <p>Comprehensive metrics and insights for Computer System Servicing (CSS) program</p>
+                <div id="date-range-display" style="margin-top: 15px; padding: 12px 24px; background: rgba(66, 133, 244, 0.1); border-radius: 25px; display: inline-block; font-weight: 600; color: #333; font-size: 15px;">
+                    <span id="date-range-text">Viewing All Data</span>
+                </div>
+            </div>
 
         <!-- Filters -->
         <div class="filters-section">
             <h3>Filter Data</h3>
+
+            <!-- Quick Date Filters -->
+            <div class="quick-filters">
+                <button type="button" class="quick-filter-btn" data-filter="today">Today</button>
+                <button type="button" class="quick-filter-btn" data-filter="week">This Week</button>
+                <button type="button" class="quick-filter-btn" data-filter="month">This Month</button>
+                <button type="button" class="quick-filter-btn" data-filter="all">All Time</button>
+            </div>
+
             <form id="filters-form">
                 <div class="filters-grid">
+                    <div class="filter-group">
+                        <label>Week</label>
+                        <select name="week" id="week-filter">
+                            <option value="">Select Week</option>
+                        </select>
+                    </div>
                     <div class="filter-group">
                         <label>Grade Level</label>
                         <select name="grade_level" id="grade_level">
@@ -346,19 +417,14 @@
                             <option value="2nd">2nd Semester</option>
                         </select>
                     </div>
-                    <div class="filter-group">
-                        <label>Date From</label>
-                        <input type="date" name="date_from" id="date_from">
-                    </div>
-                    <div class="filter-group">
-                        <label>Date To</label>
-                        <input type="date" name="date_to" id="date_to">
-                    </div>
                 </div>
                 <div class="filter-actions">
                     <button type="button" class="btn btn-secondary" id="clear-filters">Clear Filters</button>
                     <button type="submit" class="btn btn-primary">Apply Filters</button>
                 </div>
+                <!-- Hidden date inputs for internal use -->
+                <input type="hidden" name="date_from" id="date_from">
+                <input type="hidden" name="date_to" id="date_to">
             </form>
         </div>
 
@@ -417,7 +483,8 @@
             <h2>No Data Available</h2>
             <p>No survey responses found. Data will appear here once students submit their feedback.</p>
         </div>
-    </div>
+        </div>
+    </main>
 
     <script>
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
@@ -425,6 +492,20 @@
 
         // Load dashboard data on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Populate week filter dropdown
+            populateWeekFilter();
+
+            // Clear filters on initial load to show all data
+            document.getElementById('week-filter').value = '';
+            document.getElementById('date_from').value = '';
+            document.getElementById('date_to').value = '';
+
+            // Update date range display
+            updateDateRangeDisplay();
+
+            // Setup filter handlers
+            setupFilterHandlers();
+
             loadDashboard();
         });
 
@@ -437,6 +518,10 @@
         // Clear filters
         document.getElementById('clear-filters').addEventListener('click', function() {
             document.getElementById('filters-form').reset();
+            document.getElementById('week-filter').value = '';
+            document.getElementById('date_from').value = '';
+            document.getElementById('date_to').value = '';
+            updateDateRangeDisplay();
             loadDashboard();
         });
 
@@ -573,13 +658,17 @@
                             indices.safety,
                             indices.wellbeing
                         ],
-                        backgroundColor: 'rgba(102, 126, 234, 0.2)',
-                        borderColor: 'rgba(102, 126, 234, 1)',
-                        borderWidth: 2,
-                        pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+                        backgroundColor: 'rgba(66, 133, 244, 0.2)',
+                        borderColor: 'rgba(66, 133, 244, 1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: 'rgba(66, 133, 244, 1)',
                         pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
                         pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: 'rgba(102, 126, 234, 1)'
+                        pointHoverBorderColor: 'rgba(66, 133, 244, 1)',
+                        pointHoverBorderWidth: 3
                     }]
                 },
                 options: {
@@ -589,11 +678,36 @@
                         r: {
                             beginAtZero: true,
                             max: 5,
-                            ticks: { stepSize: 1 }
+                            ticks: {
+                                stepSize: 1,
+                                backdropColor: 'transparent'
+                            },
+                            grid: {
+                                color: 'rgba(66, 133, 244, 0.1)'
+                            },
+                            angleLines: {
+                                color: 'rgba(66, 133, 244, 0.1)'
+                            },
+                            pointLabels: {
+                                color: '#333',
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                }
+                            }
                         }
                     },
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(66, 133, 244, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(66, 133, 244, 1)',
+                            borderWidth: 2,
+                            padding: 12,
+                            displayColors: false
+                        }
                     }
                 }
             });
@@ -612,10 +726,15 @@
                     datasets: [{
                         data: gradeData.map(g => g.count),
                         backgroundColor: [
-                            'rgba(102, 126, 234, 0.8)',
-                            'rgba(118, 75, 162, 0.8)'
+                            'rgba(66, 133, 244, 0.85)',
+                            'rgba(255, 215, 0, 0.85)'
                         ],
-                        borderWidth: 2
+                        borderColor: [
+                            'rgba(66, 133, 244, 1)',
+                            'rgba(255, 215, 0, 1)'
+                        ],
+                        borderWidth: 3,
+                        hoverOffset: 10
                     }]
                 },
                 options: {
@@ -623,7 +742,23 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom'
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 13,
+                                    weight: '600'
+                                },
+                                color: '#333'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(66, 133, 244, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(66, 133, 244, 1)',
+                            borderWidth: 2,
+                            padding: 12
                         }
                     }
                 }
@@ -635,6 +770,11 @@
             const ctx = document.getElementById('barChart').getContext('2d');
 
             if (charts.bar) charts.bar.destroy();
+
+            // Create gradient for bars
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(66, 133, 244, 0.9)');
+            gradient.addColorStop(1, 'rgba(66, 133, 244, 0.6)');
 
             charts.bar = new Chart(ctx, {
                 type: 'bar',
@@ -649,10 +789,13 @@
                             indices.safety,
                             indices.wellbeing
                         ],
-                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
-                        borderColor: 'rgba(102, 126, 234, 1)',
+                        backgroundColor: gradient,
+                        borderColor: 'rgba(66, 133, 244, 1)',
                         borderWidth: 2,
-                        borderRadius: 8
+                        borderRadius: 10,
+                        hoverBackgroundColor: 'rgba(255, 215, 0, 0.85)',
+                        hoverBorderColor: 'rgba(255, 215, 0, 1)',
+                        hoverBorderWidth: 3
                     }]
                 },
                 options: {
@@ -661,11 +804,42 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: 5
+                            max: 5,
+                            grid: {
+                                color: 'rgba(66, 133, 244, 0.1)'
+                            },
+                            ticks: {
+                                color: '#666',
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#333',
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                }
+                            }
                         }
                     },
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(66, 133, 244, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(66, 133, 244, 1)',
+                            borderWidth: 2,
+                            padding: 12,
+                            displayColors: false
+                        }
                     }
                 }
             });
@@ -699,6 +873,11 @@
 
                 if (charts.trend) charts.trend.destroy();
 
+                // Create gradient for line chart
+                const lineGradient = ctx.createLinearGradient(0, 0, 0, 400);
+                lineGradient.addColorStop(0, 'rgba(66, 133, 244, 0.3)');
+                lineGradient.addColorStop(1, 'rgba(66, 133, 244, 0.05)');
+
                 charts.trend = new Chart(ctx, {
                     type: 'line',
                     data: {
@@ -706,13 +885,19 @@
                         datasets: [{
                             label: 'Average Satisfaction',
                             data: data.data,
-                            borderColor: 'rgba(102, 126, 234, 1)',
-                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            borderColor: 'rgba(66, 133, 244, 1)',
+                            backgroundColor: lineGradient,
                             borderWidth: 3,
                             tension: 0.4,
                             fill: true,
-                            pointRadius: 5,
-                            pointHoverRadius: 7
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: 'rgba(66, 133, 244, 1)',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointHoverBackgroundColor: 'rgba(255, 215, 0, 1)',
+                            pointHoverBorderColor: '#fff',
+                            pointHoverBorderWidth: 3
                         }]
                     },
                     options: {
@@ -721,11 +906,42 @@
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                max: 5
+                                max: 5,
+                                grid: {
+                                    color: 'rgba(66, 133, 244, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#666',
+                                    font: {
+                                        size: 12,
+                                        weight: '600'
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: 'rgba(66, 133, 244, 0.05)'
+                                },
+                                ticks: {
+                                    color: '#333',
+                                    font: {
+                                        size: 11,
+                                        weight: '600'
+                                    }
+                                }
                             }
                         },
                         plugins: {
-                            legend: { display: false }
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(66, 133, 244, 0.95)',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: 'rgba(66, 133, 244, 1)',
+                                borderWidth: 2,
+                                padding: 12,
+                                displayColors: false
+                            }
                         }
                     }
                 });
@@ -755,6 +971,169 @@
             hideLoading();
             document.getElementById('dashboard-content').style.display = 'none';
             document.getElementById('no-data').style.display = 'block';
+        }
+
+        // Populate week filter dropdown
+        function populateWeekFilter() {
+            const weekFilter = document.getElementById('week-filter');
+            const currentYear = new Date().getFullYear();
+
+            for (let week = 1; week <= 52; week++) {
+                const option = document.createElement('option');
+                option.value = `${currentYear}-W${week.toString().padStart(2, '0')}`;
+                option.textContent = `Week ${week}, ${currentYear} (${getWeekDateRange(currentYear, week)})`;
+                weekFilter.appendChild(option);
+            }
+        }
+
+        // Get date range for a specific week
+        function getWeekDateRange(year, week) {
+            const jan1 = new Date(year, 0, 1);
+            const daysToFirstMonday = (8 - jan1.getDay()) % 7;
+            const firstMonday = new Date(year, 0, daysToFirstMonday + 1);
+
+            const weekStart = new Date(firstMonday);
+            weekStart.setDate(firstMonday.getDate() + (week - 1) * 7);
+
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+
+            const formatDate = (date) => {
+                return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+            };
+
+            return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
+        }
+
+        // Update Date Range Display
+        function updateDateRangeDisplay() {
+            const dateFrom = document.getElementById('date_from').value;
+            const dateTo = document.getElementById('date_to').value;
+            const weekFilter = document.getElementById('week-filter');
+            const dateRangeText = document.getElementById('date-range-text');
+
+            if (!dateFrom && !dateTo) {
+                dateRangeText.textContent = 'Viewing All Data';
+                dateRangeText.parentElement.style.background = 'rgba(66, 133, 244, 0.1)';
+                dateRangeText.parentElement.style.color = '#333';
+            } else if (dateFrom && dateTo) {
+                const from = new Date(dateFrom);
+                const to = new Date(dateTo);
+                const fromStr = from.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const toStr = to.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                dateRangeText.textContent = `📅 ${fromStr} - ${toStr}`;
+                dateRangeText.parentElement.style.background = 'rgba(40, 167, 69, 0.15)';
+                dateRangeText.parentElement.style.color = '#155724';
+            } else if (dateFrom) {
+                const from = new Date(dateFrom);
+                const fromStr = from.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                dateRangeText.textContent = `📅 From ${fromStr}`;
+                dateRangeText.parentElement.style.background = 'rgba(255, 193, 7, 0.15)';
+                dateRangeText.parentElement.style.color = '#856404';
+            } else if (dateTo) {
+                const to = new Date(dateTo);
+                const toStr = to.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                dateRangeText.textContent = `📅 Until ${toStr}`;
+                dateRangeText.parentElement.style.background = 'rgba(255, 193, 7, 0.15)';
+                dateRangeText.parentElement.style.color = '#856404';
+            }
+
+            // Add additional filter info
+            const gradeLevel = document.getElementById('grade_level').value;
+            const semester = document.getElementById('semester').value;
+
+            const additionalFilters = [];
+            if (gradeLevel) additionalFilters.push(`Grade: ${gradeLevel}`);
+            if (semester) additionalFilters.push(`Semester: ${semester}`);
+
+            if (additionalFilters.length > 0) {
+                dateRangeText.textContent += ` • ${additionalFilters.join(' • ')}`;
+            }
+        }
+
+        // Setup Filter Handlers
+        function setupFilterHandlers() {
+            // Quick filter buttons
+            document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('.quick-filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    const filter = this.dataset.filter;
+                    const now = new Date();
+
+                    document.getElementById('week-filter').value = '';
+
+                    switch(filter) {
+                        case 'today':
+                            const today = now.toISOString().split('T')[0];
+                            document.getElementById('date_from').value = today;
+                            document.getElementById('date_to').value = today;
+                            break;
+                        case 'week':
+                            const weekStart = new Date(now);
+                            weekStart.setDate(now.getDate() - now.getDay());
+                            const weekEnd = new Date(weekStart);
+                            weekEnd.setDate(weekStart.getDate() + 6);
+                            document.getElementById('date_from').value = weekStart.toISOString().split('T')[0];
+                            document.getElementById('date_to').value = weekEnd.toISOString().split('T')[0];
+                            break;
+                        case 'month':
+                            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                            const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                            document.getElementById('date_from').value = monthStart.toISOString().split('T')[0];
+                            document.getElementById('date_to').value = monthEnd.toISOString().split('T')[0];
+                            break;
+                        case 'all':
+                            document.getElementById('date_from').value = '';
+                            document.getElementById('date_to').value = '';
+                            break;
+                    }
+
+                    updateDateRangeDisplay();
+                    loadDashboard();
+                });
+            });
+
+            // Week filter change handler
+            document.getElementById('week-filter').addEventListener('change', function() {
+                if (this.value) {
+                    const [year, week] = this.value.split('-W');
+                    const weekNum = parseInt(week);
+
+                    const jan1 = new Date(year, 0, 1);
+                    const daysToFirstMonday = (8 - jan1.getDay()) % 7;
+                    const firstMonday = new Date(year, 0, daysToFirstMonday + 1);
+
+                    const weekStart = new Date(firstMonday);
+                    weekStart.setDate(firstMonday.getDate() + (weekNum - 1) * 7);
+
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+
+                    document.getElementById('date_from').value = weekStart.toISOString().split('T')[0];
+                    document.getElementById('date_to').value = weekEnd.toISOString().split('T')[0];
+
+                    updateDateRangeDisplay();
+                    loadDashboard();
+                }
+            });
+
+            // Auto-apply when date inputs change
+            ['date_from', 'date_to'].forEach(dateId => {
+                document.getElementById(dateId).addEventListener('change', function() {
+                    document.getElementById('week-filter').value = '';
+                    updateDateRangeDisplay();
+                });
+            });
+
+            // Auto-apply when other filters change
+            ['grade_level', 'semester'].forEach(filterId => {
+                document.getElementById(filterId).addEventListener('change', function() {
+                    updateDateRangeDisplay();
+                });
+            });
         }
     </script>
 </body>
