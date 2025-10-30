@@ -178,12 +178,16 @@ class AnalyticsService
      */
     private function getDistributionByGrade($responses)
     {
+        $totalCount = $responses->count();
+
         return $responses->groupBy('grade_level')
-            ->map(function ($group, $grade) {
+            ->map(function ($group, $grade) use ($totalCount) {
                 return [
                     'grade' => $grade,
                     'count' => $group->count(),
-                    'percentage' => round(($group->count() / count($group)) * 100, 1),
+                    'percentage' => $totalCount > 0
+                        ? round(($group->count() / $totalCount) * 100, 1)
+                        : 0,
                 ];
             })
             ->values()
