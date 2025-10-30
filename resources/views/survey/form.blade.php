@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Survey - ISO Quality Education</title>
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -10,6 +10,73 @@
         .logout-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        /* Mobile survey form improvements */
+        @media (max-width: 768px) {
+            .survey-container {
+                max-width: 100%;
+                padding: 0 10px;
+            }
+
+            .survey-card {
+                padding: 1.5rem;
+                border-radius: 0.5rem;
+            }
+
+            .survey-title {
+                font-size: 1.5rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .question-group {
+                padding: 1rem;
+            }
+
+            .question-label {
+                font-size: 0.95rem;
+                margin-bottom: 1rem;
+            }
+
+            .likert-scale {
+                gap: 0.5rem;
+            }
+
+            .likert-option .likert-label::before {
+                width: 2.5rem !important;
+                height: 2.5rem !important;
+                font-size: 1rem !important;
+            }
+
+            .survey-navigation {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .survey-navigation button {
+                min-height: 48px;
+                font-size: 16px;
+                padding: 12px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .survey-card {
+                padding: 1rem;
+            }
+
+            .likert-scale {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .likert-option {
+                flex: 0 0 auto;
+                min-width: 50px;
+            }
         }
     </style>
 </head>

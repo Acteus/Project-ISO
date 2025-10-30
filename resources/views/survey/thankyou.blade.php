@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Thank You - ISO Quality Education</title>
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     <style>
@@ -408,53 +408,101 @@
 
         @media (max-width: 768px) {
             .thank-you-container {
-                padding: 60px 15px 40px;
+                padding: 40px 15px 30px;
             }
 
             .message-bubble {
-                padding: 35px 25px;
+                padding: 30px 20px;
                 border-radius: 20px;
-                margin-bottom: 40px;
+                margin-bottom: 30px;
             }
 
             .thank-you-title {
-                font-size: 36px;
+                font-size: 32px;
             }
 
             .success-animation {
-                width: 140px;
-                height: 140px;
+                width: 120px;
+                height: 120px;
+                margin-bottom: 30px;
             }
 
             .success-circle {
-                width: 140px;
-                height: 140px;
+                width: 120px;
+                height: 120px;
             }
 
             .checkmark-svg {
-                width: 80px;
-                height: 80px;
+                width: 70px;
+                height: 70px;
             }
 
             .thank-you-subtitle {
-                font-size: 18px;
-            }
-
-            .thank-you-message {
                 font-size: 16px;
             }
 
+            .thank-you-message {
+                font-size: 15px;
+            }
+
+            .thank-you-actions {
+                gap: 15px;
+            }
+
             .btn-primary, .btn-secondary {
-                padding: 15px 30px;
-                font-size: 14px;
+                padding: 16px 24px;
+                font-size: 16px;
+                min-height: 48px;
+                width: 100%;
+                max-width: 280px;
             }
 
             .survey-info {
-                padding: 30px 20px;
+                padding: 25px 15px;
+                margin-top: 30px;
             }
 
             .info-grid {
                 grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .info-item {
+                padding: 15px;
+            }
+
+            .contact-section {
+                margin-top: 30px;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .thank-you-container {
+                padding: 30px 10px 20px;
+            }
+
+            .thank-you-title {
+                font-size: 28px;
+            }
+
+            .message-bubble {
+                padding: 25px 15px;
+            }
+
+            .success-animation {
+                width: 100px;
+                height: 100px;
+            }
+
+            .success-circle {
+                width: 100px;
+                height: 100px;
+            }
+
+            .checkmark-svg {
+                width: 60px;
+                height: 60px;
             }
         }
     </style>

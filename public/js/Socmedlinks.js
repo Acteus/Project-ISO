@@ -42,6 +42,24 @@ const socialMediaData = [
   }
 ];
 
+// Configuration for responsive behavior
+const socialMediaConfig = {
+  enabled: true,
+  autoInitialize: false, // Changed to false to prevent auto-initialization
+  mobileBreakpoint: 768,
+  zIndex: 999, // Reduced from 1000 to avoid conflicts
+  mobilePosition: {
+    top: '10px',
+    right: '10px', // Positioned at top right to avoid interfering with login buttons
+    bottom: 'auto',
+    left: 'auto'
+  },
+  desktopPosition: {
+    bottom: '20px',
+    left: '20px'
+  }
+};
+
 // Function to add Font Awesome CSS
 function addFontAwesome() {
   // Add Font Awesome CSS if not already present
@@ -67,7 +85,27 @@ function createSocialMediaStyles() {
       display: flex;
       flex-direction: column;
       gap: 12px;
-      z-index: 1000;
+      z-index: ${socialMediaConfig.zIndex};
+    }
+
+    /* Mobile responsive positioning */
+    @media (max-width: ${socialMediaConfig.mobileBreakpoint}px) {
+      .social-media-container {
+        top: ${socialMediaConfig.mobilePosition.top};
+        right: ${socialMediaConfig.mobilePosition.right};
+        bottom: ${socialMediaConfig.mobilePosition.bottom};
+        left: ${socialMediaConfig.mobilePosition.left};
+        gap: 10px;
+      }
+
+      .social-media-link {
+        width: 45px;
+        height: 45px;
+      }
+
+      .social-icon {
+        font-size: 18px;
+      }
     }
 
     /* Individual Social Media Links */
@@ -133,34 +171,44 @@ function createSocialMediaStyles() {
     }
 
     /* Responsive Design */
-    @media (max-width: 768px) {
-      .social-media-container {
-        bottom: 15px;
-        left: 15px;
-        gap: 10px;
-      }
+    .social-media-container.desktop-position {
+      bottom: ${socialMediaConfig.desktopPosition.bottom};
+      left: ${socialMediaConfig.desktopPosition.left};
+      right: auto;
+    }
 
-      .social-media-link {
-        width: 45px;
-        height: 45px;
-      }
-
-      .social-icon {
-        font-size: 20px;
-      }
+    .social-media-container.mobile-position {
+      top: ${socialMediaConfig.mobilePosition.top};
+      right: ${socialMediaConfig.mobilePosition.right};
+      bottom: ${socialMediaConfig.mobilePosition.bottom};
+      left: ${socialMediaConfig.mobilePosition.left};
     }
   `;
-  
+
   document.head.appendChild(style);
 }
 
 // Function to create social media links
 function createSocialMediaLinks() {
+  // Check if social media is enabled and we're not on mobile login page
+  if (!socialMediaConfig.enabled) {
+    console.log('Social media links are disabled');
+    return;
+  }
+
   // Create container
   const container = document.createElement('div');
   container.className = 'social-media-container';
+
+  // Add responsive positioning class
+  if (window.innerWidth <= socialMediaConfig.mobileBreakpoint) {
+    container.classList.add('mobile-position');
+  } else {
+    container.classList.add('desktop-position');
+  }
+
   container.id = 'social-media-container';
-  
+
   // Create links for each platform
   socialMediaData.forEach((platform, index) => {
     // Create link element
@@ -170,7 +218,7 @@ function createSocialMediaLinks() {
     link.className = `social-media-link ${platform.className}`;
     link.title = `Visit our ${platform.name}`;
     link.setAttribute('aria-label', platform.name);
-    
+
     // Create icon element
     const icon = document.createElement('i');
     if (platform.iconType === 'fontawesome') {
@@ -180,43 +228,43 @@ function createSocialMediaLinks() {
       icon.className = 'social-icon';
       icon.textContent = platform.icon;
     }
-    
+
     // Add click animation
     link.addEventListener('click', function(e) {
       // Add click animation
       this.style.transform = 'translateY(-3px) scale(0.95)';
-      
+
       // Reset animation after a short delay
       setTimeout(() => {
         this.style.transform = '';
       }, 150);
-      
+
       // Log click for analytics (optional)
       console.log(`Social media click: ${platform.name}`);
     });
-    
+
     // Add staggered entrance animation
     link.style.animationDelay = `${index * 100}ms`;
     link.style.opacity = '0';
     link.style.transform = 'translateX(-20px)';
-    
+
     // Animate in after a short delay
     setTimeout(() => {
       link.style.transition = 'all 0.5s ease';
       link.style.opacity = '1';
       link.style.transform = 'translateX(0)';
     }, index * 100 + 100);
-    
+
     // Append icon to link
     link.appendChild(icon);
-    
+
     // Append link to container
     container.appendChild(link);
   });
-  
+
   // Append container to body
   document.body.appendChild(container);
-  
+
   console.log('Social media links created successfully!');
 }
 
@@ -250,7 +298,7 @@ function addSocialMediaPlatform(platformData) {
     console.error('Platform data must include name, url, and icon');
     return;
   }
-  
+
   // Set default values
   const newPlatform = {
     name: platformData.name,
@@ -260,13 +308,13 @@ function addSocialMediaPlatform(platformData) {
     target: platformData.target || '_blank',
     color: platformData.color || 'rgba(128, 128, 128, 0.8)'
   };
-  
+
   socialMediaData.push(newPlatform);
-  
+
   // Recreate links
   removeSocialMediaLinks();
   createSocialMediaLinks();
-  
+
   console.log(`Added new platform: ${newPlatform.name}`);
 }
 
@@ -274,15 +322,15 @@ function addSocialMediaPlatform(platformData) {
 function initializeSocialMedia() {
   // Add Font Awesome
   addFontAwesome();
-  
+
   // Create CSS styles
   createSocialMediaStyles();
-  
+
   // Create social media links (with slight delay to ensure Font Awesome loads)
   setTimeout(() => {
     createSocialMediaLinks();
   }, 100);
-  
+
   // Log initialization
   console.log('Social Media System initialized');
   console.log('Available platforms:', socialMediaData.map(p => p.name));
