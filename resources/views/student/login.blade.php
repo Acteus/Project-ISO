@@ -2,11 +2,49 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Jose Rizal University - Student Login</title>
   <!-- Google Fonts: Montserrat + Poppins -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ asset('css/functions.css') }}">
   <script src="{{ asset('js/Socmedlinks.js') }}"></script>
+
+  <script>
+    // Auto-initialize social media links with mobile-friendly positioning
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if we're on a mobile device
+      function isMobile() {
+        return window.innerWidth <= 768 || 'ontouchstart' in window;
+      }
+
+      // Initialize social media links with proper positioning
+      if (isMobile()) {
+        // Wait for social media script to load and position at top right
+        setTimeout(() => {
+          const socialContainer = document.getElementById('social-media-container');
+          if (socialContainer) {
+            socialContainer.style.top = '10px';
+            socialContainer.style.right = '10px';
+            socialContainer.style.bottom = 'auto';
+            socialContainer.style.left = 'auto';
+            console.log('Social media links positioned at top right for mobile');
+          }
+        }, 500);
+      } else {
+        // Desktop positioning (bottom left)
+        setTimeout(() => {
+          const socialContainer = document.getElementById('social-media-container');
+          if (socialContainer) {
+            socialContainer.style.bottom = '20px';
+            socialContainer.style.left = '20px';
+            socialContainer.style.top = 'auto';
+            socialContainer.style.right = 'auto';
+            console.log('Social media links positioned at bottom left for desktop');
+          }
+        }, 500);
+      }
+    });
+  </script>
 
   <style>
     /* Override body for full-screen layout */
@@ -232,20 +270,57 @@
     @media (max-width: 768px) {
       .login-container {
         flex-direction: column;
-        width: 90vw;
+        width: 95vw;
         min-height: auto;
+        max-width: 100vw;
+        margin: 10px;
       }
 
       .branding, .form-side {
-        padding: 30px 20px;
+        padding: 25px 20px;
       }
 
       .branding h1 {
-        font-size: 36px;
+        font-size: 32px;
       }
 
       .branding .tagline {
-        font-size: 18px;
+        font-size: 16px;
+      }
+
+      .form-side h2 {
+        font-size: 28px;
+      }
+
+      .login-btn, .create-account-btn {
+        font-size: 16px;
+        min-height: 48px;
+        padding: 16px 24px;
+      }
+
+      .form-group input {
+        font-size: 16px;
+        min-height: 44px;
+        padding: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        width: 98vw;
+        margin: 5px;
+      }
+
+      .branding, .form-side {
+        padding: 20px 15px;
+      }
+
+      .branding h1 {
+        font-size: 28px;
+      }
+
+      .form-side h2 {
+        font-size: 24px;
       }
     }
   </style>

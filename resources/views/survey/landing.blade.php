@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ISO Quality Education Survey</title>
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     <style>
@@ -176,9 +176,68 @@
             .landing-header .desktop-nav {
                 display: flex !important;
             }
-            
+
             .landing-header .mobile-menu-btn {
                 display: none;
+            }
+        }
+
+        /* Additional mobile improvements for landing page */
+        @media (max-width: 768px) {
+            .hero-section {
+                height: 400px;
+                padding: 20px 0;
+            }
+
+            .hero-content {
+                text-align: center;
+                padding: 0 20px;
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .hero-description {
+                font-size: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .hero-btn {
+                width: 100%;
+                max-width: 300px;
+                margin: 0 auto;
+                display: block;
+                min-height: 48px;
+                font-size: 16px;
+            }
+
+            .info-section {
+                padding: 3rem 0;
+            }
+
+            .section-title {
+                font-size: 1.75rem;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .info-card {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .hero-section {
+                height: 350px;
             }
         }
     </style>

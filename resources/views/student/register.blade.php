@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Student Registration</title>
   <!-- Google Fonts: Montserrat + Poppins -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
@@ -154,14 +155,22 @@
     }
 
     /* Responsive adjustments */
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
       .container {
-        width: 90vw;
-        padding: 25px 30px;
+        width: 95vw;
+        padding: 25px 20px;
+        max-height: 85vh;
+        overflow-y: auto;
       }
 
       .container h2 {
         font-size: 28px;
+        margin-bottom: 15px;
+      }
+
+      .container > p {
+        font-size: 14px;
+        margin-bottom: 15px;
       }
 
       .year-check {
@@ -171,6 +180,31 @@
 
       .year-check label {
         text-align: left;
+        font-size: 14px;
+      }
+
+      .form-group input, .form-group select {
+        font-size: 16px;
+        min-height: 44px;
+        padding: 12px;
+      }
+
+      .continue-btn {
+        font-size: 16px;
+        min-height: 48px;
+        padding: 16px;
+        margin-top: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        width: 98vw;
+        padding: 20px 15px;
+      }
+
+      .container h2 {
+        font-size: 24px;
       }
     }
   </style>

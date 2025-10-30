@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Profile Settings - ISO Quality Education</title>
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
     <style>
@@ -10,6 +10,44 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
+        }
+
+        /* Mobile-specific dashboard styles */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 15px;
+            }
+
+            .dashboard-header {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+
+            .dashboard-header h1 {
+                font-size: 24px;
+            }
+
+            .student-info-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .student-info-card {
+                padding: 20px;
+            }
+
+            .dashboard-actions {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .action-card {
+                padding: 20px;
+            }
+
+            .survey-history {
+                padding: 20px;
+            }
         }
 
         .dashboard-header {
@@ -130,6 +168,18 @@
             font-weight: 600;
             transition: all 0.3s ease;
             cursor: pointer;
+            min-height: 44px; /* Mobile touch target */
+            font-size: 16px; /* Prevent zoom on iOS */
+        }
+
+        /* Mobile button improvements */
+        @media (max-width: 768px) {
+            .btn {
+                padding: 15px 20px;
+                font-size: 16px;
+                width: 100%;
+                margin-bottom: 10px;
+            }
         }
 
         .btn-primary {
@@ -288,21 +338,21 @@
                     <div style="margin-bottom: 20px;">
                         <label for="name" style="display: block; font-weight: 600; color: #333; margin-bottom: 8px;">Full Name</label>
                         <input type="text" id="name" name="name" value="{{ Auth::user()->name }}"
-                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px;"
+                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; min-height: 44px;"
                                required>
                     </div>
 
                     <div style="margin-bottom: 20px;">
                         <label for="email" style="display: block; font-weight: 600; color: #333; margin-bottom: 8px;">Email Address</label>
                         <input type="email" id="email" name="email" value="{{ Auth::user()->email }}"
-                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px;"
+                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; min-height: 44px;"
                                required>
                     </div>
 
                     <div style="margin-bottom: 20px;">
                         <label for="section" style="display: block; font-weight: 600; color: #333; margin-bottom: 8px;">Section</label>
                         <input type="text" id="section" name="section" value="{{ Auth::user()->section }}"
-                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px;"
+                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; min-height: 44px;"
                                required>
                     </div>
 
@@ -320,21 +370,21 @@
                     <div style="margin-bottom: 20px;">
                         <label for="current_password" style="display: block; font-weight: 600; color: #333; margin-bottom: 8px;">Current Password</label>
                         <input type="password" id="current_password" name="current_password"
-                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px;"
+                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; min-height: 44px;"
                                required>
                     </div>
 
                     <div style="margin-bottom: 20px;">
                         <label for="new_password" style="display: block; font-weight: 600; color: #333; margin-bottom: 8px;">New Password</label>
                         <input type="password" id="new_password" name="new_password"
-                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px;"
+                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; min-height: 44px;"
                                required>
                     </div>
 
                     <div style="margin-bottom: 20px;">
                         <label for="confirm_password" style="display: block; font-weight: 600; color: #333; margin-bottom: 8px;">Confirm New Password</label>
                         <input type="password" id="confirm_password" name="confirm_password"
-                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px;"
+                               style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; min-height: 44px;"
                                required>
                     </div>
 
