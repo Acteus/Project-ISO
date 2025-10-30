@@ -523,7 +523,7 @@
 </head>
 <body>
     <!-- Header -->
-    <header class="header">
+    <header class="header admin-header">
         <div class="container">
             <div class="nav-wrapper">
                 <div class="logo">

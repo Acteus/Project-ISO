@@ -209,12 +209,12 @@
                     <a href="{{ route('survey.landing') }}">ISO Quality Education</a>
                 </div>
 
-                <!-- Desktop navigation -->
-                <nav class="desktop-nav">
-                    <a href="{{ route('student.dashboard') }}" class="nav-link active">{{ Auth::user()->name }}</a>
+                <!-- Simple student navigation -->
+                <nav class="desktop-nav" style="display: flex !important;">
+                    <span class="nav-link" style="font-weight: 600; cursor: default;">{{ Auth::user()->name }}</span>
                     <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                         @csrf
-                        <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
+                        <button type="submit" class="logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
                             <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                 <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
                             </svg>
@@ -222,7 +222,30 @@
                         </button>
                     </form>
                 </nav>
+
+                <!-- Mobile menu button -->
+                <div class="mobile-menu-btn">
+                    <button class="menu-toggle" onclick="toggleMobileMenu()">
+                        <span class="hamburger"></span>
+                        <span class="hamburger"></span>
+                        <span class="hamburger"></span>
+                    </button>
+                </div>
             </div>
+
+            <!-- Mobile navigation -->
+            <nav class="mobile-nav" id="mobileNav">
+                <span class="mobile-nav-link" style="font-weight: 600;">{{ Auth::user()->name }}</span>
+                <form method="POST" action="{{ route('student.logout') }}" style="margin-top: 10px;">
+                    @csrf
+                    <button type="submit" class="logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease; width: 100%;">
+                        <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                        </svg>
+                        Logout
+                    </button>
+                </form>
+            </nav>
         </div>
     </header>
 
@@ -365,6 +388,14 @@
     <script>
         // Set current year
         document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        // Mobile menu toggle function
+        function toggleMobileMenu() {
+            const mobileNav = document.getElementById('mobileNav');
+            if (mobileNav) {
+                mobileNav.classList.toggle('show');
+            }
+        }
 
         console.log('Student dashboard loaded');
     </script>

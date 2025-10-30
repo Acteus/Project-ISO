@@ -13,6 +13,42 @@ use Illuminate\Support\Facades\Crypt;
 
 class SurveyController extends Controller
 {
+    /**
+     * Show the survey landing page
+     */
+    public function landing(Request $request)
+    {
+        // Regenerate session if marked to do so (after login)
+        if ($request->session()->has('_should_regenerate')) {
+            $request->session()->forget('_should_regenerate');
+            $request->session()->regenerate();
+        }
+        
+        // Explicitly check authentication status
+        $user = Auth::user();
+        $admin = session('admin');
+
+        // Log authentication status for debugging
+        Log::info('Landing page accessed', [
+            'authenticated' => Auth::check(),
+            'user_id' => $user ? $user->id : null,
+            'admin' => $admin ? true : false,
+        ]);
+
+        return view('survey.landing', [
+            'user' => $user,
+            'admin' => $admin,
+        ]);
+    }
+
+    /**
+     * Show the survey form
+     */
+    public function showForm()
+    {
+        return view('survey.form');
+    }
+
     public function submitResponse(Request $request)
     {
         // Check if user is authenticated (works for both web and API routes)

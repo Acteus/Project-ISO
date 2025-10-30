@@ -330,6 +330,7 @@
         fetch(this.action, {
           method: 'POST',
           body: formData,
+          credentials: 'include', // Important: Include cookies in request
           headers: {
             'X-Requested-With': 'XMLHttpRequest',
             'X-CSRF-TOKEN': document.querySelector('[name="_token"]').value

@@ -78,6 +78,9 @@ class StudentController extends Controller
 
         // Log the student in
         Auth::login($user);
+        
+        // Mark that we should regenerate on next request
+        $request->session()->put('_should_regenerate', true);
 
         return response()->json([
             'message' => 'Registration successful! Welcome to the ISO 21001 Survey System.',
@@ -117,6 +120,9 @@ class StudentController extends Controller
             if ($admin && \Illuminate\Support\Facades\Hash::check($request->password, $admin->password)) {
                 // Store admin in session for web authentication
                 session(['admin' => $admin]);
+                
+                // Mark that we should regenerate on next request
+                $request->session()->put('_should_regenerate', true);
 
                 // Log admin login for audit trail
                 AuditLog::create([
@@ -152,6 +158,21 @@ class StudentController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
+            
+            // DON'T regenerate session on AJAX login - it causes the browser to not pick up the new session ID
+            // The session will be automatically regenerated on the next page load by Laravel
+            // $request->session()->regenerate();
+            
+            // Mark that we should regenerate on next request
+            $request->session()->put('_should_regenerate', true);
+
+            // Debug logging
+            Log::info('Login successful', [
+                'user_id' => $user->id,
+                'session_id' => $request->session()->getId(),
+                'authenticated' => Auth::check(),
+                'session_data' => $request->session()->all(),
+            ]);
 
             // Log login for audit trail
             AuditLog::create([

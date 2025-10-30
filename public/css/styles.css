@@ -20,9 +20,14 @@ body {
 
 /* Header Styles */
 .header {
-    background: linear-gradient(135deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
+    background: linear-gradient(135deg, #4338ca, #312e81);
     color: white;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Admin header with gradient background */
+.header.admin-header {
+    background: linear-gradient(135deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
 }
 
 .nav-wrapper {
@@ -42,12 +47,18 @@ body {
 .desktop-nav {
     display: none;
     gap: 2rem;
+    align-items: center;
 }
 
-/* Show desktop nav on admin pages */
-.header .desktop-nav {
-    display: flex !important;
-    gap: 2rem;
+/* Show desktop nav on larger screens */
+@media (min-width: 768px) {
+    .desktop-nav {
+        display: flex !important;
+    }
+
+    .mobile-menu-btn {
+        display: none;
+    }
 }
 
 .nav-link {
