@@ -277,8 +277,8 @@ class SurveyController extends Controller
             ]);
         }
 
-        // Return HTML view
-        return view('analytics.index', [
+        // Return HTML view - Using new simplified dashboard
+        return view('analytics.dashboard', [
             'analytics' => $analytics,
             'noData' => $analytics === null
         ]);

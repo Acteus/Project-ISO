@@ -1345,8 +1345,8 @@
                             label: 'Performance Score',
                             data: values,
                             backgroundColor: values.map(v => {
-                                if (v >= 4.2) return 'rgba(40, 167, 69, 0.8)';
-                                if (v >= 3.5) return 'rgba(255, 193, 7, 0.8)';
+                                if (v >= 4.5) return 'rgba(40, 167, 69, 0.8)';
+                                if (v >= 3.0) return 'rgba(255, 193, 7, 0.8)';
                                 return 'rgba(220, 53, 69, 0.8)';
                             }),
                             borderWidth: 2,
