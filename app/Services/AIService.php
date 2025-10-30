@@ -323,9 +323,28 @@ class AIService
      */
     protected function analyzeSentimentPHP($comments)
     {
-        $positiveKeywords = ['great', 'excellent', 'love', 'amazing', 'wonderful', 'helpful', 'supportive', 'engaging', 'interesting', 'effective'];
-        $negativeKeywords = ['poor', 'bad', 'terrible', 'awful', 'boring', 'unhelpful', 'inadequate', 'frustrating', 'stressful', 'overwhelming'];
-        $neutralKeywords = ['okay', 'average', 'fine', 'neutral', 'satisfactory', 'acceptable'];
+        // Expanded keyword lists for better sentiment detection
+        $positiveKeywords = [
+            'great', 'excellent', 'love', 'amazing', 'wonderful', 'helpful', 'supportive',
+            'engaging', 'interesting', 'effective', 'good', 'best', 'happy', 'satisfied',
+            'fantastic', 'awesome', 'outstanding', 'superb', 'brilliant', 'impressive',
+            'enjoy', 'appreciate', 'perfect', 'comfortable', 'safe', 'clean', 'organized',
+            'friendly', 'caring', 'dedicated', 'professional', 'knowledgeable', 'skilled',
+            'clear', 'understandable', 'easy', 'better', 'improved', 'positive', 'success',
+            'thank', 'grateful', 'pleased', 'nice', 'well', 'quality', 'modern', 'updated'
+        ];
+
+        $negativeKeywords = [
+            'poor', 'bad', 'terrible', 'awful', 'boring', 'unhelpful', 'inadequate',
+            'frustrating', 'stressful', 'overwhelming', 'worst', 'hate', 'disappointed',
+            'unsatisfied', 'difficult', 'hard', 'confusing', 'unclear', 'problem', 'issue',
+            'concern', 'worry', 'lack', 'insufficient', 'unfair', 'bias', 'discriminate',
+            'uncomfortable', 'unsafe', 'dirty', 'messy', 'disorganized', 'rude', 'mean',
+            'unprofessional', 'incompetent', 'useless', 'waste', 'wrong', 'mistake',
+            'never', 'nothing', 'nobody', 'none', 'failure', 'failed', 'disappointing'
+        ];
+
+        $neutralKeywords = ['okay', 'average', 'fine', 'neutral', 'satisfactory', 'acceptable', 'normal', 'standard'];
 
         $totalSentimentScore = 0;
         $totalWords = 0;
@@ -336,34 +355,46 @@ class AIService
         ];
 
         foreach ($comments as $comment) {
-            $wordCount = str_word_count(strtolower($comment));
+            if (empty(trim($comment))) {
+                continue; // Skip empty comments
+            }
+
+            $commentLower = strtolower($comment);
+            $wordCount = str_word_count($commentLower);
             $totalWords += $wordCount;
 
             $positiveCount = 0;
             $negativeCount = 0;
             $neutralCount = 0;
 
-            // Simple keyword matching (in production, use proper NLP)
+            // Enhanced keyword matching - use word boundaries for more accurate detection
             foreach ($positiveKeywords as $keyword) {
-                $positiveCount += substr_count(strtolower($comment), $keyword);
+                if (preg_match('/\b' . preg_quote($keyword, '/') . '\b/', $commentLower)) {
+                    $positiveCount++;
+                }
             }
             foreach ($negativeKeywords as $keyword) {
-                $negativeCount += substr_count(strtolower($comment), $keyword);
+                if (preg_match('/\b' . preg_quote($keyword, '/') . '\b/', $commentLower)) {
+                    $negativeCount++;
+                }
             }
             foreach ($neutralKeywords as $keyword) {
-                $neutralCount += substr_count(strtolower($comment), $keyword);
+                if (preg_match('/\b' . preg_quote($keyword, '/') . '\b/', $commentLower)) {
+                    $neutralCount++;
+                }
             }
 
             // Calculate sentiment for this comment
             $commentSentiment = ($positiveCount - $negativeCount) / max(1, $wordCount);
             $totalSentimentScore += $commentSentiment;
 
-            // Categorize comment
+            // Categorize comment with better logic
             if ($positiveCount > $negativeCount && $positiveCount > 0) {
                 $sentimentBreakdown['positive']++;
             } elseif ($negativeCount > $positiveCount && $negativeCount > 0) {
                 $sentimentBreakdown['negative']++;
             } else {
+                // Only mark as neutral if truly neutral (no strong sentiment indicators)
                 $sentimentBreakdown['neutral']++;
             }
         }

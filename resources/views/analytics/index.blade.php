@@ -749,21 +749,32 @@
                     <p style="margin-bottom: 20px; color: #666;">Analyzing student feedback using advanced sentiment detection</p>
                     <div class="sentiment-breakdown" id="sentiment-breakdown">
                         <div class="sentiment-item">
-                            <div class="count" id="sentiment-positive">-</div>
+                            <div class="count" id="sentiment-positive" style="color: #28a745;">-</div>
                             <div class="label">Positive Comments</div>
                         </div>
                         <div class="sentiment-item">
-                            <div class="count" id="sentiment-neutral">-</div>
+                            <div class="count" id="sentiment-neutral" style="color: #ffc107;">-</div>
                             <div class="label">Neutral Comments</div>
                         </div>
                         <div class="sentiment-item">
-                            <div class="count" id="sentiment-negative">-</div>
+                            <div class="count" id="sentiment-negative" style="color: #dc3545;">-</div>
                             <div class="label">Negative Comments</div>
                         </div>
                         <div class="sentiment-item">
-                            <div class="count" id="sentiment-score">-</div>
+                            <div class="count" id="sentiment-score" style="color: rgba(66,133,244,1);">-</div>
                             <div class="label">Overall Score</div>
                         </div>
+                    </div>
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(66,133,244,0.1); border-radius: 10px; border-left: 4px solid rgba(66,133,244,1);">
+                        <p style="margin: 0; color: #555; font-size: 14px; line-height: 1.6;">
+                            <strong>📊 Score Calculation:</strong> The overall sentiment score is calculated as:
+                            <code style="background: white; padding: 2px 6px; border-radius: 4px;">(Positive × 100 + Neutral × 50 + Negative × 0) / Total Comments</code>
+                            <br><br>
+                            <strong>💡 Interpretation:</strong>
+                            • <span style="color: #28a745; font-weight: 600;">70-100%</span> = Highly Positive |
+                            • <span style="color: #ffc107; font-weight: 600;">40-69%</span> = Moderately Positive/Neutral |
+                            • <span style="color: #dc3545; font-weight: 600;">0-39%</span> = Needs Attention
+                        </p>
                     </div>
                 </div>
             @endif
@@ -1460,15 +1471,51 @@
                 const result = await response.json();
                 const data = result.data || result;
 
+                console.log('Sentiment Analysis Data:', data); // Debug log
+
                 // Update sentiment breakdown
                 if (data.breakdown) {
-                    document.getElementById('sentiment-positive').textContent = data.breakdown.positive || 0;
-                    document.getElementById('sentiment-neutral').textContent = data.breakdown.neutral || 0;
-                    document.getElementById('sentiment-negative').textContent = data.breakdown.negative || 0;
+                    const positive = data.breakdown.positive || 0;
+                    const neutral = data.breakdown.neutral || 0;
+                    const negative = data.breakdown.negative || 0;
+                    const total = positive + neutral + negative;
+
+                    document.getElementById('sentiment-positive').textContent = positive;
+                    document.getElementById('sentiment-neutral').textContent = neutral;
+                    document.getElementById('sentiment-negative').textContent = negative;
+
+                    // Add percentage display for clarity
+                    const posEl = document.getElementById('sentiment-positive');
+                    const neuEl = document.getElementById('sentiment-neutral');
+                    const negEl = document.getElementById('sentiment-negative');
+
+                    if (total > 0) {
+                        posEl.title = `${((positive/total)*100).toFixed(1)}% of total comments`;
+                        neuEl.title = `${((neutral/total)*100).toFixed(1)}% of total comments`;
+                        negEl.title = `${((negative/total)*100).toFixed(1)}% of total comments`;
+                    }
                 }
 
-                if (data.sentiment_score) {
-                    document.getElementById('sentiment-score').textContent = data.sentiment_score + '%';
+                if (data.sentiment_score !== undefined) {
+                    const score = parseFloat(data.sentiment_score);
+                    const scoreEl = document.getElementById('sentiment-score');
+                    scoreEl.textContent = score.toFixed(1) + '%';
+
+                    // Color code based on score
+                    if (score >= 70) {
+                        scoreEl.style.color = '#28a745';
+                    } else if (score >= 40) {
+                        scoreEl.style.color = '#ffc107';
+                    } else {
+                        scoreEl.style.color = '#dc3545';
+                    }
+                }
+
+                // Log for debugging
+                if (data.total_comments_analyzed !== undefined) {
+                    console.log(`Analyzed ${data.total_comments_analyzed} comments`);
+                    console.log(`Breakdown: ${data.breakdown.positive}P / ${data.breakdown.neutral}N / ${data.breakdown.negative}Neg`);
+                    console.log(`Score: ${data.sentiment_score}%`);
                 }
             } catch (error) {
                 console.error('Error loading sentiment analysis:', error);

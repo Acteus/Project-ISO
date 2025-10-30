@@ -242,8 +242,8 @@ class SentimentAnalyzer:
             }
 
     def _rule_based_sentiment(self, text):
-        """Fallback rule-based sentiment analysis"""
-        if not isinstance(text, str):
+        """Fallback rule-based sentiment analysis with improved keyword detection"""
+        if not isinstance(text, str) or len(text.strip()) == 0:
             return {
                 'sentiment': 'neutral',
                 'confidence': 0.5,
@@ -252,29 +252,62 @@ class SentimentAnalyzer:
 
         text_lower = text.lower()
 
-        # Simple keyword-based scoring
-        positive_keywords = ['great', 'excellent', 'love', 'amazing', 'wonderful', 'helpful', 'supportive', 'engaging', 'interesting', 'effective', 'good', 'best', 'happy', 'satisfied']
-        negative_keywords = ['poor', 'bad', 'terrible', 'awful', 'boring', 'unhelpful', 'inadequate', 'frustrating', 'stressful', 'overwhelming', 'worst', 'hate', 'disappointed', 'unsatisfied']
+        # Expanded keyword lists for better detection
+        positive_keywords = [
+            'great', 'excellent', 'love', 'amazing', 'wonderful', 'helpful', 'supportive',
+            'engaging', 'interesting', 'effective', 'good', 'best', 'happy', 'satisfied',
+            'fantastic', 'awesome', 'outstanding', 'superb', 'brilliant', 'impressive',
+            'enjoy', 'appreciate', 'perfect', 'comfortable', 'safe', 'clean', 'organized',
+            'friendly', 'caring', 'dedicated', 'professional', 'knowledgeable', 'skilled',
+            'clear', 'understandable', 'easy', 'better', 'improved', 'positive', 'success',
+            'thank', 'grateful', 'pleased'
+        ]
 
-        positive_count = sum(1 for word in positive_keywords if word in text_lower)
-        negative_count = sum(1 for word in negative_keywords if word in text_lower)
+        negative_keywords = [
+            'poor', 'bad', 'terrible', 'awful', 'boring', 'unhelpful', 'inadequate',
+            'frustrating', 'stressful', 'overwhelming', 'worst', 'hate', 'disappointed',
+            'unsatisfied', 'difficult', 'hard', 'confusing', 'unclear', 'problem', 'issue',
+            'concern', 'worry', 'lack', 'insufficient', 'unfair', 'bias', 'discriminate',
+            'uncomfortable', 'unsafe', 'dirty', 'messy', 'disorganized', 'rude', 'mean',
+            'unprofessional', 'incompetent', 'useless', 'waste', 'wrong', 'mistake',
+            'never', 'nothing', 'nobody', 'none'
+        ]
 
-        if positive_count > negative_count:
+        # Count keyword occurrences (exact word matching)
+        words = text_lower.split()
+        positive_count = sum(1 for word in words if any(keyword in word for keyword in positive_keywords))
+        negative_count = sum(1 for word in words if any(keyword in word for keyword in negative_keywords))
+
+        # Consider text length for better classification
+        text_length = len(words)
+
+        # More sophisticated classification
+        if positive_count > negative_count and positive_count > 0:
             sentiment = 'positive'
-            confidence = min(0.8, 0.5 + (positive_count - negative_count) * 0.1)
-        elif negative_count > positive_count:
+            # Higher confidence with more positive words
+            confidence = min(0.85, 0.6 + (positive_count / max(text_length, 1)) * 0.25)
+        elif negative_count > positive_count and negative_count > 0:
             sentiment = 'negative'
-            confidence = min(0.8, 0.5 + (negative_count - positive_count) * 0.1)
+            # Higher confidence with more negative words
+            confidence = min(0.85, 0.6 + (negative_count / max(text_length, 1)) * 0.25)
         else:
-            sentiment = 'neutral'
-            confidence = 0.5
+            # Only classify as neutral if there are truly no sentiment indicators
+            # or if positive and negative are equal
+            if positive_count == 0 and negative_count == 0:
+                sentiment = 'neutral'
+                confidence = 0.6  # Slightly higher confidence for true neutrality
+            else:
+                # Mixed sentiment - lean neutral but lower confidence
+                sentiment = 'neutral'
+                confidence = 0.5
 
         return {
             'sentiment': sentiment,
             'confidence': round(confidence, 3),
-            'model_used': 'Rule-based (Fallback)',
+            'model_used': 'Rule-based (Enhanced)',
             'positive_words': positive_count,
-            'negative_words': negative_count
+            'negative_words': negative_count,
+            'text_length': text_length
         }
 
     def _generate_sentiment_recommendations(self, sentiment_score):
