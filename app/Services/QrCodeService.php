@@ -52,9 +52,12 @@ class QrCodeService
     public function saveQrCodeFile(QrCode $qrCode)
     {
         // Create the QR code
+        $foregroundRgb = $this->hexToRgb($qrCode->foreground_color);
+        $backgroundRgb = $this->hexToRgb($qrCode->background_color);
+
         $qr = QrCodeFacade::size($qrCode->size)
-            ->color($this->hexToRgb($qrCode->foreground_color))
-            ->backgroundColor($this->hexToRgb($qrCode->background_color))
+            ->color($foregroundRgb[0], $foregroundRgb[1], $foregroundRgb[2])
+            ->backgroundColor($backgroundRgb[0], $backgroundRgb[1], $backgroundRgb[2])
             ->margin(10)
             ->format($qrCode->format);
 
