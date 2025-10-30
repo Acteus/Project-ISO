@@ -493,15 +493,15 @@
 
             <!-- Creation Method Selection -->
             <div class="creation-methods">
-                <div class="method-card active" id="single-method" onclick="selectMethod('single')">
-                    <div class="method-icon">📱</div>
+                                <div class="method-card active" id="single-method" onclick="selectMethod('single')">
+                    <div class="method-icon">QR</div>
                     <h3>Single QR Code</h3>
-                    <p>Create a custom QR code for specific targets with full customization options</p>
+                    <p>Create one QR code with custom settings</p>
                 </div>
 
-                <div class="method-card batch" id="batch-method" onclick="selectMethod('batch')">
-                    <div class="method-icon">📊</div>
-                    <h3>Batch Generation</h3>
+                <div class="method-card" id="batch-method" onclick="selectMethod('batch')">
+                    <div class="method-icon">BATCH</div>
+                    <h3>Batch Generate</h3>
                     <p>Generate multiple QR codes for different CSS sections at once</p>
                 </div>
             </div>
@@ -620,8 +620,8 @@
                     </div>
 
                     <div class="form-actions">
-                        <button type="button" onclick="previewSingle()" class="btn btn-warning">👁️ Preview</button>
-                        <button type="submit" class="btn btn-primary">🚀 Generate QR Code</button>
+                        <button type="button" onclick="previewSingle()" class="btn btn-warning">Preview</button>
+                        <button type="submit" class="btn btn-primary">Generate QR Code</button>
                     </div>
                 </form>
 
@@ -730,8 +730,8 @@
                     </div>
 
                     <div class="form-actions">
-                        <button type="button" onclick="previewBatch()" class="btn btn-warning">👁️ Preview</button>
-                        <button type="submit" class="btn btn-success">🚀 Generate All QR Codes</button>
+                        <button type="button" onclick="previewBatch()" class="btn btn-warning">Preview</button>
+                        <button type="submit" class="btn btn-success">Generate All QR Codes</button>
                     </div>
                 </form>
 

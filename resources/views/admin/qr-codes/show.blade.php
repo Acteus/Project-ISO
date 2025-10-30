@@ -471,10 +471,10 @@
             <div class="actions-section">
                 <h3>Quick Actions</h3>
                 <div class="actions-grid">
-                    <a href="{{ route('admin.qr-codes.edit', $qrCode->id) }}" class="action-btn btn-warning">✏️ Edit QR Code</a>
-                    <a href="{{ route('admin.qr-codes.download', $qrCode->id) }}" class="action-btn btn-success">📥 Download File</a>
-                    <button onclick="copyToClipboard('{{ $qrCode->getPublicUrl() }}')" class="action-btn btn-info">📋 Copy Link</button>
-                    <button onclick="printQRCode()" class="action-btn btn-primary">🖨️ Print</button>
+                    <a href="{{ route('admin.qr-codes.edit', $qrCode->id) }}" class="action-btn btn-warning">Edit QR Code</a>
+                    <a href="{{ route('admin.qr-codes.download', $qrCode->id) }}" class="action-btn btn-success">Download File</a>
+                    <button onclick="copyToClipboard('{{ $qrCode->getPublicUrl() }}')" class="action-btn btn-info">Copy Link</button>
+                    <button onclick="printQRCode()" class="action-btn btn-primary">Print</button>
                 </div>
             </div>
 

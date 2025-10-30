@@ -481,9 +481,9 @@
                     </div>
 
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">🚀 Update QR Code</button>
-                        <a href="{{ route('admin.qr-codes.show', $qrCode->id) }}" class="btn btn-secondary">Cancel</a>
-                        <button type="button" onclick="deleteQRCode()" class="btn btn-danger">🗑️ Delete</button>
+                        <button type="submit" class="btn btn-primary">Update QR Code</button>
+                        <a href="{{ route('admin.qr-codes.index') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="button" onclick="deleteQRCode()" class="btn btn-danger">Delete</button>
                     </div>
                 </form>
             </div>

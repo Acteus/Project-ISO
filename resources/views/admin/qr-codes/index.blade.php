@@ -548,8 +548,8 @@
             <!-- Actions Bar -->
             <div style="margin-bottom: 30px; display: flex; gap: 15px; align-items: center;">
                 <a href="{{ route('admin.qr-codes.create') }}" class="btn btn-success">+ Create New QR Code</a>
-                <a href="#" onclick="showBatchGenerate()" class="btn btn-primary">📱 Batch Generate</a>
-                <a href="#" onclick="exportData()" class="btn btn-warning">📊 Export Data</a>
+                <a href="#" onclick="showBatchGenerate()" class="btn btn-primary">Batch Generate</a>
+                <a href="#" onclick="exportData()" class="btn btn-warning">Export Data</a>
             </div>
 
             <!-- QR Codes Table -->
