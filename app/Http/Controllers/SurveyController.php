@@ -23,7 +23,12 @@ class SurveyController extends Controller
             $request->session()->forget('_should_regenerate');
             $request->session()->regenerate();
         }
-        
+
+        // Clean up old sessions occasionally (1% chance per request)
+        if (rand(1, 100) === 1) {
+            $this->cleanupOldSessions();
+        }
+
         // Explicitly check authentication status
         $user = Auth::user();
         $admin = session('admin');
@@ -39,6 +44,22 @@ class SurveyController extends Controller
             'user' => $user,
             'admin' => $admin,
         ]);
+    }
+
+    /**
+     * Clean up expired sessions from database
+     */
+    private function cleanupOldSessions()
+    {
+        try {
+            // Delete sessions older than 24 hours
+            $expiredTime = now()->subHours(24)->timestamp;
+            DB::table('sessions')
+                ->where('last_activity', '<', $expiredTime)
+                ->delete();
+        } catch (\Exception $e) {
+            Log::warning('Session cleanup failed: ' . $e->getMessage());
+        }
     }
 
     /**

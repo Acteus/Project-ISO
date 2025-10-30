@@ -30,6 +30,7 @@ Route::prefix('student')->name('student.')->group(function () {
     Route::get('/login', [StudentController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [StudentController::class, 'login'])->name('login.post');
     Route::match(['get', 'post'], '/logout', [StudentController::class, 'logout'])->name('logout');
+    Route::get('/clear-sessions', [StudentController::class, 'clearAllSessions'])->name('clear-sessions');
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
 });
 

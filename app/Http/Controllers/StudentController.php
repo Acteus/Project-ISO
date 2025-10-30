@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class StudentController extends Controller
 {
@@ -78,7 +79,7 @@ class StudentController extends Controller
 
         // Log the student in
         Auth::login($user);
-        
+
         // Mark that we should regenerate on next request
         $request->session()->put('_should_regenerate', true);
 
@@ -120,7 +121,7 @@ class StudentController extends Controller
             if ($admin && \Illuminate\Support\Facades\Hash::check($request->password, $admin->password)) {
                 // Store admin in session for web authentication
                 session(['admin' => $admin]);
-                
+
                 // Mark that we should regenerate on next request
                 $request->session()->put('_should_regenerate', true);
 
@@ -158,11 +159,11 @@ class StudentController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
-            
+
             // DON'T regenerate session on AJAX login - it causes the browser to not pick up the new session ID
             // The session will be automatically regenerated on the next page load by Laravel
             // $request->session()->regenerate();
-            
+
             // Mark that we should regenerate on next request
             $request->session()->put('_should_regenerate', true);
 
@@ -237,6 +238,38 @@ class StudentController extends Controller
 
         // Otherwise, show the beautiful logout page
         return view('logout');
+    }
+
+    /**
+     * Force clear all user sessions (useful when stuck with old cookies)
+     */
+    public function clearAllSessions(Request $request)
+    {
+        try {
+            // Get current session ID before clearing
+            $currentSessionId = $request->session()->getId();
+
+            // Log out from current session
+            Auth::logout();
+            $request->session()->forget('admin');
+
+            // Delete ALL sessions for this user from database if authenticated
+            if (Auth::check()) {
+                $userId = Auth::id();
+                DB::table('sessions')
+                    ->where('user_id', $userId)
+                    ->delete();
+            }
+
+            // Invalidate current session
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('student.login')->with('success', 'All sessions cleared successfully. Please log in again.');
+        } catch (\Exception $e) {
+            Log::error('Failed to clear all sessions: ' . $e->getMessage());
+            return redirect()->route('student.login')->with('error', 'Failed to clear sessions. Please try clearing your browser cookies.');
+        }
     }
 
     public function dashboard()

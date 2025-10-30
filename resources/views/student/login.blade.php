@@ -270,6 +270,20 @@
       </div>
       <form id="loginForm" method="post" action="{{ route('student.login.post') }}">
         @csrf
+
+        <!-- Session messages -->
+        @if(session('success'))
+        <div style="padding: 10px; margin-bottom: 15px; background: rgba(76, 175, 80, 0.2); border-left: 3px solid #4CAF50; border-radius: 4px; color: #4CAF50; font-size: 14px;">
+          {{ session('success') }}
+        </div>
+        @endif
+
+        @if(session('error'))
+        <div style="padding: 10px; margin-bottom: 15px; background: rgba(244, 67, 54, 0.2); border-left: 3px solid #f44336; border-radius: 4px; color: #f44336; font-size: 14px;">
+          {{ session('error') }}
+        </div>
+        @endif
+
         <div class="form-group">
           <label id="idLabel">Student ID or Email</label>
           <input type="text" name="student_id" required placeholder="Enter your student ID or email">
@@ -289,6 +303,11 @@
         </div>
 
         <a href="{{ route('student.register') }}" class="create-account-btn">Create new account</a>
+
+        <!-- Troubleshooting link -->
+        <div style="margin-top: 15px; font-size: 12px; color: rgba(255,255,255,0.7);">
+          Having login issues? <a href="{{ route('student.clear-sessions') }}" style="color: #4285f4; text-decoration: none;">Clear all sessions</a>
+        </div>
       </form>
     </div>
   </div>
