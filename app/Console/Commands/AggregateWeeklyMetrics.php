@@ -225,9 +225,9 @@ class AggregateWeeklyMetrics extends Command
         $metrics['compliance_percentage'] = round(($complianceScore / 5) * 100, 2);
 
         // Determine risk level
-        if ($complianceScore >= 4.2) {
+        if ($complianceScore >= 4.5) {
             $metrics['risk_level'] = 'Low';
-        } elseif ($complianceScore >= 3.5) {
+        } elseif ($complianceScore >= 3.0) {
             $metrics['risk_level'] = 'Medium';
         } else {
             $metrics['risk_level'] = 'High';

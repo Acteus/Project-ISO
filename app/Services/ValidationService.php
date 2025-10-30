@@ -145,8 +145,9 @@ class ValidationService
             $validationIssues++;
         }
 
-        // Calculate overall validation score (0-100)
-        $validationScore = max(0, 100 - ($validationIssues * 20));
+        // Calculate overall validation score (0-100) - scaled by response count
+        $issueRate = ($validationIssues / $totalResponses) * 100;
+        $validationScore = max(0, 100 - $issueRate);
 
         return [
             'message' => 'Validation analysis completed',
@@ -261,7 +262,8 @@ class ValidationService
             $variance += pow($value - $mean, 2);
         }
 
-        $variance /= count($combined);
+        // Use sample variance (Bessel's correction)
+        $variance /= (count($combined) - 1);
         $standardDeviation = sqrt($variance);
 
         // Lower standard deviation = higher consistency
@@ -393,10 +395,10 @@ class ValidationService
             $accessibilityIssues += $curriculumIssues;
         }
 
-        // Calculate accessibility compliance score (0-100) - more strict for test data
+        // Calculate accessibility compliance score (0-100)
         $totalPossibleIssues = $totalResponses * 4; // 4 accessibility metrics
         $issuePercentage = ($accessibilityIssues / $totalPossibleIssues) * 100;
-        $accessibilityScore = max(0, 100 - ($issuePercentage * 1.5)); // Make more strict
+        $accessibilityScore = max(0, 100 - $issuePercentage); // Direct percentage-based scoring
 
         return [
             'message' => 'ISO 21001 accessibility validation completed',
@@ -575,13 +577,19 @@ class ValidationService
             $variance += pow($rating - $mean, 2);
         }
 
-        $variance /= count($satisfactionRatings);
+        // Use sample variance (Bessel's correction)
+        $variance /= (count($satisfactionRatings) - 1);
         $standardDeviation = sqrt($variance);
 
-        // Flag ratings more than 2 standard deviations from mean
+        // Guard against zero standard deviation (all values identical)
+        if ($standardDeviation == 0) {
+            return $outliers;
+        }
+
+        // Flag ratings more than 2 standard deviations from mean (95% confidence)
         foreach ($responses as $response) {
             $zScore = abs(($response->overall_satisfaction - $mean) / $standardDeviation);
-            if ($zScore > 1.5) { // Lowered threshold to detect test outliers while maintaining statistical significance
+            if ($zScore > 2.0) { // Standard threshold for outliers (95% confidence interval)
                 $outliers[] = [
                     'response_id' => $response->id,
                     'anonymous_id' => $response->anonymous_id,

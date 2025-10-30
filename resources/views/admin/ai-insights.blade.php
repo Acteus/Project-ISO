@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>AI Insights - ISO Quality Education</title>
-    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}?v={{ time() }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         /* Page Transition Animation */
@@ -825,6 +828,9 @@
         };
 
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('AI Insights Dashboard loaded successfully');
+            console.log('CSRF Token:', csrfToken);
+
             checkAIServiceStatus();
             loadAIMetrics();
             loadDataRangeInfo();
@@ -877,10 +883,14 @@
 
         async function loadAIMetrics() {
             try {
+                console.log('Loading AI metrics...');
                 const res = await fetch('/api/ai/metrics', { headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken } });
                 const json = await res.json();
+                console.log('AI Metrics response:', json);
+
                 if (json?.success && json?.data) {
                     const d = json.data;
+                    console.log('Updating metrics with data:', d);
                     document.getElementById('total-predictions').textContent = d.total_predictions ?? 0;
                     document.getElementById('accuracy-rate').textContent = (d.accuracy_rate ?? 0) + '%';
                     document.getElementById('response-time').textContent = (d.avg_response_time ?? 0) + 'ms';
@@ -891,6 +901,9 @@
                     if (d.total_responses_analyzed !== undefined) {
                         document.getElementById('total-responses-count').textContent = d.total_responses_analyzed;
                     }
+                    console.log('Metrics updated successfully');
+                } else {
+                    console.error('Invalid metrics response format:', json);
                 }
             } catch (err) {
                 console.error('Error loading AI metrics:', err);
@@ -899,10 +912,12 @@
 
         async function loadDataRangeInfo() {
             try {
+                console.log('Loading data range info...');
                 const res = await fetch('/api/survey/analytics', {
                     headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }
                 });
                 const json = await res.json();
+                console.log('Survey analytics response:', json);
 
                 if (json?.success && json?.data) {
                     const analytics = json.data;
@@ -1321,7 +1336,6 @@
             container.innerHTML = parts.join('');
 
             // Scroll to top of results
-            const resultsDiv = document.getElementById('ai-results');
             if (resultsDiv) {
                 resultsDiv.scrollTop = 0;
             }

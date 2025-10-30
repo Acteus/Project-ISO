@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AIController;
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\StudentController;
@@ -242,6 +243,11 @@ Route::prefix('api')->group(function () {
     Route::get('/survey/responses', [SurveyController::class, 'getAllResponses'])->name('api.survey.responses');
     Route::get('/survey/responses/{id}', [SurveyController::class, 'getResponse'])->name('api.survey.response');
     Route::delete('/survey/responses/{id}', [SurveyController::class, 'deleteResponse'])->name('api.survey.delete');
+
+    // NEW SIMPLIFIED ANALYTICS API (v2) - Session-based auth for admin dashboard
+    Route::get('/analytics/summary', [App\Http\Controllers\AnalyticsController::class, 'getSummary'])->name('api.analytics.summary');
+    Route::get('/analytics/time-series', [App\Http\Controllers\AnalyticsController::class, 'getTimeSeries'])->name('api.analytics.time-series');
+    Route::get('/analytics/compliance', [App\Http\Controllers\AnalyticsController::class, 'getCompliance'])->name('api.analytics.compliance');
 
     // Admin authentication routes
     Route::post('/admin/login', [AdminAuthController::class, 'login']);

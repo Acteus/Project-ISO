@@ -152,7 +152,7 @@ class CompliancePredictor:
             prediction_prob = self.model.predict(X_scaled, verbose=0)[0][0]
 
             # Determine compliance level
-            if prediction_prob >= 0.8:
+            if prediction_prob >= 0.9:
                 compliance_level = 'High ISO 21001 Compliance'
                 risk_level = 'Low'
                 confidence = 0.95
@@ -208,11 +208,11 @@ class CompliancePredictor:
         )
 
         # Determine compliance prediction
-        if weighted_score >= 4.2:
+        if weighted_score >= 4.5:
             prediction = 'High ISO 21001 Compliance'
             risk_level = 'Low'
             confidence = 0.95
-        elif weighted_score >= 3.5:
+        elif weighted_score >= 3.0:
             prediction = 'Moderate ISO 21001 Compliance'
             risk_level = 'Medium'
             confidence = 0.75

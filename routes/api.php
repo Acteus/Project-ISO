@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AIController;
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\VisualizationController;
@@ -30,6 +31,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/survey/responses/{id}', [SurveyController::class, 'deleteResponse']);
     Route::get('/survey/analytics', [SurveyController::class, 'getAnalytics']);
 
+    // ==========================================
+    // NEW SIMPLIFIED ANALYTICS API (v2)
+    // ==========================================
+    // These 3 endpoints replace all the complex visualization routes below
+    Route::get('/analytics/summary', [AnalyticsController::class, 'getSummary']);
+    Route::get('/analytics/time-series', [AnalyticsController::class, 'getTimeSeries']);
+    Route::get('/analytics/compliance', [AnalyticsController::class, 'getCompliance']);
+
     // AI Routes
     Route::post('/ai/compliance-predict', [AIController::class, 'predictCompliance']);
     Route::get('/ai/cluster-responses', [AIController::class, 'clusterResponses']);
@@ -37,7 +46,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ai/keyword-extraction', [AIController::class, 'extractKeywords']);
     Route::get('/ai/compliance-risk-meter', [AIController::class, 'getComplianceRiskMeter']);
 
-    // Visualization Routes
+    // ==========================================
+    // OLD VISUALIZATION ROUTES (DEPRECATED)
+    // ==========================================
+    // Keeping these for backward compatibility but they will be removed
+    // Please migrate to the new /api/analytics/* endpoints above
+    
+    // Basic Visualization Routes
     Route::get('/visualizations/bar-chart', [VisualizationController::class, 'getBarChartData']);
     Route::get('/visualizations/pie-chart', [VisualizationController::class, 'getPieChartData']);
     Route::get('/visualizations/radar-chart', [VisualizationController::class, 'getRadarChartData']);
@@ -46,14 +61,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/visualizations/year-trend', [VisualizationController::class, 'getYearLevelTrendData']);
     Route::get('/visualizations/dashboard', [VisualizationController::class, 'getDashboardData']);
 
-    // Advanced Analytics Routes
+    // Advanced Analytics Routes (DEPRECATED)
     Route::get('/visualizations/time-series', [VisualizationController::class, 'getTimeSeriesData']);
     Route::get('/visualizations/heat-map', [VisualizationController::class, 'getHeatMapData']);
     Route::get('/visualizations/compliance-risk', [VisualizationController::class, 'getComplianceRiskData']);
     Route::get('/visualizations/comparative-analysis', [VisualizationController::class, 'getComparativeAnalysis']);
     Route::get('/visualizations/response-rate', [VisualizationController::class, 'getResponseRateAnalytics']);
 
-    // Weekly Progress Tracking Routes
+    // Weekly Progress Tracking Routes (DEPRECATED - unclear data source)
     Route::get('/visualizations/weekly-progress', [VisualizationController::class, 'getWeeklyProgressData']);
     Route::get('/visualizations/goal-progress', [VisualizationController::class, 'getGoalProgressData']);
     Route::get('/visualizations/weekly-comparison', [VisualizationController::class, 'getWeeklyComparisonData']);
