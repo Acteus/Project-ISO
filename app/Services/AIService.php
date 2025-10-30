@@ -138,6 +138,10 @@ class AIService
     private function calculateScoreVariance($indices)
     {
         $values = array_values($indices);
+        if (count($values) < 2) {
+            return 0;
+        }
+
         $mean = array_sum($values) / count($values);
         $variance = 0;
 
@@ -145,7 +149,8 @@ class AIService
             $variance += pow($value - $mean, 2);
         }
 
-        return $variance / count($values);
+        // Use sample variance (Bessel's correction)
+        return $variance / (count($values) - 1);
     }
 
     /**
