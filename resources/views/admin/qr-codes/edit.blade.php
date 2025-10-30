@@ -376,6 +376,10 @@
                     @csrf
                     @method('PUT')
 
+                    <!-- Hidden fields for format and size (required by validation) -->
+                    <input type="hidden" name="format" value="{{ $qrCode->format }}">
+                    <input type="hidden" name="size" value="{{ $qrCode->size }}">
+
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="name">QR Code Name *</label>
@@ -532,17 +536,40 @@
 
             const formData = new FormData(this);
 
+            // Convert FormData to plain object for JSON
+            const formObject = {};
+            formData.forEach((value, key) => {
+                // Skip the _method field (used for form method spoofing)
+                if (key === '_method') {
+                    return;
+                }
+
+                // Handle multiple values for the same key (like checkboxes)
+                if (formObject[key]) {
+                    if (!Array.isArray(formObject[key])) {
+                        formObject[key] = [formObject[key]];
+                    }
+                    formObject[key].push(value);
+                } else {
+                    formObject[key] = value;
+                }
+            });
+
+            console.log('Form data being sent:', formObject);
+
             try {
                 const response = await fetch(`/admin/qr-codes/{{ $qrCode->id }}`, {
                     method: 'PUT',
                     headers: {
                         'X-CSRF-TOKEN': csrfToken,
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
                     },
-                    body: formData
+                    body: JSON.stringify(formObject)
                 });
 
                 const result = await response.json();
+                console.log('Server response:', result);
 
                 if (result.success) {
                     showAlert('success', result.message);
@@ -550,9 +577,10 @@
                         window.location.href = result.redirect || '{{ route("admin.qr-codes.show", $qrCode->id) }}';
                     }, 2000);
                 } else {
-                    showAlert('error', result.message);
+                    showAlert('error', result.message || 'Update failed. Please check all required fields.');
                 }
             } catch (error) {
+                console.error('Update error:', error);
                 showAlert('error', 'An error occurred while updating the QR code.');
             }
         });

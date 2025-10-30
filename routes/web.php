@@ -65,11 +65,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/ai-insights', [StudentController::class, 'aiInsights'])->name('ai.insights');
 
     // QR Code Management Routes
+    // Note: Specific routes must come BEFORE resource routes to avoid conflicts
+    Route::get('qr-codes/export', [QrCodeController::class, 'export'])->name('qr-codes.export');
+    Route::get('qr-codes/statistics', [QrCodeController::class, 'statistics'])->name('qr-codes.statistics');
+    Route::post('qr-codes/batch-generate', [QrCodeController::class, 'batchGenerate'])->name('qr-codes.batch-generate');
+    Route::get('qr-codes/{id}/download', [QrCodeController::class, 'download'])->name('qr-codes.download');
     Route::resource('qr-codes', QrCodeController::class);
-    Route::post('/qr-codes/batch-generate', [QrCodeController::class, 'batchGenerate'])->name('qr-codes.batch-generate');
-    Route::get('/qr-codes/{id}/download', [QrCodeController::class, 'download'])->name('qr-codes.download');
-    Route::get('/qr-codes/statistics', [QrCodeController::class, 'statistics'])->name('qr-codes.statistics');
-    Route::get('/qr-codes/export', [QrCodeController::class, 'export'])->name('qr-codes.export');
 });
 
 // Survey routes

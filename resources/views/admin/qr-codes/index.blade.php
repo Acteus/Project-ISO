@@ -548,8 +548,8 @@
             <!-- Actions Bar -->
             <div style="margin-bottom: 30px; display: flex; gap: 15px; align-items: center;">
                 <a href="{{ route('admin.qr-codes.create') }}" class="btn btn-success">+ Create New QR Code</a>
-                <a href="#" onclick="showBatchGenerate()" class="btn btn-primary">Batch Generate</a>
-                <a href="#" onclick="exportData()" class="btn btn-warning">Export Data</a>
+                <button type="button" onclick="showBatchGenerate()" class="btn btn-primary">Batch Generate</button>
+                <button type="button" onclick="exportData()" class="btn btn-warning">Export Data</button>
             </div>
 
             <!-- QR Codes Table -->
@@ -665,6 +665,9 @@
         // CSRF Token
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
+        // Export URL - defined globally
+        const EXPORT_URL = '{{ route("admin.qr-codes.export") }}';
+
         function showAlert(type, message) {
             const container = document.getElementById('alert-container');
             const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
@@ -718,17 +721,37 @@
         }
 
         function exportData() {
+            console.log('Export function called');
+            console.log('Export URL constant:', EXPORT_URL);
             showLoading();
 
             const params = new URLSearchParams(window.location.search);
-            fetch(`/admin/qr-codes/export?${params}`, {
+            const exportUrl = `${EXPORT_URL}?${params}`;
+            console.log('Full export URL with params:', exportUrl);
+
+            fetch(exportUrl, {
+                method: 'GET',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        console.error('Error response:', err);
+                        throw new Error(err.message || `HTTP error! status: ${response.status}`);
+                    }).catch(() => {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Export data received:', data);
                 hideLoading();
                 if (data.success) {
                     // Create and download JSON file
@@ -744,12 +767,13 @@
 
                     showAlert('success', `Exported ${data.count} QR codes successfully!`);
                 } else {
-                    showAlert('error', 'Export failed.');
+                    showAlert('error', data.message || 'Export failed.');
                 }
             })
             .catch(error => {
                 hideLoading();
-                showAlert('error', 'Export failed. Please try again.');
+                console.error('Export error:', error);
+                showAlert('error', 'Export failed. Please try again. Error: ' + error.message);
             });
         }
 
@@ -812,7 +836,8 @@
             updateSectionOptions();
         });
 
-        console.log('QR Codes management page loaded');
+        console.log('QR Codes management page loaded - v2.0 - Export Fixed');
+        console.log('Export endpoint configured:', EXPORT_URL);
     </script>
 </body>
 </html>

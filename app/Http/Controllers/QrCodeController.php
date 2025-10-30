@@ -476,34 +476,48 @@ class QrCodeController extends Controller
     public function export(Request $request)
     {
         $admin = $this->checkAdminAuth();
-        if (!$admin instanceof \App\Models\Admin) return $admin;
+        if (!$admin instanceof \App\Models\Admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access. Please login again.'
+            ], 401);
+        }
 
-        $filters = [
-            'track' => $request->get('track'),
-            'grade_level' => $request->get('grade_level'),
-            'section' => $request->get('section'),
-            'is_active' => $request->get('is_active')
-        ];
+        try {
+            $filters = [
+                'track' => $request->get('track'),
+                'grade_level' => $request->get('grade_level'),
+                'section' => $request->get('section'),
+                'is_active' => $request->get('is_active')
+            ];
 
-        $qrCodes = $this->qrCodeService->exportData($filters);
+            $qrCodes = $this->qrCodeService->exportData($filters);
 
-        // Log export
-        \App\Models\AuditLog::create([
-            'admin_id' => $admin->id,
-            'action' => 'export_qr_codes',
-            'description' => 'Exported QR codes data',
-            'ip_address' => $request->ip(),
-            'new_values' => [
-                'count' => is_array($qrCodes) ? count($qrCodes) : $qrCodes->count(),
-                'filters' => $filters
-            ],
-        ]);
+            // Log export
+            \App\Models\AuditLog::create([
+                'admin_id' => $admin->id,
+                'action' => 'export_qr_codes',
+                'description' => 'Exported QR codes data',
+                'ip_address' => $request->ip(),
+                'new_values' => [
+                    'count' => is_array($qrCodes) ? count($qrCodes) : $qrCodes->count(),
+                    'filters' => $filters
+                ],
+            ]);
 
-        // Return as JSON for now (could be extended to CSV/Excel)
-        return response()->json([
-            'success' => true,
-            'data' => $qrCodes,
-            'count' => is_array($qrCodes) ? count($qrCodes) : $qrCodes->count()
-        ]);
+            // Return as JSON for now (could be extended to CSV/Excel)
+            return response()->json([
+                'success' => true,
+                'data' => $qrCodes,
+                'count' => is_array($qrCodes) ? count($qrCodes) : $qrCodes->count()
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('QR Code export failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to export QR codes: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

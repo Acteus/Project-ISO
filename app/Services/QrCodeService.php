@@ -284,7 +284,7 @@ class QrCodeService
      */
     public function exportData(array $filters = [])
     {
-        $query = QrCode::query()->with(['scan_analytics']);
+        $query = QrCode::query();
 
         if (isset($filters['track'])) {
             $query->where('track', $filters['track']);
