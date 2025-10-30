@@ -128,26 +128,35 @@ class AnalyticsService
     }
 
     /**
-     * Get compliance risk assessment
+     * Get compliance risk assessment with threshold information
      */
     private function getComplianceAssessment($responses)
     {
         $score = $this->calculateComplianceScore($responses);
 
-        // Risk thresholds
-        if ($score >= 4.0) {
+        // Define risk thresholds (based on ISO 21001 standards and config/ai.php)
+        $thresholds = [
+            'low_risk' => config('ai.iso_21001.risk_thresholds.high_compliance', 4.5),      // High compliance, minimal risk
+            'medium_risk' => config('ai.iso_21001.risk_thresholds.moderate_compliance', 3.0),   // Moderate compliance, acceptable risk
+            'high_risk' => config('ai.iso_21001.risk_thresholds.low_compliance', 3.0),     // Below this = significant risk
+        ];
+
+        // Determine risk level based on thresholds
+        if ($score >= $thresholds['low_risk']) {
             $risk_level = 'Low';
             $risk_color = 'green';
+            $risk_range = '≥ ' . $thresholds['low_risk'] . ' (' . round(($thresholds['low_risk'] / 5.0) * 100) . '%+)';
             $recommendations = [
                 'Maintain current quality standards',
                 'Continue regular monitoring and feedback collection',
                 'Share best practices with other programs',
             ];
-        } elseif ($score >= 3.5) {
+        } elseif ($score >= $thresholds['medium_risk']) {
             $risk_level = 'Medium';
             $risk_color = 'yellow';
+            $risk_range = $thresholds['medium_risk'] . ' - ' . number_format($thresholds['low_risk'] - 0.01, 2) . ' (' . round(($thresholds['medium_risk'] / 5.0) * 100) . '-' . round((($thresholds['low_risk'] - 0.01) / 5.0) * 100) . '%)';
             $recommendations = [
-                'Review areas with scores below 4.0',
+                'Review areas with scores below ' . $thresholds['low_risk'],
                 'Implement targeted improvement initiatives',
                 'Increase frequency of student feedback sessions',
                 'Consider additional support resources',
@@ -155,6 +164,7 @@ class AnalyticsService
         } else {
             $risk_level = 'High';
             $risk_color = 'red';
+            $risk_range = '< ' . $thresholds['high_risk'] . ' (< ' . round(($thresholds['high_risk'] / 5.0) * 100) . '%)';
             $recommendations = [
                 'Urgent review required for low-performing areas',
                 'Develop comprehensive improvement plan',
@@ -169,7 +179,29 @@ class AnalyticsService
             'percentage' => round(($score / 5.0) * 100, 1),
             'risk_level' => $risk_level,
             'risk_color' => $risk_color,
+            'risk_range' => $risk_range,
             'recommendations' => $recommendations,
+            // Threshold information for admins
+            'thresholds' => [
+                'low_risk' => [
+                    'value' => $thresholds['low_risk'],
+                    'percentage' => round(($thresholds['low_risk'] / 5.0) * 100, 1),
+                    'description' => 'High compliance, minimal risk',
+                    'range' => '≥ 4.0 (80%+)',
+                ],
+                'medium_risk' => [
+                    'value' => $thresholds['medium_risk'],
+                    'percentage' => round(($thresholds['medium_risk'] / 5.0) * 100, 1),
+                    'description' => 'Moderate compliance, acceptable risk',
+                    'range' => '3.5 - 3.99 (70-79%)',
+                ],
+                'high_risk' => [
+                    'value' => $thresholds['high_risk'],
+                    'percentage' => round(($thresholds['high_risk'] / 5.0) * 100, 1),
+                    'description' => 'Low compliance, significant risk',
+                    'range' => '< 3.5 (< 70%)',
+                ],
+            ],
         ];
     }
 

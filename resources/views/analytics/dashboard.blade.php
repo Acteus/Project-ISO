@@ -625,6 +625,35 @@
             const riskClass = 'risk-' + compliance.risk_level.toLowerCase();
             const recsHtml = compliance.recommendations.map(rec => `<li>${rec}</li>`).join('');
 
+            // Build thresholds display if available
+            let thresholdsHtml = '';
+            if (compliance.thresholds) {
+                thresholdsHtml = `
+                    <div style="margin-top: 20px; padding: 20px; background: rgba(230, 230, 230, 0.3); border-radius: 10px; border-left: 4px solid rgba(66, 133, 244, 1);">
+                        <h4 style="margin-bottom: 15px; color: #333; font-size: 16px;">
+                            <span style="margin-right: 8px;">📊</span>Risk Level Thresholds
+                        </h4>
+                        <div style="display: grid; gap: 12px;">
+                            <div style="display: flex; align-items: center; padding: 10px; background: rgba(40, 167, 69, 0.1); border-radius: 6px; border-left: 3px solid #28a745;">
+                                <span style="font-weight: bold; color: #28a745; margin-right: 10px; min-width: 80px;">LOW RISK:</span>
+                                <span style="color: #555;">${compliance.thresholds.low_risk.range} — ${compliance.thresholds.low_risk.description}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; padding: 10px; background: rgba(255, 193, 7, 0.1); border-radius: 6px; border-left: 3px solid #ffc107;">
+                                <span style="font-weight: bold; color: #d39e00; margin-right: 10px; min-width: 80px;">MEDIUM:</span>
+                                <span style="color: #555;">${compliance.thresholds.medium_risk.range} — ${compliance.thresholds.medium_risk.description}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; padding: 10px; background: rgba(220, 53, 69, 0.1); border-radius: 6px; border-left: 3px solid #dc3545;">
+                                <span style="font-weight: bold; color: #dc3545; margin-right: 10px; min-width: 80px;">HIGH RISK:</span>
+                                <span style="color: #555;">${compliance.thresholds.high_risk.range} — ${compliance.thresholds.high_risk.description}</span>
+                            </div>
+                        </div>
+                        <p style="margin-top: 12px; font-size: 13px; color: #666; font-style: italic;">
+                            ℹ️ Based on ISO 21001 Educational Quality Management Standards
+                        </p>
+                    </div>
+                `;
+            }
+
             const html = `
                 <div class="compliance-header">
                     <div>
@@ -638,11 +667,13 @@
                 </div>
                 <div style="padding: 20px; background: rgba(102, 126, 234, 0.1); border-radius: 10px; margin-bottom: 15px;">
                     <strong>Risk Level:</strong> <span class="${riskClass}" style="font-size: 18px; font-weight: bold;">${compliance.risk_level}</span>
+                    ${compliance.risk_range ? `<span style="color: #666; font-size: 14px; margin-left: 10px;">(${compliance.risk_range})</span>` : ''}
                 </div>
                 <div class="recommendations">
                     <h4>Recommendations:</h4>
                     <ul>${recsHtml}</ul>
                 </div>
+                ${thresholdsHtml}
             `;
             document.getElementById('compliance-section').innerHTML = html;
         }
