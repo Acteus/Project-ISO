@@ -24,4 +24,5 @@ Homestead.yaml
 Thumbs.db
 /ai-service/venv/
 ai-service/ai_models/__pycache__/
+ai-service/utils/__pycache__/
 
