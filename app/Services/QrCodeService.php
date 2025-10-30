@@ -267,7 +267,7 @@ class QrCodeService
 
         // If no existing sections, provide default ones
         if (empty($existingSections)) {
-            return ['A', 'B', 'C', 'D', 'E', 'F'];
+            return ['C11a', 'C11b', 'C11c', 'C12a', 'C12b', 'C12c'];
         }
 
         return $existingSections;
