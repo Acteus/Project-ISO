@@ -24,3 +24,7 @@ Homestead.yaml
 Thumbs.db
 /ai-service/venv/
 /ai-service/ai_models/__pycache__/
+ai-service/ai_models/__pycache__/__init__.cpython-310.pyc
+ai-service/ai_models/__pycache__/compliance_predictor.cpython-310.pyc
+ai-service/ai_models/__pycache__/dropout_risk_predictor.cpython-310.pyc
+ai-service/ai_models/__pycache__/risk_assessment_predictor.cpython-310.pyc
