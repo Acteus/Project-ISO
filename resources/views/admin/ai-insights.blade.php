@@ -947,29 +947,145 @@
                 }
 
                 case 'sentiment': {
-                    const arr = data.sentiment_analysis || data || [];
-                    if (Array.isArray(arr) && arr.length){
-                        const total = arr.length;
-                        const pos = arr.filter(r => r.sentiment === 'positive').length;
-                        const neu = arr.filter(r => r.sentiment === 'neutral').length;
-                        const neg = arr.filter(r => r.sentiment === 'negative').length;
-                        const summary = `
-                            <p><strong>Positive:</strong> ${pos} (${safeNum(pos/total*100)}%)</p>
-                            <p><strong>Neutral:</strong> ${neu} (${safeNum(neu/total*100)}%)</p>
-                            <p><strong>Negative:</strong> ${neg} (${safeNum(neg/total*100)}%)</p>
-                        `;
-                        parts.push(renderItem('Overall Sentiment Analysis', `${total} Comments Analyzed`, summary, { style: 'background:linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(255, 140, 0, 0.1));border-left:4px solid #4285f4;' }));
+                    // Fix: Handle the correct data structure from Python API
+                    console.log('Sentiment data:', JSON.stringify(data, null, 2));
 
-                        arr.slice(0,5).forEach((item, i) => {
-                            const color = item.sentiment === 'positive' ? '#28a745' : item.sentiment === 'negative' ? '#dc3545' : '#ffc107';
-                            const commentHtml = `
-                                <p><strong>Confidence:</strong> ${safePct(item.confidence ?? 0)}</p>
-                                ${item.probabilities ? `<p style="font-size:12px;color:#666;">Pos: ${safePct(item.probabilities.positive)} | Neu: ${safePct(item.probabilities.neutral)} | Neg: ${safePct(item.probabilities.negative)}</p>` : ''}
+                    // The Python API returns: { overall_sentiment, sentiment_score, breakdown, individual_results, ... }
+                    const breakdown = data.breakdown || { positive: 0, neutral: 0, negative: 0 };
+                    const individualResults = data.individual_results || [];
+                    const totalComments = data.total_comments_analyzed || individualResults.length || 0;
+                    const sentimentScore = data.sentiment_score || 0;
+                    const overallSentiment = data.overall_sentiment || 'Neutral';
+                    const avgConfidence = data.average_confidence || 0;
+
+                    // Summary card with overall metrics
+                    const summaryHtml = `
+                        <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); padding: 20px; border-radius: 12px; margin-bottom: 15px;">
+                            <h4 style="margin: 0 0 15px 0; color: #2c3e50;">Overall Sentiment Analysis</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                                <div>
+                                    <p style="margin: 0; font-size: 12px; color: #666;">Overall Sentiment</p>
+                                    <p style="margin: 5px 0 0 0; font-size: 20px; font-weight: 700; color: #2c3e50;">${overallSentiment}</p>
+                                </div>
+                                <div>
+                                    <p style="margin: 0; font-size: 12px; color: #666;">Sentiment Score</p>
+                                    <p style="margin: 5px 0 0 0; font-size: 20px; font-weight: 700; color: #4285F4;">${sentimentScore}%</p>
+                                </div>
+                                <div>
+                                    <p style="margin: 0; font-size: 12px; color: #666;">Avg Confidence</p>
+                                    <p style="margin: 5px 0 0 0; font-size: 20px; font-weight: 700; color: #FF8C00;">${(avgConfidence * 100).toFixed(1)}%</p>
+                                </div>
+                                <div>
+                                    <p style="margin: 0; font-size: 12px; color: #666;">Total Comments</p>
+                                    <p style="margin: 5px 0 0 0; font-size: 20px; font-weight: 700; color: #2c3e50;">${totalComments}</p>
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                                <div style="background: rgba(40, 167, 69, 0.1); padding: 10px; border-radius: 8px; border-left: 3px solid #28a745;">
+                                    <p style="margin: 0; font-size: 12px; color: #155724; font-weight: 600;">Positive</p>
+                                    <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: 700; color: #28a745;">${breakdown.positive} <span style="font-size: 12px; color: #666;">(${totalComments > 0 ? ((breakdown.positive/totalComments)*100).toFixed(1) : 0}%)</span></p>
+                                </div>
+                                <div style="background: rgba(255, 193, 7, 0.1); padding: 10px; border-radius: 8px; border-left: 3px solid #ffc107;">
+                                    <p style="margin: 0; font-size: 12px; color: #856404; font-weight: 600;">Neutral</p>
+                                    <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: 700; color: #ffc107;">${breakdown.neutral} <span style="font-size: 12px; color: #666;">(${totalComments > 0 ? ((breakdown.neutral/totalComments)*100).toFixed(1) : 0}%)</span></p>
+                                </div>
+                                <div style="background: rgba(220, 53, 69, 0.1); padding: 10px; border-radius: 8px; border-left: 3px solid #dc3545;">
+                                    <p style="margin: 0; font-size: 12px; color: #721c24; font-weight: 600;">Negative</p>
+                                    <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: 700; color: #dc3545;">${breakdown.negative} <span style="font-size: 12px; color: #666;">(${totalComments > 0 ? ((breakdown.negative/totalComments)*100).toFixed(1) : 0}%)</span></p>
+                                </div>
+                            </div>
+                            <div style="margin-top: 15px; padding: 12px; background: rgba(66, 133, 244, 0.1); border-radius: 8px; border-left: 3px solid #4285F4;">
+                                <p style="margin: 0; font-size: 13px; color: #333; font-weight: 600;">
+                                    <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; fill: #4285F4;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                    </svg>
+                                    Score Formula: (Positive × 100 + Neutral × 50 + Negative × 0) / Total Comments
+                                </p>
+                                <p style="margin: 8px 0 0 22px; font-size: 12px; color: #666; line-height: 1.5;">
+                                    <strong>Interpretation:</strong> ${sentimentScore >= 70 ? '🟢 Highly Positive (70-100%)' : sentimentScore >= 50 ? '🟡 Moderate/Neutral (50-69%)' : '🔴 Needs Attention (0-49%)'}
+                                </p>
+                            </div>
+                            ${data.iso_21001_insights ? `
+                                <div style="margin-top: 15px; padding: 12px; background: rgba(255, 140, 0, 0.1); border-radius: 8px; border-left: 3px solid #FF8C00;">
+                                    <p style="margin: 0 0 8px 0; font-size: 13px; color: #333; font-weight: 700;">
+                                        <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; fill: #FF8C00;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                                        </svg>
+                                        ISO 21001 Insights
+                                    </p>
+                                    <p style="margin: 0 0 5px 22px; font-size: 12px; color: #333;">
+                                        <strong>Learner Satisfaction:</strong> ${data.iso_21001_insights.learner_satisfaction_indicator || 'N/A'}
+                                    </p>
+                                    <p style="margin: 0 0 5px 22px; font-size: 12px; color: #333;">
+                                        <strong>Action Required:</strong> ${data.iso_21001_insights.action_required ? '⚠️ Yes' : '✅ No'}
+                                    </p>
+                                    <p style="margin: 0 0 0 22px; font-size: 12px; color: #555; font-style: italic;">
+                                        ${data.iso_21001_insights.recommendation || 'N/A'}
+                                    </p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+
+                    parts.push(renderItem('Sentiment Analysis Summary', `${totalComments} Comments Analyzed`, summaryHtml, {
+                        style: 'background:linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05));border-left:4px solid #4285F4;'
+                    }));
+
+                    // Show sample individual comments (first 5)
+                    if (individualResults.length > 0) {
+                        individualResults.slice(0, 5).forEach((item, i) => {
+                            const sentiment = item.sentiment || 'neutral';
+                            const confidence = item.confidence || 0;
+                            const color = sentiment === 'positive' ? '#28a745' : sentiment === 'negative' ? '#dc3545' : '#ffc107';
+
+                            let commentHtml = `
+                                <div style="margin-bottom: 10px;">
+                                    <p style="margin: 0 0 8px 0;">
+                                        <span style="background: ${color}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase;">
+                                            ${sentiment}
+                                        </span>
+                                        <span style="margin-left: 10px; font-size: 12px; color: #666;">
+                                            Confidence: ${(confidence * 100).toFixed(1)}%
+                                        </span>
+                                    </p>
                             `;
-                            parts.push(renderItem(`Comment ${i+1}`, `<span style="background:${color};padding:4px 8px;border-radius:12px;color:#fff;">${item.sentiment ?? 'Neutral'}</span>`, commentHtml));
+
+                            if (item.probabilities) {
+                                commentHtml += `
+                                    <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.02); border-radius: 8px;">
+                                        <p style="margin: 0 0 5px 0; font-size: 11px; color: #666; font-weight: 600;">Probability Breakdown:</p>
+                                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 11px;">
+                                            <div style="text-align: center;">
+                                                <p style="margin: 0; color: #28a745; font-weight: 600;">Positive</p>
+                                                <p style="margin: 2px 0 0 0; color: #666;">${(item.probabilities.positive * 100).toFixed(1)}%</p>
+                                            </div>
+                                            <div style="text-align: center;">
+                                                <p style="margin: 0; color: #ffc107; font-weight: 600;">Neutral</p>
+                                                <p style="margin: 2px 0 0 0; color: #666;">${(item.probabilities.neutral * 100).toFixed(1)}%</p>
+                                            </div>
+                                            <div style="text-align: center;">
+                                                <p style="margin: 0; color: #dc3545; font-weight: 600;">Negative</p>
+                                                <p style="margin: 2px 0 0 0; color: #666;">${(item.probabilities.negative * 100).toFixed(1)}%</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+
+                            if (item.model_used) {
+                                commentHtml += `<p style="margin: 10px 0 0 0; font-size: 11px; color: #999;"><em>Model: ${item.model_used}</em></p>`;
+                            }
+
+                            commentHtml += `</div>`;
+
+                            parts.push(renderItem(`Sample Comment ${i + 1}`, `${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)}`, commentHtml));
                         });
-                    } else {
-                        parts.push(renderItem('Sentiment Analysis', '', '<p>No sentiment data available</p>'));
+
+                        if (individualResults.length > 5) {
+                            parts.push(renderItem('Additional Comments', '', `<p style="color: #666; font-style: italic;">+ ${individualResults.length - 5} more comments analyzed (showing first 5)</p>`));
+                        }
+                    } else if (totalComments === 0) {
+                        parts.push(renderItem('Sentiment Analysis', '', '<p>No comments available for sentiment analysis</p>'));
                     }
                     break;
                 }

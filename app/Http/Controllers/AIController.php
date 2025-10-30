@@ -456,11 +456,14 @@ class AIController extends Controller
 
                 case 'sentiment':
                     // Get recent comments for sentiment analysis
-                    $comments = \App\Models\SurveyResponse::whereNotNull('positive_aspects')
-                        ->orWhereNotNull('improvement_suggestions')
-                        ->orWhereNotNull('additional_comments')
+                    // Use proper query with where closure to ensure OR conditions are grouped correctly
+                    $comments = \App\Models\SurveyResponse::where(function($query) {
+                            $query->whereNotNull('positive_aspects')
+                                  ->orWhereNotNull('improvement_suggestions')
+                                  ->orWhereNotNull('additional_comments');
+                        })
                         ->latest()
-                        ->take(10)
+                        ->take(100) // Increased from 10 to get more data
                         ->get()
                         ->map(function($response) {
                             $texts = [];
@@ -469,12 +472,17 @@ class AIController extends Controller
                             if ($response->additional_comments) $texts[] = $response->additional_comments;
                             return implode(' ', $texts);
                         })
-                        ->filter()
-                        ->take(5)
+                        ->filter() // Remove empty entries
+                        ->values() // Reset array keys
                         ->toArray();
+
+                    \Illuminate\Support\Facades\Log::info('Sentiment analysis: Found ' . count($comments) . ' comments');
 
                     if (!empty($comments)) {
                         $result = $flaskClient->analyzeSentiment($comments);
+                        \Illuminate\Support\Facades\Log::info('Sentiment analysis result:', ['result' => $result]);
+                    } else {
+                        \Illuminate\Support\Facades\Log::warning('No comments found for sentiment analysis');
                     }
                     break;
 
@@ -804,7 +812,13 @@ class AIController extends Controller
                 ]);
 
             case 'sentiment':
-                // Normalize to { sentiment_analysis: [ { text, sentiment, confidence, probabilities } ] }
+                // Flask returns: { overall_sentiment, sentiment_score, breakdown, individual_results, ... }
+                // Just return the whole structure as-is since it's already well-formed
+                if (is_array($result)) {
+                    // The result is already in the correct format from Flask
+                    return $result;
+                }
+                // Fallback for old format
                 $items = [];
                 if (is_array($result) && array_values($result) === $result) {
                     foreach ($result as $it) {
