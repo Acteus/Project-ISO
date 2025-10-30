@@ -3,7 +3,6 @@
 namespace App\Observers;
 
 use App\Models\SurveyResponse;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use App\Services\CacheService;
 
@@ -18,9 +17,6 @@ class SurveyResponseObserver
 
         // Clear analytics cache when new response is added
         CacheService::clearAnalyticsCache();
-
-        // Clear specific dashboard caches
-        Cache::tags(['analytics', 'dashboard'])->flush();
     }
 
     /**
@@ -32,9 +28,6 @@ class SurveyResponseObserver
 
         // Clear analytics cache when response is updated
         CacheService::clearAnalyticsCache();
-
-        // Clear specific dashboard caches
-        Cache::tags(['analytics', 'dashboard'])->flush();
     }
 
     /**
@@ -46,8 +39,5 @@ class SurveyResponseObserver
 
         // Clear analytics cache when response is deleted
         CacheService::clearAnalyticsCache();
-
-        // Clear specific dashboard caches
-        Cache::tags(['analytics', 'dashboard'])->flush();
     }
 }
