@@ -625,6 +625,57 @@
             const riskClass = 'risk-' + compliance.risk_level.toLowerCase();
             const recsHtml = compliance.recommendations.map(rec => `<li>${rec}</li>`).join('');
 
+            // Build warning indicators for scores that triggered the risk level
+            let warningIndicatorsHtml = '';
+            if (compliance.warning_scores && compliance.warning_scores.length > 0) {
+                const warningItems = compliance.warning_scores.map(warning => {
+                    let iconColor = '';
+                    let bgColor = '';
+                    let borderColor = '';
+                    let icon = '';
+
+                    if (warning.severity === 'critical') {
+                        icon = '⛔';
+                        iconColor = '#dc3545';
+                        bgColor = 'rgba(220, 53, 69, 0.1)';
+                        borderColor = '#dc3545';
+                    } else if (warning.severity === 'warning') {
+                        icon = '⚠️';
+                        iconColor = '#ffc107';
+                        bgColor = 'rgba(255, 193, 7, 0.1)';
+                        borderColor = '#ffc107';
+                    } else {
+                        icon = 'ℹ️';
+                        iconColor = '#17a2b8';
+                        bgColor = 'rgba(23, 162, 184, 0.1)';
+                        borderColor = '#17a2b8';
+                    }
+
+                    return `
+                        <div style="display: flex; align-items: center; padding: 12px; background: ${bgColor}; border-radius: 6px; border-left: 3px solid ${borderColor}; margin-bottom: 8px;">
+                            <span style="font-size: 20px; margin-right: 12px;">${icon}</span>
+                            <div style="flex: 1;">
+                                <strong style="color: ${iconColor}; font-size: 14px;">${warning.dimension}</strong>
+                                <span style="color: #555; margin-left: 8px;">${warning.score}/5.0</span>
+                                <div style="font-size: 12px; color: #666; margin-top: 4px;">${warning.message}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                warningIndicatorsHtml = `
+                    <div style="margin-top: 20px; padding: 20px; background: rgba(255, 243, 205, 0.3); border-radius: 10px; border-left: 4px solid #ffc107;">
+                        <h4 style="margin-bottom: 15px; color: #333; font-size: 16px;">
+                            <span style="margin-right: 8px;">🎯</span>Areas Requiring Attention
+                        </h4>
+                        ${warningItems}
+                        <p style="margin-top: 12px; font-size: 12px; color: #666; font-style: italic;">
+                            💡 These scores contributed to the current ${compliance.risk_level} risk level
+                        </p>
+                    </div>
+                `;
+            }
+
             // Build thresholds display if available
             let thresholdsHtml = '';
             if (compliance.thresholds) {
@@ -669,6 +720,7 @@
                     <strong>Risk Level:</strong> <span class="${riskClass}" style="font-size: 18px; font-weight: bold;">${compliance.risk_level}</span>
                     ${compliance.risk_range ? `<span style="color: #666; font-size: 14px; margin-left: 10px;">(${compliance.risk_range})</span>` : ''}
                 </div>
+                ${warningIndicatorsHtml}
                 <div class="recommendations">
                     <h4>Recommendations:</h4>
                     <ul>${recsHtml}</ul>

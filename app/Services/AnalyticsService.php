@@ -133,6 +133,7 @@ class AnalyticsService
     private function getComplianceAssessment($responses)
     {
         $score = $this->calculateComplianceScore($responses);
+        $indices = $this->calculateISOIndices($responses);
 
         // Define risk thresholds (based on ISO 21001 standards and config/ai.php)
         $thresholds = [
@@ -140,6 +141,9 @@ class AnalyticsService
             'medium_risk' => config('ai.iso_21001.risk_thresholds.moderate_compliance', 3.0),   // Moderate compliance, acceptable risk
             'high_risk' => config('ai.iso_21001.risk_thresholds.low_compliance', 3.0),     // Below this = significant risk
         ];
+
+        // Identify which scores triggered warnings
+        $warningScores = $this->identifyWarningScores($indices, $thresholds);
 
         // Determine risk level based on thresholds
         if ($score >= $thresholds['low_risk']) {
@@ -181,6 +185,8 @@ class AnalyticsService
             'risk_color' => $risk_color,
             'risk_range' => $risk_range,
             'recommendations' => $recommendations,
+            // Warning scores that triggered the current risk level
+            'warning_scores' => $warningScores,
             // Threshold information for admins
             'thresholds' => [
                 'low_risk' => [
@@ -203,6 +209,64 @@ class AnalyticsService
                 ],
             ],
         ];
+    }
+
+    /**
+     * Identify which ISO indices triggered warnings based on thresholds
+     */
+    private function identifyWarningScores($indices, $thresholds)
+    {
+        $warnings = [];
+
+        // Define dimension names for display
+        $dimensionNames = [
+            'learner_needs' => 'Learner Needs',
+            'satisfaction' => 'Satisfaction',
+            'success' => 'Success',
+            'safety' => 'Safety',
+            'wellbeing' => 'Wellbeing',
+        ];
+
+        // Define practical thresholds for individual dimensions
+        // Low risk: >= 4.0 (80%), Medium: 3.0-3.99 (60-79%), High: < 3.0 (< 60%)
+        $criticalThreshold = 3.0;   // Below this = critical
+        $warningThreshold = 3.5;    // Below this = warning
+        $optimalThreshold = 4.0;    // Below this = info (approaching optimal)
+
+        // Check each dimension against thresholds
+        foreach ($indices as $key => $score) {
+            $dimensionName = $dimensionNames[$key] ?? ucfirst(str_replace('_', ' ', $key));
+
+            // Critical: Below 3.0 (60%)
+            if ($score < $criticalThreshold) {
+                $warnings[] = [
+                    'dimension' => $dimensionName,
+                    'score' => $score,
+                    'severity' => 'critical',
+                    'message' => 'Critical: Below minimum threshold of ' . $criticalThreshold . '/5.0 (' . ($criticalThreshold / 5.0 * 100) . '%) - Immediate action required',
+                ];
+            }
+            // Warning: Between 3.0 and 3.5 (60-70%)
+            elseif ($score < $warningThreshold) {
+                $warnings[] = [
+                    'dimension' => $dimensionName,
+                    'score' => $score,
+                    'severity' => 'warning',
+                    'message' => 'Below acceptable threshold of ' . $warningThreshold . '/5.0 (' . ($warningThreshold / 5.0 * 100) . '%) - Improvement needed',
+                ];
+            }
+            // Info: Between 3.5 and 4.0 (70-80%)
+            elseif ($score < $optimalThreshold) {
+                $warnings[] = [
+                    'dimension' => $dimensionName,
+                    'score' => $score,
+                    'severity' => 'info',
+                    'message' => 'Approaching optimal level of ' . $optimalThreshold . '/5.0 (' . ($optimalThreshold / 5.0 * 100) . '%) - Consider enhancement strategies',
+                ];
+            }
+        }
+
+        return $warnings;
     }
 
     /**
