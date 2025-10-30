@@ -954,6 +954,54 @@
             }
         });
 
+        // Section filtering based on grade level
+        const allSections = {
+            '11': ['C11a', 'C11b', 'C11c'],
+            '12': ['C12a', 'C12b', 'C12c']
+        };
+
+        // Update single form section dropdown
+        function updateSectionOptions() {
+            const gradeLevel = document.getElementById('grade_level').value;
+            const sectionSelect = document.getElementById('section');
+            const currentValue = sectionSelect.value;
+
+            // Clear current options except the first one
+            sectionSelect.innerHTML = '<option value="">Select Section</option>';
+
+            if (gradeLevel && allSections[gradeLevel]) {
+                // Add sections for selected grade level
+                allSections[gradeLevel].forEach(section => {
+                    const option = document.createElement('option');
+                    option.value = section;
+                    option.textContent = 'Section ' + section;
+                    if (section === currentValue) {
+                        option.selected = true;
+                    }
+                    sectionSelect.appendChild(option);
+                });
+            } else {
+                // Add all sections if no grade level selected
+                Object.values(allSections).flat().forEach(section => {
+                    const option = document.createElement('option');
+                    option.value = section;
+                    option.textContent = 'Section ' + section;
+                    if (section === currentValue) {
+                        option.selected = true;
+                    }
+                    sectionSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Update sections when grade level changes in single form
+        document.getElementById('grade_level').addEventListener('change', updateSectionOptions);
+
+        // Initialize section options on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSectionOptions();
+        });
+
         // Check for hash parameter to switch to batch mode
         if (window.location.hash === '#batch') {
             selectMethod('batch');

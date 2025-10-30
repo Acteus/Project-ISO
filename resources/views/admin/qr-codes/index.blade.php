@@ -752,15 +752,64 @@
             });
         }
 
-        // Auto-submit form when filters change
+        // Section filtering based on grade level
+        const allSections = {
+            '11': ['C11a', 'C11b', 'C11c'],
+            '12': ['C12a', 'C12b', 'C12c']
+        };
+
+        function updateSectionOptions() {
+            const gradeLevel = document.getElementById('grade_level').value;
+            const sectionSelect = document.getElementById('section');
+            const currentValue = sectionSelect.value;
+
+            // Clear current options except the first one
+            sectionSelect.innerHTML = '<option value="">All Sections</option>';
+
+            if (gradeLevel && allSections[gradeLevel]) {
+                // Add sections for selected grade level
+                allSections[gradeLevel].forEach(section => {
+                    const option = document.createElement('option');
+                    option.value = section;
+                    option.textContent = 'Section ' + section;
+                    if (section === currentValue) {
+                        option.selected = true;
+                    }
+                    sectionSelect.appendChild(option);
+                });
+            } else {
+                // Add all sections if no grade level selected
+                Object.values(allSections).flat().forEach(section => {
+                    const option = document.createElement('option');
+                    option.value = section;
+                    option.textContent = 'Section ' + section;
+                    if (section === currentValue) {
+                        option.selected = true;
+                    }
+                    sectionSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Update sections when grade level changes
+        document.getElementById('grade_level').addEventListener('change', function() {
+            updateSectionOptions();
+            submitFilters();
+        });
+
+        // Auto-submit form when other filters change
         document.getElementById('track').addEventListener('change', submitFilters);
-        document.getElementById('grade_level').addEventListener('change', submitFilters);
         document.getElementById('section').addEventListener('change', submitFilters);
         document.getElementById('is_active').addEventListener('change', submitFilters);
 
         function submitFilters() {
             document.getElementById('filters-form').submit();
         }
+
+        // Initialize section options on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSectionOptions();
+        });
 
         console.log('QR Codes management page loaded');
     </script>

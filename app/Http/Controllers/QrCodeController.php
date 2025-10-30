@@ -82,6 +82,17 @@ class QrCodeController extends Controller
         $gradeLevels = QrCode::distinct()->whereNotNull('grade_level')->pluck('grade_level')->sort();
         $sections = QrCode::distinct()->whereNotNull('section')->pluck('section')->sort();
 
+        // Provide default values if no QR codes exist
+        if ($tracks->isEmpty()) {
+            $tracks = collect(['CSS']);
+        }
+        if ($gradeLevels->isEmpty()) {
+            $gradeLevels = collect(['11', '12']);
+        }
+        if ($sections->isEmpty()) {
+            $sections = collect(['C11a', 'C11b', 'C11c', 'C12a', 'C12b', 'C12c']);
+        }
+
         return view('admin.qr-codes.index', compact(
             'qrCodes', 'stats', 'tracks', 'gradeLevels', 'sections',
             'track', 'gradeLevel', 'section', 'isActive'

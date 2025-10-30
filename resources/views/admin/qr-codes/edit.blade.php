@@ -402,12 +402,9 @@
                             <label for="section">Section</label>
                             <select id="section" name="section">
                                 <option value="" {{ !$qrCode->section ? 'selected' : '' }}>Select Section</option>
-                                <option value="A" {{ $qrCode->section === 'A' ? 'selected' : '' }}>Section A</option>
-                                <option value="B" {{ $qrCode->section === 'B' ? 'selected' : '' }}>Section B</option>
-                                <option value="C" {{ $qrCode->section === 'C' ? 'selected' : '' }}>Section C</option>
-                                <option value="D" {{ $qrCode->section === 'D' ? 'selected' : '' }}>Section D</option>
-                                <option value="E" {{ $qrCode->section === 'E' ? 'selected' : '' }}>Section E</option>
-                                <option value="F" {{ $qrCode->section === 'F' ? 'selected' : '' }}>Section F</option>
+                                @foreach($cssSections as $section)
+                                    <option value="{{ $section }}" {{ $qrCode->section === $section ? 'selected' : '' }}>Section {{ $section }}</option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -584,6 +581,53 @@
                 });
             }
         }
+
+        // Section filtering based on grade level
+        const allSections = {
+            '11': ['C11a', 'C11b', 'C11c'],
+            '12': ['C12a', 'C12b', 'C12c']
+        };
+
+        function updateSectionOptions() {
+            const gradeLevel = document.getElementById('grade_level').value;
+            const sectionSelect = document.getElementById('section');
+            const currentValue = sectionSelect.value;
+
+            // Clear current options except the first one
+            sectionSelect.innerHTML = '<option value="">Select Section</option>';
+
+            if (gradeLevel && allSections[gradeLevel]) {
+                // Add sections for selected grade level
+                allSections[gradeLevel].forEach(section => {
+                    const option = document.createElement('option');
+                    option.value = section;
+                    option.textContent = 'Section ' + section;
+                    if (section === currentValue) {
+                        option.selected = true;
+                    }
+                    sectionSelect.appendChild(option);
+                });
+            } else {
+                // Add all sections if no grade level selected
+                Object.values(allSections).flat().forEach(section => {
+                    const option = document.createElement('option');
+                    option.value = section;
+                    option.textContent = 'Section ' + section;
+                    if (section === currentValue) {
+                        option.selected = true;
+                    }
+                    sectionSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Update sections when grade level changes
+        document.getElementById('grade_level').addEventListener('change', updateSectionOptions);
+
+        // Initialize section options on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSectionOptions();
+        });
 
         console.log('QR Code edit page loaded');
     </script>
