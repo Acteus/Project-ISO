@@ -446,7 +446,7 @@
             <div class="charts-grid">
                 <!-- ISO Indices Radar -->
                 <div class="chart-card">
-                    <h3>ISO 21001 Performance Profile</h3>
+                    <h3>ISO 21001 Performance Profile (0–5)</h3>
                     <div class="chart-wrapper">
                         <canvas id="radarChart"></canvas>
                     </div>
@@ -454,7 +454,7 @@
 
                 <!-- Grade Distribution -->
                 <div class="chart-card">
-                    <h3>Responses by Grade Level</h3>
+                    <h3>Responses by Grade Level (counts & %)</h3>
                     <div class="chart-wrapper">
                         <canvas id="gradeChart"></canvas>
                     </div>
@@ -462,7 +462,7 @@
 
                 <!-- Time Series -->
                 <div class="chart-card full-width">
-                    <h3>Satisfaction Trend Over Time</h3>
+                    <h3>Average Satisfaction Over Time (0–5)</h3>
                     <div class="chart-wrapper">
                         <canvas id="trendChart"></canvas>
                     </div>
@@ -470,7 +470,7 @@
 
                 <!-- ISO Indices Bar Chart -->
                 <div class="chart-card full-width">
-                    <h3>ISO 21001 Dimensions Comparison</h3>
+                    <h3>ISO 21001 Dimensions Comparison (0–5)</h3>
                     <div class="chart-wrapper">
                         <canvas id="barChart"></canvas>
                     </div>
@@ -571,7 +571,8 @@
                 renderStats(data);
                 renderCompliance(data.compliance);
                 renderRadarChart(data.iso_indices);
-                renderGradeChart(data.distribution.by_grade);
+                // Pass total_responses so grade chart can compute percentages correctly
+                renderGradeChart(data.distribution.by_grade, data.total_responses);
                 renderBarChart(data.iso_indices);
 
                 // Load time series separately
@@ -587,13 +588,20 @@
 
         // Render stats cards
         function renderStats(data) {
+            // Format satisfaction: if it's on 0-5 scale show with /5, otherwise show value as-is
+            let satisfactionDisplay = data.overall && data.overall.satisfaction != null ? data.overall.satisfaction : '-';
+            if (typeof satisfactionDisplay === 'number') {
+                if (satisfactionDisplay <= 5) satisfactionDisplay = `${satisfactionDisplay} / 5`;
+                else satisfactionDisplay = `${satisfactionDisplay}%`;
+            }
+
             const statsHtml = `
                 <div class="stat-card">
                     <div class="stat-value">${data.total_responses}</div>
                     <div class="stat-label">Total Responses</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${data.overall.satisfaction}</div>
+                    <div class="stat-value">${satisfactionDisplay}</div>
                     <div class="stat-label">Avg Satisfaction</div>
                 </div>
                 <div class="stat-card">
@@ -713,18 +721,31 @@
             });
         }
 
-        // Render grade distribution chart
-        function renderGradeChart(gradeData) {
+                // Render grade distribution chart — compute percentages client-side using total responses
+        function renderGradeChart(gradeData, totalResponses) {
             const ctx = document.getElementById('gradeChart').getContext('2d');
 
             if (charts.grade) charts.grade.destroy();
 
+            // Compute total (prefer server-provided totalResponses; fallback to sum of counts)
+            const total = (typeof totalResponses === 'number' && totalResponses > 0)
+                ? totalResponses
+                : gradeData.reduce((s, g) => s + (g.count || 0), 0);
+
+            // Build labels that include percentage so legend reflects the true percent next to counts
+            const labels = gradeData.map(g => {
+                const pct = total > 0 ? ((g.count / total) * 100).toFixed(1) : '0.0';
+                return `Grade ${g.grade} — ${pct}%`;
+            });
+
+            const counts = gradeData.map(g => g.count);
+
             charts.grade = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: gradeData.map(g => 'Grade ' + g.grade),
+                    labels: labels,
                     datasets: [{
-                        data: gradeData.map(g => g.count),
+                        data: counts,
                         backgroundColor: [
                             'rgba(66, 133, 244, 0.85)',
                             'rgba(255, 215, 0, 0.85)'
@@ -758,7 +779,16 @@
                             bodyColor: '#fff',
                             borderColor: 'rgba(66, 133, 244, 1)',
                             borderWidth: 2,
-                            padding: 12
+                            padding: 12,
+                            callbacks: {
+                                // Show both absolute count and percentage in tooltip
+                                label: function(context) {
+                                    const idx = context.dataIndex;
+                                    const count = counts[idx] || 0;
+                                    const pct = total > 0 ? ((count / total) * 100).toFixed(1) : '0.0';
+                                    return `${count} responses — ${pct}%`;
+                                }
+                            }
                         }
                     }
                 }
