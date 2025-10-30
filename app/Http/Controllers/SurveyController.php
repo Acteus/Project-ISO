@@ -15,11 +15,20 @@ class SurveyController extends Controller
 {
     public function submitResponse(Request $request)
     {
-        // Check if user is authenticated
-        $isAuthenticated = Auth::check();
+        // Check if user is authenticated (works for both web and API routes)
+        $isAuthenticated = Auth::check() || Auth::guard('sanctum')->check() || session()->has('admin');
+
+        // Debug logging
+        Log::info('Survey submission attempt', [
+            'auth_check' => Auth::check(),
+            'sanctum_check' => Auth::guard('sanctum')->check(),
+            'session_admin' => session()->has('admin'),
+            'has_student_id_in_request' => $request->has('student_id'),
+            'student_id_value' => $request->input('student_id', 'NOT_PROVIDED'),
+        ]);
 
         $validator = Validator::make($request->all(), [
-            'student_id' => $isAuthenticated ? 'nullable|string' : 'required|string',
+            'student_id' => 'nullable|string', // Always nullable, we'll handle authentication below
             'track' => 'required|in:CSS',
             'grade_level' => 'required|integer|in:11,12',
             'academic_year' => 'required|string|max:9',
@@ -81,9 +90,19 @@ class SurveyController extends Controller
 
         $data = $request->all();
 
-        // If user is authenticated, use their student_id from auth
-        if ($isAuthenticated && Auth::user()->student_id) {
-            $data['student_id'] = Auth::user()->student_id;
+        // Determine student_id from multiple sources
+        if (!isset($data['student_id']) || empty($data['student_id'])) {
+            // Try to get from authenticated user
+            if (Auth::check() && Auth::user()->student_id) {
+                $data['student_id'] = Auth::user()->student_id;
+            } elseif (Auth::guard('sanctum')->check() && Auth::guard('sanctum')->user()->student_id) {
+                $data['student_id'] = Auth::guard('sanctum')->user()->student_id;
+            } elseif (session()->has('admin') && session('admin')->student_id) {
+                $data['student_id'] = session('admin')->student_id;
+            } else {
+                // Generate anonymous ID if no student_id provided
+                $data['student_id'] = 'ANON_' . uniqid() . '_' . substr(md5($request->ip() . time()), 0, 8);
+            }
         }
 
         // Let model mutators handle encryption - don't encrypt in controller to avoid double encryption

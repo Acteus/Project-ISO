@@ -667,8 +667,15 @@ async function submitSurveyLaravel(event) {
 
         // Get form fields
         const studentIdField = document.querySelector('input[name="student_id"]');
+        const trackField = document.querySelector('input[name="track"]');
         const gradeLevelField = document.querySelector('input[name="grade_level"]');
+        const yearLevelField = document.querySelector('input[name="year_level"]');
         const additionalFeedbackField = document.querySelector('textarea[name="additional_feedback"]');
+
+        console.log('Student ID field:', studentIdField ? studentIdField.value : 'NOT FOUND');
+        console.log('Grade level field:', gradeLevelField ? gradeLevelField.value : 'NOT FOUND');
+        console.log('Year level field:', yearLevelField ? yearLevelField.value : 'NOT FOUND');
+        console.log('Track field:', trackField ? trackField.value : 'NOT FOUND');
 
         // Get all question responses
         const getQuestionValue = (qName) => {
@@ -680,13 +687,23 @@ async function submitSurveyLaravel(event) {
         let gradeLevel = 11;
         if (gradeLevelField && gradeLevelField.value) {
             gradeLevel = parseInt(gradeLevelField.value);
+        } else if (yearLevelField && yearLevelField.value) {
+            // Parse year_level like "Grade 11" or just "11"
+            const yearValue = yearLevelField.value.toString().replace(/\D/g, '');
+            gradeLevel = parseInt(yearValue) || 11;
+        }
+
+        // Get track value
+        let track = 'CSS';
+        if (trackField && trackField.value) {
+            track = trackField.value;
         }
 
         // Map to Laravel API format with actual form data
         const laravelData = {
-            // Student information from Laravel auth
-            student_id: studentIdField ? studentIdField.value : '',
-            track: 'CSS', // CSS strand
+            // Student information from Laravel auth - ONLY include if field exists
+            ...(studentIdField && studentIdField.value && { student_id: studentIdField.value }),
+            track: track, // CSS strand
             grade_level: gradeLevel,
             academic_year: new Date().getFullYear().toString(),
             semester: getCurrentSemester(),

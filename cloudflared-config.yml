@@ -1,0 +1,17 @@
+tunnel: ISO-Laravel
+credentials-file: 01eb8e7b-f50f-4965-bd75-6c4858f51beb.json
+
+ingress:
+  - hostname: app.kwadrateam.dev
+    path: /
+    service: http://localhost:8000
+    headers:
+      X-Forwarded-Proto: https
+      X-Forwarded-Port: 443
+  - hostname: app.kwadrateam.dev
+    path: /ai/*
+    service: http://localhost:5001
+    headers:
+      X-Forwarded-Proto: https
+      X-Forwarded-Port: 443
+  - service: http_status:404
