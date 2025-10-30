@@ -26,3 +26,4 @@ Thumbs.db
 ai-service/ai_models/__pycache__/
 ai-service/utils/__pycache__/
 
+cloudflared-config.yml
