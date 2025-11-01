@@ -18,6 +18,27 @@ use App\Http\Controllers\QrCodeController;
 // Health check endpoint for Railway monitoring
 Route::get('/health', function () {
     try {
+        // Simple health check - just verify the app is running
+        // Don't check database or AI service to allow faster startup
+        return response()->json([
+            'status' => 'healthy',
+            'timestamp' => now()->toISOString(),
+            'version' => config('app.version', '1.0.0'),
+            'environment' => config('app.env'),
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'timestamp' => now()->toISOString(),
+        ], 500);
+    }
+})->name('health');
+
+// Detailed health check endpoint for monitoring (doesn't block deployment)
+Route::get('/health/detailed', function () {
+    try {
         // Check database connection
         $databaseStatus = 'ok';
         try {
@@ -44,7 +65,7 @@ Route::get('/health', function () {
             $aiServiceStatus = 'error: ' . $e->getMessage();
         }
 
-        $status = ($databaseStatus === 'ok' && $cacheStatus === 'ok') ? 'healthy' : 'unhealthy';
+        $status = ($databaseStatus === 'ok' && $cacheStatus === 'ok') ? 'healthy' : 'degraded';
 
         return response()->json([
             'status' => $status,
@@ -60,7 +81,7 @@ Route::get('/health', function () {
                 'memory_usage' => memory_get_peak_usage(true),
                 'uptime' => now()->diffInSeconds(now()->startOfDay()),
             ]
-        ], $status === 'healthy' ? 200 : 503);
+        ], 200);
 
     } catch (\Exception $e) {
         return response()->json([
@@ -69,7 +90,7 @@ Route::get('/health', function () {
             'timestamp' => now()->toISOString(),
         ], 500);
     }
-})->name('health');
+})->name('health.detailed');
 
 // Public routes
 // Public routes
