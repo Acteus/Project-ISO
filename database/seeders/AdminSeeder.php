@@ -17,17 +17,27 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        Admin::create([
-            'name' => 'System Administrator',
-            'username' => 'admin',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('Admin@1'),
-            'email_verified_at' => now(),
-        ]);
+        $name = env('ADMIN_NAME', 'System Administrator');
+        $username = env('ADMIN_USERNAME', 'admin');
+        $email = env('ADMIN_EMAIL', 'admin@example.com');
+        $password = env('ADMIN_PASSWORD', 'Admin@1');
 
-        $this->command->info('Admin account created successfully.');
-        $this->command->info('Username: admin');
-        $this->command->info('Password: Admin@1');
+        $admin = Admin::updateOrCreate(
+            [
+                'email' => $email,
+            ],
+            [
+                'name' => $name,
+                'username' => $username,
+                'password' => Hash::make($password),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $this->command->info('Admin account ensured.');
+        $this->command->info("Username: {$username}");
+        $this->command->info("Email: {$email}");
+        $this->command->info("Password (set via env ADMIN_PASSWORD or default): {$password}");
         $this->command->warn('Please change the default password after first login.');
     }
 }
