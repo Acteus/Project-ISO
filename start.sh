@@ -52,15 +52,14 @@ elif [ -n "$MYSQLHOST" ] && [ -z "$DB_HOST" ]; then
     echo "🔍 Detected MySQL variables from Railway:"
     echo "   MYSQLHOST=${MYSQLHOST}"
     echo "   MYSQLPORT=${MYSQLPORT}"
-    echo "   MYSQLDATABASE=${MYSQLDATABASE}"
     echo "   MYSQL_DATABASE=${MYSQL_DATABASE}"
     echo "   MYSQLUSER=${MYSQLUSER}"
     echo "   MYSQL_URL=${MYSQL_URL}"
-    
+
     export DB_CONNECTION=mysql
     export DB_HOST="$MYSQLHOST"
     export DB_PORT="${MYSQLPORT:-3306}"
-    
+
     # Railway might use MYSQLDATABASE or MYSQL_DATABASE, check both
     if [ -n "$MYSQLDATABASE" ]; then
         export DB_DATABASE="$MYSQLDATABASE"
@@ -76,7 +75,7 @@ elif [ -n "$MYSQLHOST" ] && [ -z "$DB_HOST" ]; then
             echo "   ⚠️  WARNING: No database name found, using default 'railway'"
         fi
     fi
-    
+
     export DB_USERNAME="${MYSQLUSER:-root}"
     export DB_PASSWORD="$MYSQLPASSWORD"
     echo "✅ Using MySQL database from Railway"
