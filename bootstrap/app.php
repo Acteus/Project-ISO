@@ -12,19 +12,40 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Trust all proxies for Cloudflare tunnel
-        $middleware->trustProxies(at: '*', headers: \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR |
-            \Illuminate\Http\Request::HEADER_X_FORWARDED_HOST |
-            \Illuminate\Http\Request::HEADER_X_FORWARDED_PORT |
-            \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO);
+        // Trust all proxies for Railway/Cloudflare
+        // Railway sits behind proxies, so we need to trust them for proper IP detection
+        $middleware->trustProxies(
+            at: '*',
+            headers: \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR |
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_HOST |
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_PORT |
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO |
+                \Illuminate\Http\Request::HEADER_X_FORWARDED_AWS_ELB
+        );
 
+        // CSRF protection - exclude API routes
         $middleware->validateCsrfTokens(except: [
-            'api/survey/submit',
+            'api/*',
+            'health',
+            'health/*',
         ]);
 
-        // Register cache response middleware
+        // Register custom middleware aliases
         $middleware->alias([
             'cache.response' => \App\Http\Middleware\CacheResponse::class,
+        ]);
+
+        // Ensure session is started before any middleware that needs it
+        $middleware->priority([
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+            \Illuminate\Routing\Middleware\ThrottleRequests::class,
+            \Illuminate\Session\Middleware\AuthenticateSession::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \Illuminate\Auth\Middleware\Authorize::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -20,6 +20,21 @@ Route::middleware([])->get('/health', function () {
     return response()->json(['status' => 'ok'], 200);
 })->name('health');
 
+// CSRF token test endpoint (helpful for debugging)
+Route::get('/csrf-test', function () {
+    return response()->json([
+        'csrf_token' => csrf_token(),
+        'session_id' => session()->getId(),
+        'session_driver' => config('session.driver'),
+        'session_domain' => config('session.domain'),
+        'session_secure' => config('session.secure'),
+        'session_same_site' => config('session.same_site'),
+        'app_url' => config('app.url'),
+        'cookies_set' => !empty($_COOKIE),
+        'cookie_names' => array_keys($_COOKIE),
+    ]);
+})->name('csrf.test');
+
 // Detailed health check endpoint for monitoring (doesn't block deployment)
 Route::get('/health/detailed', function () {
     try {
