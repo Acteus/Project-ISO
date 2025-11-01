@@ -443,7 +443,9 @@ def internal_error(error):
     return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
-    port = int(os.getenv('FLASK_PORT', 5000))
+    # Railway sets PORT environment variable, fallback to FLASK_PORT or 5000
+    port = int(os.getenv('PORT', os.getenv('FLASK_PORT', 5000)))
     debug = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
 
+    logger.info(f"Starting Flask AI Service on port {port}")
     app.run(host='0.0.0.0', port=port, debug=debug)

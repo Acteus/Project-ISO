@@ -1,0 +1,12 @@
+[phases.setup]
+nixPkgs = ["python311", "gcc"]
+
+[phases.install]
+cmds = [
+    "pip install --timeout=900 --no-cache-dir -r requirements.txt",
+    "python -m nltk.downloader punkt stopwords averaged_perceptron_tagger"
+]
+
+[start]
+cmd = "gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120 --access-logfile - --error-logfile - app:app"
+
