@@ -1,0 +1,64 @@
+# Ignore unnecessary files for Railway deployment
+
+# Development files
+.git
+.gitignore
+.gitattributes
+.editorconfig
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Documentation (not needed for runtime)
+*.md
+!README.md
+docs/
+
+# Test files
+tests/
+phpunit.xml
+.phpunit.cache
+
+# Node modules (will be installed during build)
+node_modules/
+
+# Vendor (will be installed during build)
+vendor/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Build artifacts
+public/hot
+public/storage
+storage/*.key
+
+# Laravel specific
+bootstrap/cache/*.php
+!bootstrap/cache/.gitignore
+
+# Logs
+*.log
+storage/logs/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# AI Service (not needed in Laravel deployment)
+ai-service/
+
+# Old HTML files
+html/
+index1 (1).html
+
+# Railway config files (keep for AI service)
+# These will be needed when deploying separately
+
