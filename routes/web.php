@@ -17,23 +17,8 @@ use App\Http\Controllers\QrCodeController;
 
 // Health check endpoint for Railway monitoring
 Route::get('/health', function () {
-    try {
-        // Simple health check - just verify the app is running
-        // Don't check database or AI service to allow faster startup
-        return response()->json([
-            'status' => 'healthy',
-            'timestamp' => now()->toISOString(),
-            'version' => config('app.version', '1.0.0'),
-            'environment' => config('app.env'),
-        ], 200);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'error',
-            'message' => $e->getMessage(),
-            'timestamp' => now()->toISOString(),
-        ], 500);
-    }
+    // Ultra-simple health check - just return 200 OK
+    return response()->json(['status' => 'ok'], 200);
 })->name('health');
 
 // Detailed health check endpoint for monitoring (doesn't block deployment)

@@ -1,17 +1,26 @@
 #!/bin/bash
 
-# Exit on error
-set -e
-
 echo "🚀 Starting Laravel application..."
 
-# Run migrations (Laravel will skip if nothing to migrate)
-echo "📊 Running database migrations..."
-php artisan migrate --force --no-interaction
+# Set default port
+export PORT=${PORT:-8000}
 
-echo "✨ Optimizing application..."
-php artisan optimize:clear
+# Start PHP server immediately in the background
+echo "🌐 Starting PHP server on port $PORT..."
+php artisan serve --host=0.0.0.0 --port=$PORT &
+SERVER_PID=$!
 
-# Start the PHP server
-echo "🌐 Starting PHP server on port ${PORT:-8000}..."
-exec php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+# Give server a moment to start
+sleep 2
+
+# Run migrations in the background (non-blocking)
+echo "📊 Running database migrations in background..."
+(
+    php artisan migrate --force --no-interaction 2>&1 | while IFS= read -r line; do
+        echo "  [Migration] $line"
+    done
+) &
+
+# Wait for the PHP server process
+echo "✅ Server started with PID $SERVER_PID"
+wait $SERVER_PID
