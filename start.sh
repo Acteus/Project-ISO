@@ -49,13 +49,38 @@ if [ -n "$PGHOST" ] && [ -z "$DB_HOST" ]; then
     export DB_PASSWORD="$PGPASSWORD"
     echo "✅ Using PostgreSQL database from Railway"
 elif [ -n "$MYSQLHOST" ] && [ -z "$DB_HOST" ]; then
+    echo "🔍 Detected MySQL variables from Railway:"
+    echo "   MYSQLHOST=${MYSQLHOST}"
+    echo "   MYSQLPORT=${MYSQLPORT}"
+    echo "   MYSQLDATABASE=${MYSQLDATABASE}"
+    echo "   MYSQL_DATABASE=${MYSQL_DATABASE}"
+    echo "   MYSQLUSER=${MYSQLUSER}"
+    echo "   MYSQL_URL=${MYSQL_URL}"
+    
     export DB_CONNECTION=mysql
     export DB_HOST="$MYSQLHOST"
     export DB_PORT="${MYSQLPORT:-3306}"
-    export DB_DATABASE="$MYSQLDATABASE"
-    export DB_USERNAME="$MYSQLUSER"
+    
+    # Railway might use MYSQLDATABASE or MYSQL_DATABASE, check both
+    if [ -n "$MYSQLDATABASE" ]; then
+        export DB_DATABASE="$MYSQLDATABASE"
+    elif [ -n "$MYSQL_DATABASE" ]; then
+        export DB_DATABASE="$MYSQL_DATABASE"
+    else
+        # Fallback: extract from MYSQL_URL if available
+        if [ -n "$MYSQL_URL" ]; then
+            export DB_DATABASE=$(echo "$MYSQL_URL" | sed -n 's|.*\/\([^?]*\).*|\1|p')
+            echo "   ℹ️  Extracted database name from MYSQL_URL: $DB_DATABASE"
+        else
+            export DB_DATABASE="railway"
+            echo "   ⚠️  WARNING: No database name found, using default 'railway'"
+        fi
+    fi
+    
+    export DB_USERNAME="${MYSQLUSER:-root}"
     export DB_PASSWORD="$MYSQLPASSWORD"
     echo "✅ Using MySQL database from Railway"
+    echo "   Final DB_DATABASE: $DB_DATABASE"
 else
     export DB_CONNECTION=${DB_CONNECTION:-pgsql}
     echo "⚠️  Using DB_CONNECTION=${DB_CONNECTION} with custom credentials"
