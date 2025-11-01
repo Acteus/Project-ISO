@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AIController;
 use App\Http\Controllers\AnalyticsController;
@@ -14,6 +15,63 @@ use App\Http\Controllers\VisualizationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\QrCodeController;
 
+// Health check endpoint for Railway monitoring
+Route::get('/health', function () {
+    try {
+        // Check database connection
+        $databaseStatus = 'ok';
+        try {
+            DB::connection()->getPdo();
+        } catch (\Exception $e) {
+            $databaseStatus = 'error: ' . $e->getMessage();
+        }
+
+        // Check cache connection
+        $cacheStatus = 'ok';
+        try {
+            Cache::store()->getStore();
+        } catch (\Exception $e) {
+            $cacheStatus = 'error: ' . $e->getMessage();
+        }
+
+        // Check AI service connection (optional)
+        $aiServiceStatus = 'unknown';
+        try {
+            $aiClient = app(\App\Services\FlaskAIClient::class);
+            $status = $aiClient->getServiceStatus();
+            $aiServiceStatus = $status['available'] ? 'ok' : 'error';
+        } catch (\Exception $e) {
+            $aiServiceStatus = 'error: ' . $e->getMessage();
+        }
+
+        $status = ($databaseStatus === 'ok' && $cacheStatus === 'ok') ? 'healthy' : 'unhealthy';
+
+        return response()->json([
+            'status' => $status,
+            'timestamp' => now()->toISOString(),
+            'version' => config('app.version', '1.0.0'),
+            'environment' => config('app.env'),
+            'services' => [
+                'database' => $databaseStatus,
+                'cache' => $cacheStatus,
+                'ai_service' => $aiServiceStatus,
+            ],
+            'metrics' => [
+                'memory_usage' => memory_get_peak_usage(true),
+                'uptime' => now()->diffInSeconds(now()->startOfDay()),
+            ]
+        ], $status === 'healthy' ? 200 : 503);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'timestamp' => now()->toISOString(),
+        ], 500);
+    }
+})->name('health');
+
+// Public routes
 // Public routes
 Route::get('/', function () {
     return view('welcome');
