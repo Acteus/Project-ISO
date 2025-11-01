@@ -51,35 +51,59 @@ if [ -n "$PGHOST" ] && [ -z "$DB_HOST" ]; then
 elif [ -n "$MYSQLHOST" ] && [ -z "$DB_HOST" ]; then
     echo "🔍 Detected MySQL variables from Railway:"
     echo "   MYSQLHOST=${MYSQLHOST}"
-    echo "   MYSQLPORT=${MYSQLPORT}"
-    echo "   MYSQL_DATABASE=${MYSQL_DATABASE}"
-    echo "   MYSQLUSER=${MYSQLUSER}"
-    echo "   MYSQL_URL=${MYSQL_URL}"
+    echo "   MYSQLPORT=${MYSQLPORT:-<not set>}"
+    echo "   MYSQLDATABASE=${MYSQLDATABASE:-<not set>}"
+    echo "   MYSQL_DATABASE=${MYSQL_DATABASE:-<not set>}"
+    echo "   MYSQLUSER=${MYSQLUSER:-<not set>}"
+    echo "   Has MYSQLPASSWORD: $([ -n "$MYSQLPASSWORD" ] && echo 'Yes' || echo 'No')"
+    echo "   Has MYSQL_URL: $([ -n "$MYSQL_URL" ] && echo 'Yes' || echo 'No')"
+    echo "   Has MYSQL_PRIVATE_URL: $([ -n "$MYSQL_PRIVATE_URL" ] && echo 'Yes' || echo 'No')"
 
     export DB_CONNECTION=mysql
-    export DB_HOST="$MYSQLHOST"
-    export DB_PORT="${MYSQLPORT:-3306}"
 
-    # Railway might use MYSQLDATABASE or MYSQL_DATABASE, check both
-    if [ -n "$MYSQLDATABASE" ]; then
-        export DB_DATABASE="$MYSQLDATABASE"
-    elif [ -n "$MYSQL_DATABASE" ]; then
-        export DB_DATABASE="$MYSQL_DATABASE"
+    # Try to use MYSQL_PRIVATE_URL first if available (better for Railway private networking)
+    if [ -n "$MYSQL_PRIVATE_URL" ]; then
+        echo "   ℹ️  Parsing MYSQL_PRIVATE_URL for connection details..."
+        # Extract components from URL: mysql://user:pass@host:port/database
+        export DB_HOST=$(echo "$MYSQL_PRIVATE_URL" | sed -n 's|.*@\([^:]*\):.*|\1|p')
+        export DB_PORT=$(echo "$MYSQL_PRIVATE_URL" | sed -n 's|.*:\([0-9]*\)/.*|\1|p')
+        export DB_DATABASE=$(echo "$MYSQL_PRIVATE_URL" | sed -n 's|.*/\([^?]*\).*|\1|p')
+        export DB_USERNAME=$(echo "$MYSQL_PRIVATE_URL" | sed -n 's|.*://\([^:]*\):.*|\1|p')
+        export DB_PASSWORD=$(echo "$MYSQL_PRIVATE_URL" | sed -n 's|.*://[^:]*:\([^@]*\)@.*|\1|p')
+        echo "   ℹ️  Parsed from MYSQL_PRIVATE_URL: host=$DB_HOST, port=$DB_PORT, db=$DB_DATABASE"
+    elif [ -n "$MYSQL_URL" ]; then
+        echo "   ℹ️  Parsing MYSQL_URL for connection details..."
+        export DB_HOST=$(echo "$MYSQL_URL" | sed -n 's|.*@\([^:]*\):.*|\1|p')
+        export DB_PORT=$(echo "$MYSQL_URL" | sed -n 's|.*:\([0-9]*\)/.*|\1|p')
+        export DB_DATABASE=$(echo "$MYSQL_URL" | sed -n 's|.*/\([^?]*\).*|\1|p')
+        export DB_USERNAME=$(echo "$MYSQL_URL" | sed -n 's|.*://\([^:]*\):.*|\1|p')
+        export DB_PASSWORD=$(echo "$MYSQL_URL" | sed -n 's|.*://[^:]*:\([^@]*\)@.*|\1|p')
+        echo "   ℹ️  Parsed from MYSQL_URL: host=$DB_HOST, port=$DB_PORT, db=$DB_DATABASE"
     else
-        # Fallback: extract from MYSQL_URL if available
-        if [ -n "$MYSQL_URL" ]; then
-            export DB_DATABASE=$(echo "$MYSQL_URL" | sed -n 's|.*\/\([^?]*\).*|\1|p')
-            echo "   ℹ️  Extracted database name from MYSQL_URL: $DB_DATABASE"
+        # Fallback to individual variables
+        export DB_HOST="$MYSQLHOST"
+        export DB_PORT="${MYSQLPORT:-3306}"
+
+        # Railway might use MYSQLDATABASE or MYSQL_DATABASE, check both
+        if [ -n "$MYSQLDATABASE" ]; then
+            export DB_DATABASE="$MYSQLDATABASE"
+        elif [ -n "$MYSQL_DATABASE" ]; then
+            export DB_DATABASE="$MYSQL_DATABASE"
         else
             export DB_DATABASE="railway"
             echo "   ⚠️  WARNING: No database name found, using default 'railway'"
         fi
+
+        export DB_USERNAME="${MYSQLUSER:-root}"
+        export DB_PASSWORD="$MYSQLPASSWORD"
     fi
 
-    export DB_USERNAME="${MYSQLUSER:-root}"
-    export DB_PASSWORD="$MYSQLPASSWORD"
     echo "✅ Using MySQL database from Railway"
-    echo "   Final DB_DATABASE: $DB_DATABASE"
+    echo "   Final configuration:"
+    echo "   - Host: $DB_HOST"
+    echo "   - Port: $DB_PORT"
+    echo "   - Database: $DB_DATABASE"
+    echo "   - Username: $DB_USERNAME"
 else
     export DB_CONNECTION=${DB_CONNECTION:-pgsql}
     echo "⚠️  Using DB_CONNECTION=${DB_CONNECTION} with custom credentials"
@@ -124,25 +148,71 @@ echo ""
 echo "🔌 Testing database connection..."
 echo "   Connection: ${DB_CONNECTION}"
 echo "   Host: ${DB_HOST}"
+echo "   Port: ${DB_PORT}"
 echo "   Database: ${DB_DATABASE}"
 echo "   User: ${DB_USERNAME}"
+echo "   Has Password: $([ -n "$DB_PASSWORD" ] && echo 'Yes' || echo 'No')"
+
+# First, test if we can reach the database host (network connectivity)
+echo ""
+echo "🌐 Testing network connectivity to database host..."
+if command -v nc &> /dev/null; then
+    if timeout 5 nc -z "$DB_HOST" "$DB_PORT" 2>/dev/null; then
+        echo "   ✅ Network connection to $DB_HOST:$DB_PORT is reachable"
+    else
+        echo "   ⚠️  Cannot reach $DB_HOST:$DB_PORT (network issue or MySQL not ready)"
+        echo "   This could mean:"
+        echo "   - MySQL service is not running"
+        echo "   - MySQL service is still starting up"
+        echo "   - Private networking is not enabled/configured"
+        echo "   - Firewall is blocking the connection"
+    fi
+else
+    echo "   ℹ️  nc (netcat) not available, skipping network test"
+fi
 
 # Try to connect with retries
+echo ""
+echo "🔄 Attempting database authentication..."
 MAX_DB_RETRIES=5
 DB_RETRY_COUNT=0
 DB_CONNECTED=false
 
 while [ $DB_RETRY_COUNT -lt $MAX_DB_RETRIES ]; do
-    if php artisan db:show 2>&1 | grep -q "Connection:"; then
-        echo "   ✅ Database connection successful"
+    DB_RETRY_COUNT=$((DB_RETRY_COUNT + 1))
+    echo "   Attempt $DB_RETRY_COUNT/$MAX_DB_RETRIES..."
+
+    # Capture both stdout and stderr
+    DB_TEST_OUTPUT=$(php artisan db:show 2>&1)
+
+    if echo "$DB_TEST_OUTPUT" | grep -q "Connection:"; then
+        echo "   ✅ Database connection successful!"
         DB_CONNECTED=true
         break
     else
-        DB_RETRY_COUNT=$((DB_RETRY_COUNT + 1))
-        echo "   ⚠️  Database connection attempt $DB_RETRY_COUNT/$MAX_DB_RETRIES failed"
+        echo "   ⚠️  Connection failed"
+
+        # Show error details to help diagnose
+        if echo "$DB_TEST_OUTPUT" | grep -q "SQLSTATE"; then
+            ERROR_MSG=$(echo "$DB_TEST_OUTPUT" | grep "SQLSTATE" | head -n 1)
+            echo "   Error: $ERROR_MSG"
+
+            # Provide specific guidance based on error
+            if echo "$ERROR_MSG" | grep -q "HY000.*2002"; then
+                echo "   → Database host is unreachable or MySQL is not running"
+            elif echo "$ERROR_MSG" | grep -q "HY000.*1045"; then
+                echo "   → Authentication failed - check username/password"
+            elif echo "$ERROR_MSG" | grep -q "HY000.*1049"; then
+                echo "   → Database '$DB_DATABASE' does not exist"
+            elif echo "$ERROR_MSG" | grep -q "HY000.*2006"; then
+                echo "   → MySQL server has gone away - check MySQL is running"
+            fi
+        fi
+
         if [ $DB_RETRY_COUNT -lt $MAX_DB_RETRIES ]; then
-            echo "   Retrying in 3 seconds..."
-            sleep 3
+            WAIT_TIME=$((3 * $DB_RETRY_COUNT))  # Progressive backoff
+            echo "   Waiting ${WAIT_TIME}s before retry..."
+            sleep $WAIT_TIME
         fi
     fi
 done
@@ -166,14 +236,68 @@ if [ "$DB_CONNECTED" = true ]; then
         DB_CONNECTED=false
     fi
 else
-    echo "   ⚠️  Database connection FAILED after $MAX_DB_RETRIES attempts!"
-    echo "   Starting server with file-based sessions as fallback."
-    echo "   The application will work but sessions won't persist across instances."
     echo ""
-    echo "   Troubleshooting:"
-    echo "   1. Verify MySQL service is attached in Railway"
-    echo "   2. Check Railway environment variables"
-    echo "   3. Ensure MYSQLHOST, MYSQLDATABASE, MYSQLUSER, MYSQLPASSWORD are set"
+    echo "❌ Database connection FAILED after $MAX_DB_RETRIES attempts!"
+    echo ""
+    echo "   The application will start with file-based sessions as fallback."
+    echo "   ⚠️  WARNING: Sessions won't persist across instances!"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📋 TROUBLESHOOTING CHECKLIST"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "1. ✓ Verify MySQL service exists in Railway:"
+    echo "   - Go to your Railway project dashboard"
+    echo "   - Check if MySQL service is present and running (green status)"
+    echo "   - If not, click '+ New' → 'Database' → 'MySQL'"
+    echo ""
+    echo "2. ✓ Check MySQL service status:"
+    echo "   - Click on your MySQL service in Railway"
+    echo "   - Check the 'Deployments' tab - should show 'Active'"
+    echo "   - Check 'Metrics' tab - CPU/Memory should show activity"
+    echo "   - If crashed, check logs for errors"
+    echo ""
+    echo "3. ✓ Verify environment variables are set:"
+    echo "   - Go to Laravel service → 'Variables' tab"
+    echo "   - Check if these variables exist:"
+    echo "     • MYSQLHOST or DB_HOST"
+    echo "     • MYSQLPORT or DB_PORT"
+    echo "     • MYSQLDATABASE or DB_DATABASE"
+    echo "     • MYSQLUSER or DB_USERNAME"
+    echo "     • MYSQLPASSWORD or DB_PASSWORD"
+    echo "   - Or check for MYSQL_URL / MYSQL_PRIVATE_URL"
+    echo ""
+    echo "4. ✓ Link MySQL service to Laravel service:"
+    echo "   - In Railway, MySQL should be 'connected' to Laravel"
+    echo "   - If not linked: Laravel service → Settings → scroll down"
+    echo "   - Under 'Service Connections', add MySQL service"
+    echo "   - Railway will auto-inject MYSQL* variables"
+    echo ""
+    echo "5. ✓ Enable Private Networking (REQUIRED for *.railway.internal):"
+    echo "   - Go to Project Settings"
+    echo "   - Enable 'Private Networking' if disabled"
+    echo "   - Redeploy both services after enabling"
+    echo ""
+    echo "6. ✓ Check MySQL configuration:"
+    echo "   - In MySQL service, check 'Variables' tab"
+    echo "   - MYSQL_ROOT_PASSWORD should be set"
+    echo "   - MYSQL_DATABASE should be set (default: 'railway')"
+    echo ""
+    echo "7. ✓ Verify credentials match:"
+    echo "   Current config (from environment):"
+    echo "   - Host: ${DB_HOST:-<not set>}"
+    echo "   - Port: ${DB_PORT:-<not set>}"
+    echo "   - Database: ${DB_DATABASE:-<not set>}"
+    echo "   - Username: ${DB_USERNAME:-<not set>}"
+    echo "   - Has Password: $([ -n "$DB_PASSWORD" ] && echo 'Yes' || echo 'No')"
+    echo ""
+    echo "8. ✓ Common fixes that work:"
+    echo "   a) Unlink and re-link MySQL service to Laravel service"
+    echo "   b) Redeploy both MySQL and Laravel services"
+    echo "   c) Use MYSQL_PRIVATE_URL instead of individual vars"
+    echo "   d) Check Railway Status page for platform issues"
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
     # Switch to file-based sessions as fallback
     export SESSION_DRIVER=file
