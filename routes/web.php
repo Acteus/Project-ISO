@@ -15,9 +15,8 @@ use App\Http\Controllers\VisualizationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\QrCodeController;
 
-// Health check endpoint for Railway monitoring
-Route::get('/health', function () {
-    // Ultra-simple health check - just return 200 OK
+// Health check endpoint for Railway monitoring (no middleware)
+Route::middleware([])->get('/health', function () {
     return response()->json(['status' => 'ok'], 200);
 })->name('health');
 
