@@ -9,7 +9,9 @@ export PORT=${PORT:-8000}
 export APP_ENV=${APP_ENV:-production}
 export APP_DEBUG=${APP_DEBUG:-false}
 export LOG_CHANNEL=${LOG_CHANNEL:-stderr}
-export SESSION_DRIVER=${SESSION_DRIVER:-file}
+export SESSION_DRIVER=${SESSION_DRIVER:-database}
+export SESSION_SECURE_COOKIE=${SESSION_SECURE_COOKIE:-true}
+export SESSION_SAME_SITE=${SESSION_SAME_SITE:-lax}
 
 # Bridge Railway MySQL env vars to Laravel if DB_* not explicitly set
 export DB_CONNECTION=${DB_CONNECTION:-mysql}
