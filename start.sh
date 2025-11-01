@@ -12,6 +12,7 @@ export LOG_CHANNEL=${LOG_CHANNEL:-stderr}
 export SESSION_DRIVER=${SESSION_DRIVER:-database}
 export SESSION_SECURE_COOKIE=${SESSION_SECURE_COOKIE:-true}
 export SESSION_SAME_SITE=${SESSION_SAME_SITE:-lax}
+export SESSION_HTTP_ONLY=${SESSION_HTTP_ONLY:-true}
 
 # Bridge Railway MySQL env vars to Laravel if DB_* not explicitly set
 export DB_CONNECTION=${DB_CONNECTION:-mysql}
@@ -30,6 +31,12 @@ if [ -z "$APP_KEY" ]; then
     export APP_KEY=$(php -r "echo 'base64:'.base64_encode(random_bytes(32));")
 fi
 
+# Run critical migrations first to ensure sessions table exists for health checks
+echo "📊 Running critical migrations (sessions table)..."
+php artisan migrate --force --no-interaction --path=database/migrations/0001_01_01_000000_create_sessions_table.php 2>&1 | while IFS= read -r line; do
+    echo "  [Migration] $line"
+done || echo "⚠️  Session migration may have already run or not exist"
+
 # Start PHP server immediately in the background
 echo "🌐 Starting PHP server on port $PORT..."
 php artisan serve --host=0.0.0.0 --port=$PORT &
@@ -38,8 +45,8 @@ SERVER_PID=$!
 # Give server a moment to start
 sleep 2
 
-# Run migrations and seed default admin in the background (non-blocking)
-echo "📊 Running database migrations and seeder in background..."
+# Run remaining migrations and seed default admin in the background (non-blocking)
+echo "📊 Running remaining database migrations and seeder in background..."
 (
     php artisan migrate --force --no-interaction 2>&1 | while IFS= read -r line; do
         echo "  [Migration] $line"
