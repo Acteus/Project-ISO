@@ -24,8 +24,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Register model observers for automatic cache clearing
-        SurveyResponse::observe(SurveyResponseObserver::class);
+        try {
+            // Register model observers for automatic cache clearing
+            SurveyResponse::observe(SurveyResponseObserver::class);
+        } catch (\Exception $e) {
+            Log::warning('Failed to register SurveyResponse observer', [
+                'error' => $e->getMessage()
+            ]);
+        }
 
         // Enable query logging in development for performance monitoring
         if (config('app.debug')) {
