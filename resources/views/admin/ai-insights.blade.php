@@ -10,6 +10,43 @@
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}?v={{ time() }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
+        /* Accessibility: Visible Focus */
+        :focus-visible {
+            outline: 3px solid #4285F4;
+            outline-offset: 2px;
+            transition: outline 0.2s ease;
+        }
+
+        /* Screen reader only content */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .btn-primary {
+                background: #000 !important;
+                color: #fff !important;
+                border: 2px solid #fff !important;
+            }
+            .btn-success {
+                background: #000 !important;
+                color: #fff !important;
+                border: 2px solid #fff !important;
+            }
+            .metric-card, .insight-card, .ai-results {
+                border: 2px solid #000 !important;
+            }
+        }
+
         /* Page Transition Animation */
         @keyframes pageEnter {
             from {
@@ -24,6 +61,13 @@
 
         body {
             animation: pageEnter 0.5s ease-out;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            body, .insight-card, .metric-card {
+                animation: none !important;
+                transition: none !important;
+            }
         }
 
         /* Enhanced Modern AI Insights Styles */
@@ -224,6 +268,16 @@
             background-clip: text;
             margin-bottom: 10px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            /* Fallback for accessibility */
+            color: #2c3e50; /* Dark color for contrast */
+        }
+
+        /* Ensure gradient text has sufficient contrast fallback */
+        @media (prefers-reduced-transparency: reduce) {
+            .metric-value {
+                -webkit-text-fill-color: #2c3e50 !important;
+                background: none !important;
+            }
         }
 
         .metric-label {
@@ -608,26 +662,71 @@
             .insight-card {
                 padding: 25px 20px;
             }
+
+            /* Ensure touch targets are at least 44x44px on mobile */
+            .btn {
+                min-height: 44px;
+                min-width: 44px;
+                padding: 12px 24px;
+            }
+
+            .results-close-btn {
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            /* Improve focus visibility on mobile */
+            :focus-visible {
+                outline: 4px solid #4285F4;
+                outline-offset: 3px;
+            }
+        }
+
+        /* Touch device optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            .btn:hover {
+                transform: none; /* Remove hover transforms on touch devices */
+            }
+
+            .insight-card:hover,
+            .metric-card:hover {
+                transform: none; /* Remove hover transforms on touch devices */
+            }
+        }
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #000;
+            color: white;
+            padding: 8px;
+            z-index: 100;
+            transition: top 0.3s;
+        }
+
+        .skip-link:focus {
+            top: 0;
         }
     </style>
 </head>
 <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
     <!-- Header -->
-    <header class="header admin-header">
+    <header class="header admin-header" role="banner">
         <div class="container">
             <div class="nav-wrapper">
                 <div class="logo">
-                    <a href="{{ route('welcome') }}">ISO Quality Education</a>
+                    <a href="{{ route('welcome') }}" aria-label="ISO Quality Education - Go to home page">ISO Quality Education</a>
                 </div>
 
                 <!-- Desktop navigation -->
-                <nav class="desktop-nav">
-                    <a href="{{ route('admin.dashboard') }}" class="nav-link">Dashboard</a>
-                    <a href="{{ route('admin.ai.insights') }}" class="nav-link active">AI Insights</a>
-                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
+                <nav class="desktop-nav" aria-label="Main navigation">
+                    <a href="{{ route('admin.dashboard') }}" class="nav-link" aria-label="Go to Admin Dashboard">Dashboard</a>
+                    <a href="{{ route('admin.ai.insights') }}" class="nav-link active" aria-current="page" aria-label="AI Insights - Current page">AI Insights</a>
+                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;" aria-label="Logout form">
                         @csrf
-                        <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(135deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 700; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;">
-                            <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 8px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <button type="submit" class="nav-link logout-btn" aria-label="Logout from admin account" style="background: linear-gradient(135deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 700; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;">
+                            <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 8px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
                             </svg>
                             Logout
@@ -638,135 +737,149 @@
         </div>
     </header>
 
-    <main class="survey-main">
+    <main class="survey-main" id="main-content" role="main">
         <div class="insights-container">
             <!-- Main Content Area -->
             <div class="insights-content">
                 <a href="{{ route('admin.dashboard') }}" class="back-btn">← Back to Dashboard</a>
 
-                <div class="insights-header">
-                    <h1>AI Insights Dashboard</h1>
+                <section class="insights-header" aria-labelledby="insights-heading">
+                    <h1 id="insights-heading">AI Insights Dashboard</h1>
                     <p>Comprehensive machine learning analytics for ISO 21001 compliance, predictive modeling, and proactive quality management</p>
-                    <div id="data-range-display" style="margin-top: 25px; padding: 15px 30px; background: rgba(66, 133, 244, 0.1); backdrop-filter: blur(10px); border-radius: 25px; display: inline-block; font-weight: 600; color: #333; font-size: 14px; border: 1px solid rgba(255, 255, 255, 0.3);">
-                        <svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 10px; fill: rgba(66, 133, 244, 1);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <div id="data-range-display" role="status" aria-live="polite" aria-label="Data range information" style="margin-top: 25px; padding: 15px 30px; background: rgba(66, 133, 244, 0.1); backdrop-filter: blur(10px); border-radius: 25px; display: inline-block; font-weight: 600; color: #333; font-size: 14px; border: 1px solid rgba(255, 255, 255, 0.3);">
+                        <svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 10px; fill: rgba(66, 133, 244, 1);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                            <title>Data range calendar icon</title>
                             <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
                         </svg>
                         <span id="data-range-text">Loading data range...</span>
                     </div>
-                    <div id="data-stats-display" style="margin-top: 15px; padding: 10px 25px; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border-radius: 20px; display: inline-block; font-size: 13px; color: #555; margin-left: 10px;">
+                    <div id="data-stats-display" role="status" aria-live="polite" aria-label="Survey data statistics" style="margin-top: 15px; padding: 10px 25px; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border-radius: 20px; display: inline-block; font-size: 13px; color: #555; margin-left: 10px;">
                         <span id="data-stats-text">Analyzing <strong id="total-responses-count">0</strong> survey responses</span>
                     </div>
-                </div>
+                </section>
 
                 <!-- Alert Messages -->
-                <div id="alert-container"></div>
+                <div id="alert-container" role="status" aria-live="polite" aria-atomic="true"></div>
 
                 <!-- AI Metrics Overview -->
-                <div class="ai-metrics">
-                    <div class="metric-card">
-                        <div class="metric-value" id="service-status">Checking...</div>
-                        <div class="metric-label">AI Service Status</div>
+                <section class="ai-metrics" aria-label="AI Metrics Overview">
+                    <h2 class="sr-only">AI Service Metrics</h2>
+                    <div class="metric-card" role="status" aria-labelledby="service-status-label">
+                        <div class="metric-value" id="service-status" aria-describedby="service-status-label">Checking...</div>
+                        <div class="metric-label" id="service-status-label">AI Service Status</div>
                     </div>
-                    <div class="metric-card">
-                        <div class="metric-value" id="total-predictions">0</div>
-                        <div class="metric-label">AI Predictions Today</div>
+                    <div class="metric-card" role="status" aria-labelledby="predictions-label">
+                        <div class="metric-value" id="total-predictions" aria-describedby="predictions-label">0</div>
+                        <div class="metric-label" id="predictions-label">AI Predictions Today</div>
                     </div>
-                    <div class="metric-card">
-                        <div class="metric-value" id="accuracy-rate">0%</div>
-                        <div class="metric-label">Model Accuracy</div>
+                    <div class="metric-card" role="status" aria-labelledby="accuracy-label">
+                        <div class="metric-value" id="accuracy-rate" aria-describedby="accuracy-label">0%</div>
+                        <div class="metric-label" id="accuracy-label">Model Accuracy</div>
                     </div>
-                    <div class="metric-card">
-                        <div class="metric-value" id="response-time">0ms</div>
-                        <div class="metric-label">Avg Response Time</div>
+                    <div class="metric-card" role="status" aria-labelledby="response-time-label">
+                        <div class="metric-value" id="response-time" aria-describedby="response-time-label">0ms</div>
+                        <div class="metric-label" id="response-time-label">Avg Response Time</div>
                     </div>
-                    <div class="metric-card">
-                        <div class="metric-value" id="iso-compliance">0%</div>
-                        <div class="metric-label">ISO 21001 Compliance</div>
+                    <div class="metric-card" role="status" aria-labelledby="compliance-label">
+                        <div class="metric-value" id="iso-compliance" aria-describedby="compliance-label">0%</div>
+                        <div class="metric-label" id="compliance-label">ISO 21001 Compliance</div>
                     </div>
-                    <div class="metric-card">
-                        <div class="metric-value" id="risk-score">0/100</div>
-                        <div class="metric-label">Overall Risk Score</div>
+                    <div class="metric-card" role="status" aria-labelledby="risk-score-label">
+                        <div class="metric-value" id="risk-score" aria-describedby="risk-score-label">0/100</div>
+                        <div class="metric-label" id="risk-score-label">Overall Risk Score</div>
                     </div>
-                </div>
+                </section>
 
                 <!-- AI Analysis Tools -->
-                <div class="insights-grid">
+                <section class="insights-grid" aria-label="AI Analysis Tools">
+                    <h2 class="sr-only">Available AI Analysis Tools</h2>
                     <!-- Compliance Prediction -->
-                    <div class="insight-card">
+                    <article class="insight-card">
                         <h3>Compliance Prediction</h3>
                         <p>AI-powered prediction of ISO 21001 compliance levels based on learner feedback and performance metrics.</p>
-                        <button type="button" class="btn btn-primary" onclick="runCompliancePrediction()">Run Prediction</button>
-                    </div>
+                        <button type="button" class="btn btn-primary" onclick="runCompliancePrediction()" aria-describedby="compliance-desc">Run Compliance Prediction</button>
+                        <div id="compliance-desc" class="sr-only">Runs AI analysis to predict ISO 21001 compliance levels based on current survey data</div>
+                    </article>
 
                     <!-- Sentiment Analysis -->
-                    <div class="insight-card">
+                    <article class="insight-card">
                         <h3>Sentiment Analysis</h3>
                         <p>Analyze student feedback sentiment using advanced NLP models to identify positive and negative trends.</p>
-                        <button type="button" class="btn btn-primary" onclick="runSentimentAnalysis()">Analyze Sentiment</button>
-                    </div>
+                        <button type="button" class="btn btn-primary" onclick="runSentimentAnalysis()" aria-describedby="sentiment-desc">Analyze Feedback Sentiment</button>
+                        <div id="sentiment-desc" class="sr-only">Analyzes sentiment in student feedback comments using natural language processing</div>
+                    </article>
 
                     <!-- Student Clustering -->
-                    <div class="insight-card">
+                    <article class="insight-card">
                         <h3>Student Clustering</h3>
                         <p>Group students based on survey responses for targeted interventions and personalized support. ISO 21001:7.1 compliant segmentation.</p>
-                        <button type="button" class="btn btn-primary" onclick="runStudentClustering()">Cluster Students</button>
-                    </div>
+                        <button type="button" class="btn btn-primary" onclick="runStudentClustering()" aria-describedby="clustering-desc">Run Student Clustering</button>
+                        <div id="clustering-desc" class="sr-only">Groups students into clusters based on survey responses for targeted support</div>
+                    </article>
 
                     <!-- Predictive Analytics -->
-                    <div class="insight-card">
+                    <article class="insight-card">
                         <h3>Predictive Analytics</h3>
                         <p>Advanced forecasting of student performance, satisfaction trends, and risk factors using time series analysis.</p>
-                        <button type="button" class="btn btn-primary" onclick="runPredictiveAnalytics()">Run Predictive Analytics</button>
-                    </div>
+                        <button type="button" class="btn btn-primary" onclick="runPredictiveAnalytics()" aria-describedby="predictive-desc">Forecast Future Performance</button>
+                        <div id="predictive-desc" class="sr-only">Forecasts future student performance and satisfaction trends</div>
+                    </article>
 
                     <!-- Comprehensive Risk Assessment -->
-                    <div class="insight-card">
+                    <article class="insight-card">
                         <h3>Comprehensive Risk Assessment</h3>
                         <p>Complete ISO 21001 compliance risk evaluation across all learner-centric dimensions with intervention recommendations.</p>
-                        <button type="button" class="btn btn-primary" onclick="runComprehensiveRiskAssessment()">Assess All Risks</button>
-                    </div>
+                        <button type="button" class="btn btn-primary" onclick="runComprehensiveRiskAssessment()" aria-describedby="risk-desc">Run Comprehensive Risk Assessment</button>
+                        <div id="risk-desc" class="sr-only">Evaluates compliance risks across all ISO 21001 dimensions</div>
+                    </article>
 
                     <!-- Trend Analysis -->
-                    <div class="insight-card">
+                    <article class="insight-card">
                         <h3>Satisfaction Trend Analysis</h3>
                         <p>Analyze satisfaction trends over time with forecasting capabilities for proactive quality management.</p>
-                        <button type="button" class="btn btn-primary" onclick="runTrendAnalysis()">Analyze Trends</button>
-                    </div>
+                        <button type="button" class="btn btn-primary" onclick="runTrendAnalysis()" aria-describedby="trend-desc">Analyze Satisfaction Trends</button>
+                        <div id="trend-desc" class="sr-only">Analyzes satisfaction trends over time with forecasting</div>
+                    </article>
 
                     <!-- Performance Prediction -->
-                    <div class="insight-card">
+                    <article class="insight-card">
                         <h3>Performance Prediction</h3>
                         <p>Predict student academic performance and identify at-risk students early.</p>
-                        <button type="button" class="btn btn-primary" onclick="runPerformancePrediction()">Predict Performance</button>
-                    </div>
+                        <button type="button" class="btn btn-primary" onclick="runPerformancePrediction()" aria-describedby="performance-desc">Predict Student Performance</button>
+                        <div id="performance-desc" class="sr-only">Predicts academic performance and identifies at-risk students</div>
+                    </article>
 
                     <!-- Dropout Risk Assessment -->
-                    <div class="insight-card">
+                    <article class="insight-card">
                         <h3>Dropout Risk Assessment</h3>
                         <p>Identify students at risk of dropping out using machine learning algorithms.</p>
-                        <button type="button" class="btn btn-primary" onclick="runDropoutRiskAssessment()">Assess Risk</button>
-                    </div>
+                        <button type="button" class="btn btn-primary" onclick="runDropoutRiskAssessment()" aria-describedby="dropout-desc">Assess Dropout Risk</button>
+                        <div id="dropout-desc" class="sr-only">Identifies students at risk of dropping out</div>
+                    </article>
 
                     <!-- Comprehensive Analytics -->
-                    <div class="insight-card">
+                    <article class="insight-card">
                         <h3>Comprehensive Analytics</h3>
                         <p>Run all AI models simultaneously for complete insights into student satisfaction and compliance.</p>
-                        <button type="button" class="btn btn-success" onclick="runComprehensiveAnalytics()">Run All Analytics</button>
-                    </div>
-                </div>
+                        <button type="button" class="btn btn-success" onclick="runComprehensiveAnalytics()" aria-describedby="comprehensive-desc">Run All AI Analytics</button>
+                        <div id="comprehensive-desc" class="sr-only">Runs all AI analysis models simultaneously for comprehensive insights</div>
+                    </article>
+                </section>
             </div>
 
             <!-- Sticky Results Sidebar -->
-            <div class="insights-sidebar">
-                <div id="ai-results" class="ai-results">
+            <aside class="insights-sidebar" role="complementary" aria-label="AI Analysis Results">
+                <div id="ai-results" class="ai-results" aria-live="polite" aria-atomic="true">
                     <h3>
                         <span>📊 AI Analysis Results</span>
-                        <button class="results-close-btn" onclick="clearResults()" title="Clear Results">×</button>
+                        <button class="results-close-btn" onclick="clearResults()" title="Clear Results" aria-label="Clear all analysis results" aria-describedby="clear-results-desc">×</button>
+                        <div id="clear-results-desc" class="sr-only">Clears all current analysis results from the display</div>
                     </h3>
                     <div id="results-container">
                         <!-- Empty State -->
                         <div class="ai-results-placeholder">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                                <title>Chart icon indicating analysis results area</title>
                                 <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
                             </svg>
                             <p>Run an analysis to see results</p>
@@ -774,20 +887,21 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </aside>
         </div>
     </main>
 
     <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-overlay" id="loading-overlay" role="dialog" aria-modal="true" aria-labelledby="loading-heading" aria-describedby="loading-desc" aria-busy="false">
         <div style="text-align: center; color: white;">
-            <div class="loading-spinner"></div>
-            <p style="margin-top: 20px; font-size: 18px; font-weight: 600;">Processing AI Analysis...</p>
+            <div class="loading-spinner" aria-hidden="true"></div>
+            <p id="loading-heading" style="margin-top: 20px; font-size: 18px; font-weight: 600;">Processing AI Analysis...</p>
+            <div id="loading-desc" class="sr-only">Please wait while the AI analysis is being processed. This dialog cannot be dismissed until the analysis is complete.</div>
         </div>
     </div>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer" role="contentinfo">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-main">
@@ -811,6 +925,30 @@
 
         // CSRF Token
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        let lastFocusedElement = null;
+
+        /* ----------------------
+           Keyboard Navigation & Accessibility
+           ---------------------- */
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Alt + H: Go to header
+            if (e.altKey && e.key === 'h') {
+                e.preventDefault();
+                document.querySelector('header').focus();
+            }
+            // Alt + M: Go to main content
+            if (e.altKey && e.key === 'm') {
+                e.preventDefault();
+                document.getElementById('main-content').focus();
+            }
+            // Alt + R: Go to results
+            if (e.altKey && e.key === 'r') {
+                e.preventDefault();
+                document.getElementById('ai-results').focus();
+            }
+        });
 
         /* ----------------------
            Helpers & Init
@@ -1052,6 +1190,20 @@
             const container = document.getElementById('results-container');
             const resultsDiv = document.getElementById('ai-results');
             const parts = [];
+
+            // Announce results to screen readers
+            const announcement = document.createElement('div');
+            announcement.setAttribute('aria-live', 'assertive');
+            announcement.setAttribute('aria-atomic', 'true');
+            announcement.className = 'sr-only';
+            announcement.textContent = `AI analysis complete. ${type.charAt(0).toUpperCase() + type.slice(1)} results are now displayed.`;
+            document.body.appendChild(announcement);
+
+            setTimeout(() => {
+                document.body.removeChild(announcement);
+                // Focus management: move focus to results after announcement
+                resultsDiv.focus();
+            }, 1000);
 
             // Debug logging
             console.log('displayResults called with type:', type);
@@ -1339,6 +1491,12 @@
             if (resultsDiv) {
                 resultsDiv.scrollTop = 0;
             }
+
+            // Update results heading with analysis type
+            const resultsHeading = resultsDiv.querySelector('h3 span');
+            if (resultsHeading) {
+                resultsHeading.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} Results`;
+            }
         }
 
         /* ----------------------
@@ -1346,18 +1504,62 @@
            ---------------------- */
         function showAlert(type, message){
             const container = document.getElementById('alert-container');
-            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
-            container.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+            const alertClass = type === 'success' ? 'alert-success' : type === 'warning' ? 'alert-warning' : 'alert-error';
+            const role = type === 'error' ? 'alert' : 'status';
+            container.innerHTML = `<div class="alert ${alertClass}" role="${role}" aria-live="assertive">${message}</div>`;
             setTimeout(()=> container.innerHTML = '', 5000);
         }
 
         function showLoading(message = 'Processing...'){
             const overlay = document.getElementById('loading-overlay');
+            lastFocusedElement = document.activeElement;
+
             overlay.querySelector('p').textContent = message;
             overlay.classList.add('active');
+            overlay.setAttribute('aria-busy', 'true');
+
+            // Focus trap for loading overlay
+            overlay.focus();
+
+            // Announce loading state to screen readers
+            const announcement = document.createElement('div');
+            announcement.setAttribute('aria-live', 'assertive');
+            announcement.setAttribute('aria-atomic', 'true');
+            announcement.className = 'sr-only';
+            announcement.textContent = `${message} Please wait.`;
+            document.body.appendChild(announcement);
+
+            setTimeout(() => document.body.removeChild(announcement), 1000);
+
+            document.addEventListener('keydown', handleKeyDown);
         }
 
-        function hideLoading(){ document.getElementById('loading-overlay').classList.remove('active'); }
+        function hideLoading(){
+            const overlay = document.getElementById('loading-overlay');
+            overlay.classList.remove('active');
+            overlay.setAttribute('aria-busy', 'false');
+            if (lastFocusedElement) {
+                lastFocusedElement.focus();
+            }
+            document.removeEventListener('keydown', handleKeyDown);
+        }
+
+        function handleKeyDown(e) {
+            const overlay = document.getElementById('loading-overlay');
+            if (!overlay.classList.contains('active')) return;
+
+            if (e.key === 'Escape') {
+                // Don't allow escape during loading - analysis must complete
+                e.preventDefault();
+                return;
+            }
+
+            if (e.key === 'Tab') {
+                // Trap focus within the dialog - prevent tabbing out
+                e.preventDefault();
+                overlay.focus();
+            }
+        }
 
         console.log('Enhanced AI Insights page loaded');
     </script>
