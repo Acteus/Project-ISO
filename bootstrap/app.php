@@ -28,5 +28,17 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Log all exceptions to stderr for Railway logs
+        $exceptions->reportable(function (Throwable $e) {
+            if (app()->environment('production')) {
+                error_log(sprintf(
+                    "[%s] %s: %s in %s:%d",
+                    date('Y-m-d H:i:s'),
+                    get_class($e),
+                    $e->getMessage(),
+                    $e->getFile(),
+                    $e->getLine()
+                ));
+            }
+        });
     })->create();
