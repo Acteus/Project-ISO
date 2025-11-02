@@ -18,6 +18,7 @@ class AIService
     public function __construct()
     {
         $this->flaskClient = app(FlaskAIClient::class);
+        // Re-enable Flask service now that it's deployed at https://ai-service-mezs5q.fly.dev
         $this->useFlaskService = config('ai.fallback_to_php', true) ? $this->flaskClient->isServiceAvailable() : true;
     }
     /**
