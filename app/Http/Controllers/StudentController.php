@@ -127,10 +127,14 @@ class StudentController extends Controller
 
                 // Log admin login for audit trail
                 AuditLog::create([
-                    'admin_id' => $admin->id,
+                    'user_id' => null,
                     'action' => 'admin_login',
                     'description' => 'Admin logged into ISO 21001 survey system',
                     'ip_address' => $request->ip(),
+                    'new_values' => [
+                        'admin_id' => $admin->id,
+                        'admin_username' => $admin->username,
+                    ],
                 ]);
 
                 return response()->json([
@@ -218,10 +222,14 @@ class StudentController extends Controller
         // Log logout for audit trail for admins
         if ($admin) {
             AuditLog::create([
-                'admin_id' => $admin->id,
+                'user_id' => null,
                 'action' => 'admin_logout',
                 'description' => 'Admin logged out of ISO 21001 survey system',
                 'ip_address' => $request->ip(),
+                'new_values' => [
+                    'admin_id' => $admin->id,
+                    'admin_username' => $admin->username,
+                ],
             ]);
         }
 
@@ -324,11 +332,15 @@ class StudentController extends Controller
 
         // Log viewing of response for audit trail
         AuditLog::create([
-            'admin_id' => $admin->id,
+            'user_id' => null,
             'action' => 'view_survey_response',
             'description' => 'Admin viewed detailed survey response',
             'ip_address' => request()->ip(),
-            'new_values' => ['response_id' => $response->id],
+            'new_values' => [
+                'response_id' => $response->id,
+                'admin_id' => $admin->id,
+                'admin_username' => $admin->username,
+            ],
         ]);
 
         return view('admin.response-detail', compact('admin', 'response'));
@@ -347,10 +359,14 @@ class StudentController extends Controller
 
         // Log viewing of all responses for audit trail
         AuditLog::create([
-            'admin_id' => $admin->id,
+            'user_id' => null,
             'action' => 'view_all_responses',
             'description' => 'Admin viewed all survey responses list',
             'ip_address' => request()->ip(),
+            'new_values' => [
+                'admin_id' => $admin->id,
+                'admin_username' => $admin->username,
+            ],
         ]);
 
         return view('admin.all-responses', compact('admin', 'responses'));
@@ -393,10 +409,14 @@ class StudentController extends Controller
 
         // Log viewing of audit logs
         AuditLog::create([
-            'admin_id' => $admin->id,
+            'user_id' => null,
             'action' => 'view_audit_logs',
             'description' => 'Admin viewed system audit logs',
             'ip_address' => request()->ip(),
+            'new_values' => [
+                'admin_id' => $admin->id,
+                'admin_username' => $admin->username,
+            ],
         ]);
 
         return view('admin.audit-logs', compact('admin', 'auditLogs', 'actions', 'action', 'dateFrom', 'dateTo'));
@@ -412,10 +432,14 @@ class StudentController extends Controller
 
         // Log viewing of AI insights for audit trail
         AuditLog::create([
-            'admin_id' => $admin->id,
+            'user_id' => null,
             'action' => 'view_ai_insights',
             'description' => 'Admin accessed AI insights dashboard',
             'ip_address' => request()->ip(),
+            'new_values' => [
+                'admin_id' => $admin->id,
+                'admin_username' => $admin->username,
+            ],
         ]);
 
         return view('admin.ai-insights', compact('admin'));
