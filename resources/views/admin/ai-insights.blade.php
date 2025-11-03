@@ -1213,20 +1213,20 @@
                 case 'compliance': {
                     const p = data.prediction || data || {};
                     console.log('compliance p:', JSON.stringify(p, null, 2));
-                    
+
                     // Extract values with better fallback logic
                     const weighted = Number(p.weighted_score) || 0;
                     const confidence = Number(p.confidence) || 0;
-                    
+
                     // Use confidence as the badge value (more meaningful than probability)
                     const badgeValue = confidence > 0 ? `${Math.round(confidence * 100)}% Confidence` : 'Completed';
-                    
+
                     const predictionLabel = typeof p.prediction === 'string' ? p.prediction : (p.prediction?.prediction || 'Unknown');
-                    
+
                     // Create visual score bar
                     const scorePercentage = (weighted / 5) * 100;
                     const scoreColor = scorePercentage >= 80 ? '#28a745' : scorePercentage >= 60 ? '#ffc107' : '#dc3545';
-                    
+
                     const html = `
                         <p><strong>Compliance Level:</strong> <span style="color: ${scoreColor}; font-weight: 700;">${predictionLabel}</span></p>
                         <p><strong>Risk Level:</strong> <span style="color: ${p.risk_level === 'High' ? '#dc3545' : p.risk_level === 'Medium' ? '#ffc107' : '#28a745'};">${p.risk_level ?? 'Unknown'}</span></p>
@@ -1403,14 +1403,14 @@
                             const riskColor = riskLevel === 'High' ? '#dc3545' : riskLevel === 'Medium' ? '#ffc107' : '#28a745';
                             const avgSat = cluster.average_satisfaction;
                             const avgPerf = cluster.average_performance;
-                            
+
                             const details = `
                                 <p><strong>Risk Level:</strong> <span style="color: ${riskColor}; font-weight: 700;">${riskLevel}</span></p>
                                 <p><strong>Avg Satisfaction:</strong> ${avgSat ? `${Number(avgSat).toFixed(2)}/5.0` : 'N/A'}</p>
                                 <p><strong>Avg Performance:</strong> ${avgPerf ? `${Number(avgPerf).toFixed(2)}/4.0` : 'N/A'}</p>
                                 <div style="margin-top: 10px;">
                                     <p style="margin-bottom: 5px;"><strong>Key Characteristics:</strong></p>
-                                    ${Array.isArray(cluster.characteristics) && cluster.characteristics.length 
+                                    ${Array.isArray(cluster.characteristics) && cluster.characteristics.length
                                         ? '<ul style="margin: 5px 0; padding-left: 20px; font-size: 13px;">' + cluster.characteristics.map(c => `<li style="margin-bottom: 5px;">${c}</li>`).join('') + '</ul>'
                                         : '<p style="color: #999; font-size: 13px;">No specific characteristics identified</p>'}
                                 </div>
@@ -1430,7 +1430,7 @@
                     const predGpa = p.predicted_gpa;
                     const riskLevel = p.risk_level ?? 'Unknown';
                     const riskColor = riskLevel === 'High' ? '#dc3545' : riskLevel === 'Medium' ? '#ffc107' : '#28a745';
-                    
+
                     // Create GPA visualization if available
                     let gpaViz = '';
                     if (typeof predGpa === 'number') {
@@ -1445,7 +1445,7 @@
                             </div>
                         `;
                     }
-                    
+
                     const html = `
                         <p><strong>Predicted Performance:</strong> ${p.prediction ?? 'Unknown'}</p>
                         ${gpaViz}
@@ -1463,7 +1463,7 @@
                     const riskColor = riskLevel === 'High' ? '#dc3545' : riskLevel === 'Medium' ? '#ffc107' : '#28a745';
                     const prob = p.risk_probability;
                     const conf = Number(p.confidence) || 0;
-                    
+
                     // Create probability visualization if available
                     let probViz = '';
                     if (typeof prob === 'number') {
@@ -1477,19 +1477,19 @@
                             </div>
                         `;
                     }
-                    
+
                     const html = `
                         <p><strong>Risk Level:</strong> <span style="color: ${riskColor}; font-weight: 700; font-size: 18px;">${riskLevel}</span></p>
                         ${probViz}
                         <p><strong>Intervention Urgency:</strong> <span style="font-weight: 600;">${p.intervention_urgency ?? 'Moderate'}</span></p>
                         <p><strong>Analysis Confidence:</strong> ${(conf * 100).toFixed(1)}%</p>
-                        ${Array.isArray(p.risk_factors) && p.risk_factors.length 
+                        ${Array.isArray(p.risk_factors) && p.risk_factors.length
                             ? `<div style="margin-top: 10px;">
                                 <p style="margin-bottom: 5px;"><strong>Identified Risk Factors:</strong></p>
                                 <ul style="margin: 5px 0; padding-left: 20px; font-size: 13px;">
                                     ${p.risk_factors.map(rf => `<li style="margin-bottom: 5px;">${rf}</li>`).join('')}
                                 </ul>
-                            </div>` 
+                            </div>`
                             : ''}
                         <p style="margin-top: 10px; font-size: 12px; color: #666; font-style: italic;">Early intervention recommended for high-risk students.</p>
                     `;
@@ -1515,11 +1515,11 @@
                     const riskCategory = r.risk_category ?? 'Unknown';
                     const riskLevel = r.risk_level ?? 'Unknown';
                     const conf = Number(r.confidence) || 0;
-                    
+
                     // Determine risk color based on score
                     const riskColor = overallRisk >= 70 ? '#dc3545' : overallRisk >= 40 ? '#ffc107' : '#28a745';
                     const riskLabel = overallRisk >= 70 ? 'High Risk' : overallRisk >= 40 ? 'Medium Risk' : 'Low Risk';
-                    
+
                     const html = `
                         <div style="margin: 15px 0;">
                             <p style="margin-bottom: 8px;"><strong>Overall Risk Score:</strong> <span style="color: ${riskColor}; font-weight: 700; font-size: 22px;">${overallRisk}</span> / 100</p>
@@ -1535,21 +1535,21 @@
                         <p style="margin-top: 10px; font-size: 12px; color: #666; font-style: italic;">Comprehensive risk assessment across all ISO 21001 dimensions.</p>
                     `;
                     parts.push(renderItem('Comprehensive Risk Assessment', `${overallRisk}/100`, html));
-                    
+
                     if (r.risk_breakdown){
-                        const names = { 
-                            learning_environment:'Learning Environment', 
-                            academic_performance:'Academic Performance', 
-                            safety:'Safety & Security', 
-                            wellbeing:'Student Wellbeing', 
-                            engagement:'Student Engagement' 
+                        const names = {
+                            learning_environment:'Learning Environment',
+                            academic_performance:'Academic Performance',
+                            safety:'Safety & Security',
+                            wellbeing:'Student Wellbeing',
+                            engagement:'Student Engagement'
                         };
-                        
+
                         Object.entries(r.risk_breakdown).forEach(([k,v]) => {
                             const score = Number(v) || 0;
                             const color = score >= 70 ? '#dc3545' : score >= 40 ? '#ffc107' : '#28a745';
                             const categoryName = names[k] || k;
-                            
+
                             const breakdownHtml = `
                                 <div style="margin: 10px 0;">
                                     <p style="margin-bottom: 5px;"><strong>Risk Score:</strong> <span style="color: ${color}; font-weight: 700; font-size: 18px;">${score}</span> / 100</p>
@@ -1568,12 +1568,12 @@
                 case 'trend_analysis': {
                     const t = data.trend_prediction || data || {};
                     const trendDir = t.trend_direction ?? 'Stable';
-                    const trendColor = trendDir.toLowerCase().includes('upward') || trendDir.toLowerCase().includes('improving') ? '#28a745' 
-                                     : trendDir.toLowerCase().includes('downward') || trendDir.toLowerCase().includes('declining') ? '#dc3545' 
+                    const trendColor = trendDir.toLowerCase().includes('upward') || trendDir.toLowerCase().includes('improving') ? '#28a745'
+                                     : trendDir.toLowerCase().includes('downward') || trendDir.toLowerCase().includes('declining') ? '#dc3545'
                                      : '#6c757d';
                     const currentSat = t.current_satisfaction;
                     const conf = Number(t.confidence) || 0;
-                    
+
                     // Create satisfaction visualization
                     let satViz = '';
                     if (typeof currentSat === 'number') {
@@ -1588,7 +1588,7 @@
                             </div>
                         `;
                     }
-                    
+
                     const html = `
                         ${satViz}
                         <p><strong>Trend Direction:</strong> <span style="color: ${trendColor}; font-weight: 700;">${trendDir}</span></p>
@@ -1597,7 +1597,7 @@
                         <p style="margin-top: 10px; font-size: 12px; color: #666; font-style: italic;">Trend analysis based on historical satisfaction data patterns.</p>
                     `;
                     parts.push(renderItem('Satisfaction Trend Analysis', trendDir, html));
-                    
+
                     if (Array.isArray(t.forecasted_satisfaction) && t.forecasted_satisfaction.length){
                         const forecastHtml = t.forecasted_satisfaction.map((val, idx) => {
                             const month = idx + 1;
@@ -1620,13 +1620,13 @@
                 case 'comprehensive': {
                     // Summary header
                     const totalAnalyses = Object.keys(data.analytics_results || {}).length;
-                    parts.push(renderItem('Comprehensive Analytics', `${totalAnalyses} Analyses Completed`, 
+                    parts.push(renderItem('Comprehensive Analytics', `${totalAnalyses} Analyses Completed`,
                         '<p style="font-size: 15px; line-height: 1.6;">All AI models have been executed successfully. Detailed results for each analysis are shown below.</p>',
                         { style: 'background:linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(32, 201, 151, 0.1));border-left:4px solid #28a745;' }
                     ));
-                    
+
                     const a = data.analytics_results || {};
-                    
+
                     // Compliance Prediction
                     if (a.compliance_prediction) {
                         const cp = a.compliance_prediction;
@@ -1634,7 +1634,7 @@
                         const weighted = Number(cp.weighted_score) || 0;
                         const scorePercentage = (weighted / 5) * 100;
                         const scoreColor = scorePercentage >= 80 ? '#28a745' : scorePercentage >= 60 ? '#ffc107' : '#dc3545';
-                        
+
                         const compHtml = `
                             <p><strong>Compliance Level:</strong> <span style="color: ${scoreColor}; font-weight: 700;">${cp.prediction ?? 'Unknown'}</span></p>
                             <p><strong>Risk Level:</strong> <span style="color: ${cp.risk_level === 'High' ? '#dc3545' : cp.risk_level === 'Medium' ? '#ffc107' : '#28a745'};">${cp.risk_level ?? 'Unknown'}</span></p>
@@ -1645,13 +1645,13 @@
                         `;
                         parts.push(renderItem('✓ Compliance Prediction', `${Math.round(confidence * 100)}% Confidence`, compHtml));
                     }
-                    
+
                     // Sentiment Analysis
                     if (a.sentiment_analysis) {
                         const sa = a.sentiment_analysis;
                         const breakdown = sa.breakdown || { positive: 0, neutral: 0, negative: 0 };
                         const total = sa.total_comments_analyzed || 0;
-                        
+
                         const sentHtml = `
                             <p><strong>Overall Sentiment:</strong> <span style="font-weight: 700; color: ${sa.overall_sentiment === 'Positive' ? '#28a745' : sa.overall_sentiment === 'Negative' ? '#dc3545' : '#6c757d'};">${sa.overall_sentiment ?? 'Neutral'}</span></p>
                             <p><strong>Comments Analyzed:</strong> ${total}</p>
@@ -1666,13 +1666,13 @@
                         `;
                         parts.push(renderItem('✓ Sentiment Analysis', `${total} Comments`, sentHtml));
                     }
-                    
+
                     // Student Clustering
                     if (a.student_clustering) {
                         const sc = a.student_clustering;
                         const clusterCount = sc.clusters ?? sc.cluster_count ?? 0;
                         const totalStudents = sc.total_samples ?? 0;
-                        
+
                         const clusterHtml = `
                             <p><strong>Total Students:</strong> ${totalStudents}</p>
                             <p><strong>Clusters Identified:</strong> ${clusterCount}</p>
@@ -1681,12 +1681,12 @@
                         `;
                         parts.push(renderItem('✓ Student Clustering', `${clusterCount} Groups`, clusterHtml));
                     }
-                    
+
                     // Performance Prediction
                     if (a.performance_prediction) {
                         const pp = a.performance_prediction;
                         const confidence = Number(pp.confidence) || 0;
-                        
+
                         const perfHtml = `
                             <p><strong>Predicted Performance:</strong> ${pp.prediction ?? 'Unknown'}</p>
                             ${pp.predicted_gpa ? `<p><strong>Predicted GPA:</strong> ${Number(pp.predicted_gpa).toFixed(2)}</p>` : ''}
@@ -1694,13 +1694,13 @@
                         `;
                         parts.push(renderItem('✓ Performance Prediction', `${Math.round(confidence * 100)}% Confidence`, perfHtml));
                     }
-                    
+
                     // Dropout Risk Assessment
                     if (a.dropout_risk_prediction) {
                         const dr = a.dropout_risk_prediction;
                         const riskLevel = dr.dropout_risk ?? 'Unknown';
                         const riskColor = riskLevel === 'High' ? '#dc3545' : riskLevel === 'Medium' ? '#ffc107' : '#28a745';
-                        
+
                         const dropHtml = `
                             <p><strong>Dropout Risk:</strong> <span style="color: ${riskColor}; font-weight: 700;">${riskLevel}</span></p>
                             ${dr.confidence ? `<p><strong>Confidence:</strong> ${Math.round(dr.confidence * 100)}%</p>` : ''}
@@ -1708,7 +1708,7 @@
                         `;
                         parts.push(renderItem('✓ Dropout Risk Assessment', riskLevel, dropHtml));
                     }
-                    
+
                     break;
                 }
 
