@@ -574,8 +574,12 @@
                             @foreach($qrCodes as $qrCode)
                                 <tr>
                                     <td>
-                                        @if($qrCode->file_path)
-                                            <img src="{{ $qrCode->file_url }}" alt="QR Code" class="qr-preview">
+                                        @if($qrCode->file_path && $qrCode->fileExists())
+                                            <img src="{{ $qrCode->file_url }}" alt="QR Code" class="qr-preview"
+                                                 onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div style="width: 50px; height: 50px; background: #fff3cd; border-radius: 4px; display: none; align-items: center; justify-content: center; font-size: 20px; color: #856404;">⚠️</div>
+                                        @elseif($qrCode->file_path)
+                                            <div style="width: 50px; height: 50px; background: #fff3cd; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #856404;" title="File not found in storage">⚠️</div>
                                         @else
                                             <div style="width: 50px; height: 50px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #666;">No Image</div>
                                         @endif

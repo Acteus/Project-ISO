@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Storage;
 
 class QrCode extends Model
 {
@@ -59,9 +60,25 @@ class QrCode extends Model
     public function getFileUrlAttribute()
     {
         if ($this->file_path) {
+            // Use Storage facade for proper URL generation
+            // This works better with symbolic links on various hosting platforms
+            if (Storage::disk('public')->exists($this->file_path)) {
+                return Storage::disk('public')->url($this->file_path);
+            }
+            // Fallback to asset helper if Storage URL doesn't work
             return asset('storage/' . $this->file_path);
         }
         return null;
+    }
+
+    /**
+     * Check if the QR code file exists in storage.
+     *
+     * @return bool
+     */
+    public function fileExists()
+    {
+        return $this->file_path && Storage::disk('public')->exists($this->file_path);
     }
 
     /**
