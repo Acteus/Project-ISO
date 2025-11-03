@@ -34,11 +34,11 @@ class DiagnoseStorage extends Command
         $this->info('1. Checking storage symlink...');
         $publicStoragePath = public_path('storage');
         $storagePublicPath = storage_path('app/public');
-        
+
         if (is_link($publicStoragePath)) {
             $this->info('   ✓ Storage symlink EXISTS at: ' . $publicStoragePath);
             $this->info('   → Points to: ' . readlink($publicStoragePath));
-            
+
             if (readlink($publicStoragePath) === $storagePublicPath) {
                 $this->info('   ✓ Symlink is CORRECT');
             } else {
@@ -49,7 +49,7 @@ class DiagnoseStorage extends Command
             $this->error('   ✗ Storage symlink NOT FOUND!');
             $this->info('   Run: php artisan storage:link');
         }
-        
+
         $this->newLine();
 
         // Check storage disk configuration
@@ -62,7 +62,7 @@ class DiagnoseStorage extends Command
         // Check QR code directory
         $this->info('3. Checking QR code storage directory...');
         $qrCodePath = 'qr-codes';
-        
+
         if (Storage::disk('public')->exists($qrCodePath)) {
             $this->info('   ✓ QR code directory EXISTS');
             $files = Storage::disk('public')->files($qrCodePath);
@@ -74,24 +74,24 @@ class DiagnoseStorage extends Command
             Storage::disk('public')->makeDirectory($qrCodePath);
             $this->info('   ✓ Directory created');
         }
-        
+
         $this->newLine();
 
         // Check QR codes in database
         $this->info('4. Checking QR codes in database...');
         $totalQrCodes = QrCode::count();
         $this->info('   Total QR codes: ' . $totalQrCodes);
-        
+
         if ($totalQrCodes > 0) {
             $missingFiles = 0;
             $existingFiles = 0;
-            
+
             $this->info('   Checking file existence...');
             $bar = $this->output->createProgressBar($totalQrCodes);
             $bar->start();
-            
+
             $issues = [];
-            
+
             QrCode::chunk(10, function ($qrCodes) use (&$missingFiles, &$existingFiles, &$issues, $bar) {
                 foreach ($qrCodes as $qrCode) {
                     if ($qrCode->file_path) {
@@ -116,14 +116,14 @@ class DiagnoseStorage extends Command
                     $bar->advance();
                 }
             });
-            
+
             $bar->finish();
             $this->newLine(2);
-            
+
             $this->info('   ✓ Files found: ' . $existingFiles);
             if ($missingFiles > 0) {
                 $this->warn('   ⚠ Files missing: ' . $missingFiles);
-                
+
                 if ($this->confirm('Show details of missing files?', true)) {
                     $this->table(
                         ['ID', 'Name', 'File Path'],
@@ -134,11 +134,11 @@ class DiagnoseStorage extends Command
                         ])->toArray()
                     );
                 }
-                
+
                 if ($this->confirm('Regenerate missing QR code files?', false)) {
                     $this->info('   Regenerating files...');
                     $regenerated = 0;
-                    
+
                     foreach ($issues as $issue) {
                         if ($issue['path'] !== 'NULL') {
                             try {
@@ -152,12 +152,12 @@ class DiagnoseStorage extends Command
                             }
                         }
                     }
-                    
+
                     $this->info("   ✓ Regenerated {$regenerated} QR code files");
                 }
             }
         }
-        
+
         $this->newLine();
 
         // Final summary
@@ -167,7 +167,7 @@ class DiagnoseStorage extends Command
         if ($totalQrCodes > 0) {
             $this->info('Files status: ' . $existingFiles . ' found, ' . $missingFiles . ' missing');
         }
-        
+
         $this->newLine();
         $this->info('Diagnostics complete!');
 
