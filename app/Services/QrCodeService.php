@@ -261,9 +261,9 @@ class QrCodeService
     {
         // Get sections from existing users
         $existingSections = \App\Models\User::where('role', 'student')
-            ->where('track', 'CSS')
             ->distinct()
             ->pluck('section')
+            ->filter() // Remove null values
             ->sort()
             ->values()
             ->toArray();

@@ -12,12 +12,34 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('audit_logs', function (Blueprint $table) {
-            // Drop index first
-            $table->dropIndex(['admin_id', 'created_at']);
+        // Get the actual foreign key constraint name
+        $foreignKeys = DB::select(
+            "SELECT CONSTRAINT_NAME
+             FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = DATABASE()
+             AND TABLE_NAME = 'audit_logs'
+             AND COLUMN_NAME = 'admin_id'
+             AND REFERENCED_TABLE_NAME IS NOT NULL"
+        );
 
-            // Drop foreign key
-            $table->dropForeign(['admin_id']);
+        Schema::table('audit_logs', function (Blueprint $table) use ($foreignKeys) {
+            // Drop foreign key if it exists
+            if (!empty($foreignKeys)) {
+                DB::statement('ALTER TABLE audit_logs DROP FOREIGN KEY ' . $foreignKeys[0]->CONSTRAINT_NAME);
+            }
+
+            // Drop index if it exists
+            $indexExists = DB::select(
+                "SELECT INDEX_NAME
+                 FROM information_schema.STATISTICS
+                 WHERE TABLE_SCHEMA = DATABASE()
+                 AND TABLE_NAME = 'audit_logs'
+                 AND INDEX_NAME = 'audit_logs_admin_id_created_at_index'"
+            );
+
+            if (!empty($indexExists)) {
+                $table->dropIndex('audit_logs_admin_id_created_at_index');
+            }
 
             // Drop column
             $table->dropColumn('admin_id');
