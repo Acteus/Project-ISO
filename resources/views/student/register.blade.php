@@ -479,7 +479,7 @@
 
                                   const modalContent = document.createElement('div');
                                   modalContent.style.cssText = `
-                                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                      background: linear-gradient(135deg, #4285f4, #ffd700);
                                       padding: 40px;
                                       border-radius: 15px;
                                       max-width: 500px;
@@ -499,7 +499,7 @@
                                       </p>
                                       <button onclick="window.location.href='${data.redirect}'" style="
                                           background: white;
-                                          color: #667eea;
+                                          color: #4285f4;
                                           border: none;
                                           padding: 15px 40px;
                                           border-radius: 8px;
