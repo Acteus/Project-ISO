@@ -483,9 +483,18 @@
                 <!-- QR Code Preview -->
                 <div class="qr-preview-card">
                     <h3>QR Code Preview</h3>
-                    @if($qrCode->file_path)
+                    @if($qrCode->file_path && $qrCode->fileExists())
                         <div class="qr-preview-image">
-                            <img src="{{ $qrCode->file_url }}" alt="QR Code" id="qr-image">
+                            <img src="{{ $qrCode->file_url }}" alt="QR Code" id="qr-image"
+                                 onerror="this.parentElement.innerHTML='<div style=\'color: #dc3545; padding: 20px; text-align: center;\'><p><strong>Image Load Error</strong></p><p style=\'font-size: 12px;\'>File path: {{ $qrCode->file_path }}</p><p style=\'font-size: 12px; word-break: break-all;\'>URL: {{ $qrCode->file_url }}</p></div>'">
+                        </div>
+                    @elseif($qrCode->file_path)
+                        <div class="qr-preview-image" style="background: #fff3cd; color: #856404; padding: 20px; text-align: center;">
+                            <div>
+                                <p><strong>⚠️ File Not Found</strong></p>
+                                <p style="font-size: 12px; margin-top: 10px;">The QR code file exists in the database but not in storage.</p>
+                                <p style="font-size: 11px; color: #666; margin-top: 5px;">Path: {{ $qrCode->file_path }}</p>
+                            </div>
                         </div>
                     @else
                         <div class="qr-preview-image" style="background: #f0f0f0; color: #666;">

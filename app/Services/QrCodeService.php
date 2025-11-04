@@ -73,17 +73,19 @@ class QrCodeService
         $fileName = $this->generateFileName($qrCode);
         $directory = 'qr-codes/' . date('Y/m');
 
-        // Save to storage
+        // Save to storage with proper visibility
+        $filePath = $directory . '/' . $fileName;
+
         if ($qrCode->format === 'svg') {
-            Storage::disk('public')->put($directory . '/' . $fileName, $qrData);
+            Storage::disk('public')->put($filePath, $qrData, 'public');
         } else {
             // For PNG, we need to save binary data
-            Storage::disk('public')->put($directory . '/' . $fileName, $qrData);
+            Storage::disk('public')->put($filePath, $qrData, 'public');
         }
 
         // Update QR code with file path
         $qrCode->update([
-            'file_path' => $directory . '/' . $fileName
+            'file_path' => $filePath
         ]);
 
         return $directory . '/' . $fileName;
@@ -261,9 +263,9 @@ class QrCodeService
     {
         // Get sections from existing users
         $existingSections = \App\Models\User::where('role', 'student')
-            ->where('track', 'CSS')
             ->distinct()
             ->pluck('section')
+            ->filter() // Remove null values
             ->sort()
             ->values()
             ->toArray();

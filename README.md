@@ -8,10 +8,14 @@ This application implements a complete ISO 21001 quality management system for e
 
 - **ISO 21001 Compliance**: Full compliance with educational quality management standards
 - **Learner-Centric Design**: Comprehensive survey metrics across 5 key domains
-- **AI-Powered Analytics**: Machine learning for compliance prediction and insights
+- **AI-Powered Analytics**: Machine learning for compliance prediction and insights with Flask AI service and PHP-ML fallback
 - **Privacy by Design**: GDPR-compliant data handling with encryption and anonymization
 - **Comprehensive Reporting**: Multi-format exports and executive dashboards
 - **Audit Trail**: Complete traceability for compliance verification
+- **QR Code Management**: Automated QR code generation and tracking for survey distribution
+- **Weekly Progress Tracking**: Automated weekly metrics aggregation and goal management
+- **Email Notifications**: Automated weekly and monthly compliance reports
+- **Advanced Analytics**: Real-time dashboards with interactive visualizations
 
 ## Architecture Overview
 
@@ -20,50 +24,101 @@ This is a monolithic Laravel application with a service-oriented architecture an
 ### Core Components
 - **Laravel Framework**: Version 12 with PHP 8.2+
 - **Database**: SQLite/MySQL/PostgreSQL support
-- **Authentication**: Laravel Sanctum for API authentication
-- **Frontend**: Laravel Blade views with vanilla JavaScript (Axios for API calls)
-- **AI/ML**: 
+- **Authentication**: Laravel Sanctum for API authentication and session-based auth
+- **Frontend**: Laravel Blade views with Tailwind CSS and vanilla JavaScript (Axios for API calls)
+- **AI/ML**:
   - **Primary**: Python Flask AI Service with TensorFlow/scikit-learn (8 ML models)
   - **Fallback**: PHP-ML library for offline compliance analysis
+  - **Circuit Breaker**: Resilient service communication with retry mechanisms
 - **Exports**: Laravel Excel and DomPDF for reporting
 - **Visualization**: Chart.js for real-time analytics dashboards
+- **QR Code Management**: SimpleSoftwareIO QR Code library for survey distribution
+- **Email**: Resend for automated notifications and reports
+- **Caching**: Advanced caching with Redis/file cache support
+- **Background Jobs**: Laravel Queue for automated report generation
 
 ### Key Features
-- Student registration and authentication system
-- Comprehensive ISO 21001 survey forms
-- Admin dashboard with analytics and visualizations
-- AI-driven compliance risk assessment
+- Student registration and authentication system with email verification
+- Comprehensive ISO 21001 survey forms (20+ questions across 5 domains)
+- Admin dashboard with real-time analytics and interactive visualizations
+- AI-driven compliance risk assessment with 8 ML models
+- QR code generation and tracking for survey distribution
+- Weekly progress tracking and automated goal management
 - Multi-format data exports (Excel, CSV, PDF)
-- Complete audit logging and privacy compliance
+- Automated email reports (weekly/monthly compliance reports)
+- Complete audit logging and GDPR-compliant privacy controls
+- Advanced caching and performance optimization
 
 ## Project Structure
 
 ```
 project-iso/
 ├── app/                          # Laravel application code
+│   ├── Console/Commands/         # Artisan commands for automation
+│   │   ├── AggregateWeeklyMetrics.php    # Weekly metrics aggregation
+│   │   ├── GenerateMonthlyReports.php    # Automated report generation
+│   │   ├── SendWeeklyProgressReports.php # Email notifications
+│   │   └── TestFlaskAIService.php        # AI service testing
 │   ├── Http/Controllers/         # Controllers (Survey, AI, Admin, etc.)
-│   │   ├── AIAnalysisController.php    # AI insights and predictions
-│   │   ├── AdminController.php         # Admin dashboard
-│   │   └── SurveyController.php        # Survey management
-│   ├── Models/                   # Eloquent models (SurveyResponse, Admin, etc.)
+│   │   ├── AIController.php              # AI insights and predictions
+│   │   ├── AdminAuthController.php       # Admin authentication
+│   │   ├── AnalyticsController.php       # Analytics and reporting
+│   │   ├── ExportController.php          # Data export functionality
+│   │   ├── QrCodeController.php          # QR code management
+│   │   ├── StudentController.php         # Student authentication & dashboard
+│   │   ├── SurveyController.php          # Survey management
+│   │   └── VisualizationController.php   # Chart and visualization data
+│   ├── Models/                   # Eloquent models
+│   │   ├── Admin.php             # Admin user model
+│   │   ├── AuditLog.php          # Audit logging
+│   │   ├── Goal.php              # Goal tracking
+│   │   ├── QrCode.php            # QR code management
+│   │   ├── SurveyResponse.php    # Survey response data
+│   │   ├── User.php              # Student user model
+│   │   └── WeeklyMetric.php      # Weekly progress metrics
 │   ├── Services/                 # Business logic services
 │   │   ├── AIService.php         # Core AI service with fallback logic
-│   │   └── FlaskAIClient.php     # Flask AI service client
-│   └── Exports/                  # Export classes
-├── ai-service/                   # Python Flask AI microservice
-│   ├── app.py                    # Flask application entry point
-│   ├── ai_models/                # 8 ML model implementations
-│   │   ├── compliance_predictor.py
-│   │   ├── sentiment_analyzer.py
-│   │   ├── student_clusterer.py
-│   │   ├── dropout_risk_predictor.py
-│   │   ├── risk_assessment_predictor.py
-│   │   ├── satisfaction_trend_predictor.py
-│   │   └── student_performance_predictor.py
-│   ├── utils/                    # Data processing utilities
-│   ├── models/                   # Trained model files
-│   ├── Dockerfile                # Docker configuration
-│   └── requirements.txt          # Python dependencies
+│   │   ├── AnalyticsService.php  # Analytics calculations
+│   │   ├── CacheService.php      # Advanced caching
+│   │   ├── FlaskAIClient.php     # Flask AI service client
+│   │   ├── QrCodeService.php     # QR code generation
+│   │   └── VisualizationService.php # Chart data generation
+│   ├── Exports/                  # Export classes
+│   └── Observers/                # Model observers
+├── config/                       # Configuration files
+│   ├── ai.php                    # AI service configuration
+│   ├── performance.php           # Performance optimization settings
+│   └── queue.php                 # Background job configuration
+├── database/                     # Migrations and seeders
+│   ├── migrations/               # Database schema migrations
+│   │   ├── 2025_08_28_080733_create_survey_responses_table.php
+│   │   ├── 2025_10_28_185339_create_weekly_metrics_table.php
+│   │   ├── 2025_10_28_190344_create_goals_table.php
+│   │   ├── 2025_10_29_215050_create_qr_codes_table.php
+│   │   └── ...additional migrations
+│   └── seeders/                  # Data seeding
+├── docs/                         # Documentation
+│   ├── iso-21001-system-documentation.md
+│   ├── analytics-enhancements.md
+│   └── qr-code-documentation.md
+├── resources/views/              # Blade templates
+│   ├── admin/                    # Admin dashboard views
+│   │   ├── dashboard.blade.php
+│   │   ├── ai-insights.blade.php
+│   │   ├── qr-codes/
+│   │   └── reports.blade.php
+│   ├── student/                  # Student-facing views
+│   │   ├── login.blade.php
+│   │   ├── register.blade.php
+│   │   └── dashboard.blade.php
+│   └── survey/                   # Survey forms and pages
+│       ├── form.blade.php
+│       ├── landing.blade.php
+│       └── thankyou.blade.php
+├── routes/                       # Route definitions
+│   ├── web.php                   # Web routes
+│   └── api.php                   # API routes
+└── storage/                      # File storage and logs
 ├── bootstrap/                    # Laravel bootstrap files
 ├── config/                       # Configuration files
 │   └── ai.php                    # AI service configuration
@@ -96,18 +151,19 @@ project-iso/
 5. **Learner Wellbeing Metrics** (Mental health support, stress management, physical health, overall wellbeing)
 
 ### AI-Powered Features
-- **8 Advanced ML Models**: 
-  - Compliance Prediction (Deep Learning with TensorFlow)
-  - Sentiment Analysis (NLP with scikit-learn)
-  - Student Clustering (K-Means & DBSCAN)
-  - Performance Prediction (Gradient Boosting)
-  - Dropout Risk Assessment (Random Forest)
+- **8 Advanced ML Models**:
+  - Compliance Prediction (Flask service with PHP-ML fallback)
+  - Sentiment Analysis (NLP with keyword-based fallback)
+  - Student Clustering (K-Means clustering with PHP-ML)
+  - Performance Prediction (Weighted algorithm with ML fallback)
+  - Dropout Risk Assessment (Rule-based with ML enhancement)
   - Comprehensive Risk Assessment (Multi-dimensional analysis)
-  - Satisfaction Trend Analysis (Time Series Forecasting)
-  - Predictive Analytics (Advanced forecasting)
+  - Satisfaction Trend Analysis (Time series forecasting)
+  - Keyword Extraction (TF-IDF analysis)
 - **Real-time AI Insights Dashboard**: Interactive dashboard with live metrics and predictions
 - **Automatic Fallback System**: PHP-ML backup when Flask service unavailable
 - **Circuit Breaker Pattern**: Resilient service communication with retry mechanisms
+- **Service Health Monitoring**: Real-time status tracking with 6 key metrics
 
 ### Data Privacy & Security
 - **Encryption**: AES-256 encryption for sensitive student data
@@ -144,10 +200,14 @@ project-iso/
 
 ### Administration
 - **Admin Dashboard**: Comprehensive analytics and management interface
-- **User Management**: Student and admin account management
+- **User Management**: Student and admin account management with email verification
+- **QR Code Management**: Generate, track, and manage survey distribution QR codes
+- **Goal Management**: Set and track ISO 21001 compliance goals and targets
+- **Weekly Progress Tracking**: Automated weekly metrics aggregation and reporting
 - **Audit Logging**: Complete system activity tracking for compliance
 - **Data Privacy**: GDPR-compliant data handling and anonymization
 - **Export Management**: Secure data export with privacy controls
+- **Email Reports**: Automated weekly and monthly compliance reports
 
 ## Requirements
 
@@ -157,6 +217,8 @@ project-iso/
 - **Laravel**: Version 12
 - **Node.js**: 18+ (for Vite asset compilation)
 - **npm**: Latest version
+- **Python**: 3.8+ (for Flask AI service, optional)
+- **Redis**: (optional, for enhanced caching)
 
 ## Installation
 
@@ -181,6 +243,8 @@ npm install
 cp .env.example .env
 php artisan key:generate
 ```
+
+**Note:** The `.env.example` file contains all the necessary environment variables for the application, including AI service configuration, database settings, and other required parameters.
 
 5. **Database configuration:**
 Update `.env` file with your database credentials:
@@ -210,65 +274,13 @@ npm run build
 
 8. **Start Flask AI Service (Optional but Recommended):**
 ```bash
-# Navigate to AI service directory
-cd ai-service
-
-# Using Docker (Recommended)
-docker-compose up -d
-
-# Or manually with Python
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python app.py
+# The Flask AI service can be deployed separately
+# Source code available at: https://github.com/Acteus/ai-service/tree/main
+# Configure the service URL in your .env file:
+FLASK_AI_SERVICE_URL=https://your-ai-service-url.com
 ```
 
 The system will work with PHP-ML fallback if Flask service is not running.
-
-## Configuration
-
-### Environment Variables
-Key configuration options in `.env`:
-
-```env
-APP_NAME="Jose Rizal University - ISO 21001 Survey System"
-APP_ENV=local
-APP_DEBUG=true
-APP_URL=http://localhost:8000
-
-# Database Configuration
-DB_CONNECTION=sqlite
-DB_DATABASE=/absolute/path/to/database/database.sqlite
-
-# Flask AI Service Configuration
-FLASK_AI_SERVICE_URL=http://localhost:5000
-FLASK_AI_API_KEY=your-optional-api-key
-AI_TIMEOUT_SECONDS=30
-AI_MAX_RETRIES=3
-AI_ENABLE_CACHE=true
-AI_FALLBACK_TO_PHP=true
-
-# AI Model Configuration
-AI_COMPLIANCE_MODEL_ENABLED=true
-AI_SENTIMENT_MODEL_ENABLED=true
-AI_CLUSTER_MODEL_ENABLED=true
-
-# Sanctum for API Authentication
-SANCTUM_STATEFUL_DOMAINS=localhost,127.0.0.1
-
-# Mail Configuration (optional)
-MAIL_MAILER=log
-MAIL_HOST=127.0.0.1
-MAIL_PORT=2525
-MAIL_USERNAME=null
-MAIL_PASSWORD=null
-MAIL_ENCRYPTION=null
-MAIL_FROM_ADDRESS="noreply@jru.edu.ph"
-MAIL_FROM_NAME="${APP_NAME}"
-
-# Queue Configuration (optional)
-QUEUE_CONNECTION=database
-```
 
 ### Database Setup
 The system supports multiple database backends:
@@ -336,12 +348,18 @@ npm run build
 ### Application Flow
 
 1. **Welcome Page** (`/`): University branding and entry point
-2. **Student Login/Register** (`/student/login`, `/student/register`): Authentication
-3. **Survey Landing** (`/home`): Survey introduction and instructions
-4. **Survey Form** (`/survey`): ISO 21001 survey completion
-5. **Thank You** (`/thank-you`): Survey completion confirmation
-6. **Admin Dashboard** (`/admin/dashboard`): Analytics and management
-7. **AI Insights Dashboard** (`/admin/ai-insights`): Advanced ML analytics with 8 models
+2. **Student Registration** (`/student/register`): Account creation with email verification
+3. **Email Verification** (`/email/verify`): Email verification process
+4. **Student Login** (`/student/login`): Secure authentication
+5. **Survey Landing** (`/home`): Survey introduction and instructions
+6. **Survey Form** (`/survey`): ISO 21001 survey completion (20+ questions)
+7. **Thank You** (`/thank-you`): Survey completion confirmation
+8. **Student Dashboard** (`/student/dashboard`): Personal survey status
+9. **Admin Dashboard** (`/admin/dashboard`): Comprehensive analytics and management
+10. **AI Insights Dashboard** (`/admin/ai-insights`): Advanced ML analytics with 8 models
+11. **QR Code Management** (`/admin/qr-codes`): Generate and track survey QR codes
+12. **Goal Management** (`/admin/goals`): Set and track compliance targets
+13. **Reports** (`/admin/reports`): Automated weekly and monthly reports
 
 ## API Documentation
 
@@ -415,6 +433,24 @@ Content-Type: application/json
     "extracurricular_hours": 12,
     "counseling_sessions": 2
 }
+```
+
+#### Get Survey Analytics (New Simplified API)
+```http
+GET /api/analytics/summary?track=CSS&grade_level=11&academic_year=2024-2025&semester=1st
+Authorization: Bearer {token}
+```
+
+#### Get Time Series Data
+```http
+GET /api/analytics/time-series?metric=overall_satisfaction&groupBy=week&filters[track]=CSS
+Authorization: Bearer {token}
+```
+
+#### Get Compliance Data
+```http
+GET /api/analytics/compliance?dateFrom=2024-01-01&dateTo=2024-12-31
+Authorization: Bearer {token}
 ```
 
 #### Get Survey Analytics
@@ -497,6 +533,83 @@ GET /api/export/pdf?semester=1st
 Authorization: Bearer {token}
 ```
 
+#### Export Analytics Report
+```http
+GET /api/export/analytics-report?dateFrom=2024-01-01&dateTo=2024-12-31
+Authorization: Bearer {token}
+```
+
+### QR Code Management Endpoints
+
+#### List QR Codes
+```http
+GET /admin/qr-codes
+Authorization: Bearer {token}
+```
+
+#### Create QR Code
+```http
+POST /admin/qr-codes
+Content-Type: application/json
+
+{
+    "name": "Grade 11 CSS Survey",
+    "target_url": "https://survey.example.com/survey",
+    "track": "CSS",
+    "grade_level": "11",
+    "academic_year": "2024-2025",
+    "semester": "1st"
+}
+```
+
+#### Batch Generate QR Codes
+```http
+POST /admin/qr-codes/batch-generate
+Content-Type: application/json
+
+{
+    "configs": [
+        {
+            "track": "CSS",
+            "grade_level": "11",
+            "section": "A"
+        }
+    ]
+}
+```
+
+### Goal Management Endpoints
+
+#### List Goals
+```http
+GET /admin/goals
+Authorization: Bearer {token}
+```
+
+#### Create Goal
+```http
+POST /admin/goals
+Content-Type: application/json
+
+{
+    "name": "Improve Satisfaction Score",
+    "metric_type": "satisfaction",
+    "target_value": 4.2,
+    "target_date": "2024-12-31"
+}
+```
+
+#### Update Goal Progress
+```http
+POST /admin/goals/{id}/progress
+Content-Type: application/json
+
+{
+    "current_value": 4.1,
+    "notes": "Weekly progress update"
+}
+```
+
 ## Testing
 
 ### Running Tests
@@ -518,6 +631,58 @@ php artisan test --coverage
 - **Feature Tests**: API endpoint testing (`tests/Feature/`)
 - **Unit Tests**: Individual component testing (`tests/Unit/`)
 - **ISO 21001 Tests**: Compliance validation testing
+
+## Artisan Commands
+
+### AI Service Testing
+```bash
+# Test Flask AI service connectivity
+php artisan ai:test-flask
+
+# Test specific AI features
+php artisan ai:test-flask --compliance  # Test compliance prediction
+php artisan ai:test-flask --sentiment   # Test sentiment analysis
+php artisan ai:test-flask --service-only # Test service health only
+```
+
+### Data Management
+```bash
+# Aggregate weekly metrics
+php artisan weekly:aggregate
+
+# Generate monthly reports
+php artisan reports:generate-monthly
+
+# Send weekly progress reports
+php artisan reports:send-weekly
+
+# Export survey data for AI training
+php artisan export:survey-data-for-training
+```
+
+### Cache Management
+```bash
+# Clear all caches
+php artisan cache:clear-custom
+
+# Warm up caches
+php artisan cache:warmup
+
+# View cache statistics
+php artisan cache:stats
+```
+
+### System Diagnostics
+```bash
+# Diagnose storage permissions
+php artisan storage:diagnose
+
+# Fix storage permissions
+php artisan storage:fix-permissions
+
+# Test email configuration
+php artisan email:test-config
+```
 
 ## Security & Compliance
 
@@ -552,6 +717,39 @@ The `SurveyResponse` model captures comprehensive ISO 21001 metrics:
 - `academic_year`: e.g., "2024-2025"
 - `semester`: "1st" or "2nd"
 - `gender`: Optional demographic data
+
+### Additional Models
+
+#### WeeklyMetric Model
+Tracks weekly aggregated metrics for progress monitoring:
+- `week_start_date`, `week_end_date`: Date range for the week
+- `total_responses`, `new_responses`: Response counts
+- `learner_needs_index`, `satisfaction_score`, etc.: ISO 21001 indices
+- `compliance_score`, `risk_level`: Compliance tracking
+- `target_satisfaction`, `target_compliance`: Goal tracking
+
+#### Goal Model
+Manages compliance goals and targets:
+- `name`, `description`: Goal details
+- `metric_type`: Type of metric being tracked
+- `target_value`, `current_value`: Goal progress
+- `status`: active, achieved, expired, cancelled
+- `progress_history`: JSON tracking of progress over time
+
+#### QrCode Model
+Manages QR codes for survey distribution:
+- `name`, `description`: QR code identification
+- `target_url`, `file_path`: URL and storage path
+- `track`, `grade_level`, `section`: Targeting information
+- `scan_count`, `scan_analytics`: Usage tracking
+- `expires_at`, `is_active`: Expiration and status
+
+#### AuditLog Model
+Complete audit trail for compliance:
+- `user_id`, `action`: Who did what
+- `model_type`, `model_id`: What was affected
+- `old_values`, `new_values`: Before/after data
+- `ip_address`, `user_agent`: Request details
 
 #### ISO 21001 Learner Needs Assessment (1-5 scale)
 - `curriculum_relevance_rating`: Relevance to career goals
@@ -614,6 +812,12 @@ php artisan test
 
 # Check code quality
 ./vendor/bin/pint
+
+# Test AI service connection
+php artisan ai:test-flask
+
+# Aggregate weekly metrics
+php artisan weekly:aggregate
 ```
 
 ### Production Deployment
@@ -631,13 +835,35 @@ php artisan migrate --force
 
 # Clear and cache config
 php artisan optimize
+
+# Warm up caches
+php artisan cache:warmup
 ```
 
-### Queue Processing (Optional)
+### Background Jobs & Automation
 ```bash
-# For background processing of exports/AI tasks
+# Process queues for background tasks
 php artisan queue:work
+
+# Schedule automated tasks (add to crontab)
+# * * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+
+# Weekly automation (run every Monday)
+php artisan weekly:aggregate
+php artisan reports:send-weekly
+
+# Monthly automation (run on 1st of month)
+php artisan reports:generate-monthly
 ```
+
+### Automated Tasks
+The system includes several automated tasks that run via Laravel's scheduler:
+
+- **Weekly Metrics Aggregation**: Every Monday at 9 AM
+- **Weekly Progress Reports**: Every Monday at 10 AM
+- **Monthly Compliance Reports**: 1st of every month at 9 AM
+- **Cache Warmup**: Daily at 2 AM
+- **AI Service Health Checks**: Every 15 minutes
 
 ## Contributing
 
@@ -668,7 +894,19 @@ php artisan ai:test-flask
 php artisan ai:test-flask --compliance  # Test compliance prediction
 php artisan ai:test-flask --sentiment   # Test sentiment analysis
 php artisan ai:test-flask --service-only # Test service health only
+
+# Test AI service connection (alternative command)
+php artisan ai:test-connection
 ```
+
+## Additional Documentation
+
+- **ISO 21001 System Documentation**: `docs/iso-21001-system-documentation.md`
+- **Analytics Enhancements**: `docs/analytics-enhancements.md`
+- **QR Code Documentation**: `docs/qr-code-documentation.md`
+- **STEM Data Model**: `docs/stem-data-model.md`
+- **Deployment Guide**: `DEPLOYMENT_README.md`
+- **Email Setup Guide**: `EMAIL-SETUP-GUIDE.md`
 
 ## License
 
