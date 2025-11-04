@@ -207,6 +207,80 @@
         font-size: 24px;
       }
     }
+
+    /* Custom Modal Styles */
+    .custom-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      opacity: 0;
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    .custom-modal-content {
+      background: linear-gradient(135deg, #4285f4, #ffd700);
+      padding: 40px;
+      border-radius: 15px;
+      max-width: 450px;
+      width: 90%;
+      text-align: center;
+      color: white;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      transform: scale(0.9);
+      animation: modalEnter 0.3s ease forwards;
+    }
+
+    @keyframes modalEnter {
+      to { transform: scale(1); }
+    }
+
+    .custom-modal-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .custom-modal-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .custom-modal-message {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 25px;
+      opacity: 0.95;
+    }
+
+    .custom-modal-button {
+      background: white;
+      color: #4285f4;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .custom-modal-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
   </style>
 </head>
 <body>
@@ -357,6 +431,31 @@
               updateSections();
           };
       });
+
+      // Custom Modal Function
+      function showCustomModal(message, icon = '✓', title = 'Notification', isError = false) {
+          // Remove any existing modal
+          const existingModal = document.querySelector('.custom-modal-overlay');
+          if (existingModal) {
+              existingModal.remove();
+          }
+
+          const modal = document.createElement('div');
+          modal.className = 'custom-modal-overlay';
+
+          modal.innerHTML = `
+              <div class="custom-modal-content">
+                  <div class="custom-modal-icon">${icon}</div>
+                  <div class="custom-modal-title">${title}</div>
+                  <div class="custom-modal-message">${message}</div>
+                  <button class="custom-modal-button" onclick="this.closest('.custom-modal-overlay').remove()">
+                      OK
+                  </button>
+              </div>
+          `;
+
+          document.body.appendChild(modal);
+      }
 
       // Enhanced form validation with visual feedback
       document.addEventListener('DOMContentLoaded', function() {
@@ -536,19 +635,19 @@
                                           }
                                       }
                                   });
-                                  alert('Please fix the validation errors and try again.');
+                                  showCustomModal('Please fix the validation errors and try again.', '⚠️', 'Validation Error', true);
                               } else {
                                   console.error('Unexpected response format:', data);
-                                  alert('Unexpected response from server. Please check console for details.');
+                                  showCustomModal('Unexpected response from server. Please check console for details.', '❌', 'Error', true);
                               }
                           })
                           .catch(error => {
                               console.error('Network error during form submission:', error);
-                              alert('Network error: ' + error.message);
+                              showCustomModal('Network error: ' + error.message, '❌', 'Network Error', true);
                           });
                       } catch (error) {
                           console.error('JavaScript error during form submission:', error);
-                          alert('JavaScript error: ' + error.message);
+                          showCustomModal('JavaScript error: ' + error.message, '❌', 'Error', true);
                       }
                   } else {
                       console.log('Form validation failed');

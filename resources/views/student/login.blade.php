@@ -323,6 +323,79 @@
         font-size: 24px;
       }
     }
+    /* Custom Modal Styles */
+    .custom-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      opacity: 0;
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    .custom-modal-content {
+      background: linear-gradient(135deg, #4285f4, #ffd700);
+      padding: 40px;
+      border-radius: 15px;
+      max-width: 450px;
+      width: 90%;
+      text-align: center;
+      color: white;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      transform: scale(0.9);
+      animation: modalEnter 0.3s ease forwards;
+    }
+
+    @keyframes modalEnter {
+      to { transform: scale(1); }
+    }
+
+    .custom-modal-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .custom-modal-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .custom-modal-message {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 25px;
+      opacity: 0.95;
+    }
+
+    .custom-modal-button {
+      background: white;
+      color: #4285f4;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .custom-modal-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
   </style>
 </head>
 <body>
@@ -388,6 +461,40 @@
   </div>
 
   <script>
+    // Custom Modal Function
+    function showCustomModal(message, icon = '✓', title = 'Notification', isSuccess = true) {
+      // Remove any existing modal
+      const existingModal = document.querySelector('.custom-modal-overlay');
+      if (existingModal) {
+        existingModal.remove();
+      }
+
+      const modal = document.createElement('div');
+      modal.className = 'custom-modal-overlay';
+
+      modal.innerHTML = `
+        <div class="custom-modal-content">
+          <div class="custom-modal-icon">${icon}</div>
+          <div class="custom-modal-title">${title}</div>
+          <div class="custom-modal-message">${message}</div>
+          <button class="custom-modal-button" onclick="this.closest('.custom-modal-overlay').remove()">
+            OK
+          </button>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      // Auto-close after 5 seconds for success messages
+      if (isSuccess) {
+        setTimeout(() => {
+          if (modal.parentElement) {
+            modal.remove();
+          }
+        }, 5000);
+      }
+    }
+
     // Enhanced form validation and submission
     document.getElementById("loginForm").addEventListener("submit", function(e) {
       e.preventDefault(); // Prevent default form submission
@@ -434,8 +541,10 @@
         .then(data => {
           if (data.message && data.redirect) {
             // Show success message and redirect
-            alert(data.message);
-            window.location.href = data.redirect;
+            showCustomModal(data.message, '✓', 'Success', true);
+            setTimeout(() => {
+              window.location.href = data.redirect;
+            }, 1500);
           } else if (data.errors) {
             // Show validation errors
             Object.keys(data.errors).forEach(key => {
@@ -453,12 +562,12 @@
             });
           } else if (data.message) {
             // Show error message
-            alert(data.message);
+            showCustomModal(data.message, '⚠️', 'Error', false);
           }
         })
         .catch(error => {
           console.error('Login error:', error);
-          alert('An error occurred during login. Please try again.');
+          showCustomModal('An error occurred during login. Please try again.', '❌', 'Error', false);
         });
       }
     });
