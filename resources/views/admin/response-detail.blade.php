@@ -221,6 +221,60 @@
             transform: scale(1.1);
         }
 
+        /* Rating level indicators */
+        .rating-item.negative {
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.1), rgba(220, 53, 69, 0.1)) !important;
+            border-left: 4px solid #dc3545;
+        }
+
+        .rating-item.warning {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.1)) !important;
+            border-left: 4px solid #ffc107;
+        }
+
+        .rating-item.positive {
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(32, 201, 151, 0.1)) !important;
+            border-left: 4px solid #28a745;
+        }
+
+        .star.filled.negative {
+            color: #dc3545;
+        }
+
+        .star.filled.warning {
+            color: #ffc107;
+        }
+
+        .star.filled.positive {
+            color: #28a745;
+        }
+
+        .rating-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 10px;
+        }
+
+        .rating-badge.negative {
+            background: #dc3545;
+            color: white;
+        }
+
+        .rating-badge.warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .rating-badge.positive {
+            background: #28a745;
+            color: white;
+        }
+
         .comment-section {
             background: linear-gradient(135deg, rgba(40, 167, 69, 0.05), rgba(32, 201, 151, 0.05));
             backdrop-filter: blur(15px);
@@ -535,35 +589,63 @@
             <div class="section-card">
                 <h2>ISO 21001 Learner Needs Assessment</h2>
                 <div class="rating-grid">
-                    <div class="rating-item">
-                        <div class="rating-label">Curriculum Relevance</div>
+                    <div class="rating-item {{ $response->curriculum_relevance_rating <= 2 ? 'negative' : ($response->curriculum_relevance_rating == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Curriculum Relevance
+                            @if($response->curriculum_relevance_rating <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->curriculum_relevance_rating == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->curriculum_relevance_rating ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->curriculum_relevance_rating ? 'filled ' . ($response->curriculum_relevance_rating <= 2 ? 'negative' : ($response->curriculum_relevance_rating == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
-                    <div class="rating-item">
-                        <div class="rating-label">Learning Pace Appropriateness</div>
+                    <div class="rating-item {{ $response->learning_pace_appropriateness <= 2 ? 'negative' : ($response->learning_pace_appropriateness == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Learning Pace Appropriateness
+                            @if($response->learning_pace_appropriateness <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->learning_pace_appropriateness == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->learning_pace_appropriateness ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->learning_pace_appropriateness ? 'filled ' . ($response->learning_pace_appropriateness <= 2 ? 'negative' : ($response->learning_pace_appropriateness == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
-                    <div class="rating-item">
-                        <div class="rating-label">Individual Support Availability</div>
+                    <div class="rating-item {{ $response->individual_support_availability <= 2 ? 'negative' : ($response->individual_support_availability == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Individual Support Availability
+                            @if($response->individual_support_availability <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->individual_support_availability == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->individual_support_availability ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->individual_support_availability ? 'filled ' . ($response->individual_support_availability <= 2 ? 'negative' : ($response->individual_support_availability == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
-                    <div class="rating-item">
-                        <div class="rating-label">Learning Style Accommodation</div>
+                    <div class="rating-item {{ $response->learning_style_accommodation <= 2 ? 'negative' : ($response->learning_style_accommodation == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Learning Style Accommodation
+                            @if($response->learning_style_accommodation <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->learning_style_accommodation == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->learning_style_accommodation ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->learning_style_accommodation ? 'filled ' . ($response->learning_style_accommodation <= 2 ? 'negative' : ($response->learning_style_accommodation == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
@@ -574,35 +656,63 @@
             <div class="section-card">
                 <h2>ISO 21001 Learner Satisfaction Metrics</h2>
                 <div class="rating-grid">
-                    <div class="rating-item">
-                        <div class="rating-label">Teaching Quality</div>
+                    <div class="rating-item {{ $response->teaching_quality_rating <= 2 ? 'negative' : ($response->teaching_quality_rating == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Teaching Quality
+                            @if($response->teaching_quality_rating <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->teaching_quality_rating == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->teaching_quality_rating ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->teaching_quality_rating ? 'filled ' . ($response->teaching_quality_rating <= 2 ? 'negative' : ($response->teaching_quality_rating == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
-                    <div class="rating-item">
-                        <div class="rating-label">Learning Environment</div>
+                    <div class="rating-item {{ $response->learning_environment_rating <= 2 ? 'negative' : ($response->learning_environment_rating == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Learning Environment
+                            @if($response->learning_environment_rating <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->learning_environment_rating == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->learning_environment_rating ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->learning_environment_rating ? 'filled ' . ($response->learning_environment_rating <= 2 ? 'negative' : ($response->learning_environment_rating == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
-                    <div class="rating-item">
-                        <div class="rating-label">Peer Interaction Satisfaction</div>
+                    <div class="rating-item {{ $response->peer_interaction_satisfaction <= 2 ? 'negative' : ($response->peer_interaction_satisfaction == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Peer Interaction Satisfaction
+                            @if($response->peer_interaction_satisfaction <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->peer_interaction_satisfaction == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->peer_interaction_satisfaction ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->peer_interaction_satisfaction ? 'filled ' . ($response->peer_interaction_satisfaction <= 2 ? 'negative' : ($response->peer_interaction_satisfaction == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
-                    <div class="rating-item">
-                        <div class="rating-label">Extracurricular Satisfaction</div>
+                    <div class="rating-item {{ $response->extracurricular_satisfaction <= 2 ? 'negative' : ($response->extracurricular_satisfaction == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Extracurricular Satisfaction
+                            @if($response->extracurricular_satisfaction <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->extracurricular_satisfaction == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->extracurricular_satisfaction ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->extracurricular_satisfaction ? 'filled ' . ($response->extracurricular_satisfaction <= 2 ? 'negative' : ($response->extracurricular_satisfaction == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
@@ -613,35 +723,63 @@
             <div class="section-card">
                 <h2>ISO 21001 Learner Success Indicators</h2>
                 <div class="rating-grid">
-                    <div class="rating-item">
-                        <div class="rating-label">Academic Progress</div>
+                    <div class="rating-item {{ $response->academic_progress_rating <= 2 ? 'negative' : ($response->academic_progress_rating == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Academic Progress
+                            @if($response->academic_progress_rating <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->academic_progress_rating == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->academic_progress_rating ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->academic_progress_rating ? 'filled ' . ($response->academic_progress_rating <= 2 ? 'negative' : ($response->academic_progress_rating == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
-                    <div class="rating-item">
-                        <div class="rating-label">Skill Development</div>
+                    <div class="rating-item {{ $response->skill_development_rating <= 2 ? 'negative' : ($response->skill_development_rating == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Skill Development
+                            @if($response->skill_development_rating <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->skill_development_rating == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->skill_development_rating ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->skill_development_rating ? 'filled ' . ($response->skill_development_rating <= 2 ? 'negative' : ($response->skill_development_rating == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
-                    <div class="rating-item">
-                        <div class="rating-label">Critical Thinking Improvement</div>
+                    <div class="rating-item {{ $response->critical_thinking_improvement <= 2 ? 'negative' : ($response->critical_thinking_improvement == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Critical Thinking Improvement
+                            @if($response->critical_thinking_improvement <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->critical_thinking_improvement == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->critical_thinking_improvement ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->critical_thinking_improvement ? 'filled ' . ($response->critical_thinking_improvement <= 2 ? 'negative' : ($response->critical_thinking_improvement == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
-                    <div class="rating-item">
-                        <div class="rating-label">Problem Solving Confidence</div>
+                    <div class="rating-item {{ $response->problem_solving_confidence <= 2 ? 'negative' : ($response->problem_solving_confidence == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Problem Solving Confidence
+                            @if($response->problem_solving_confidence <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->problem_solving_confidence == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->problem_solving_confidence ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->problem_solving_confidence ? 'filled ' . ($response->problem_solving_confidence <= 2 ? 'negative' : ($response->problem_solving_confidence == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
@@ -652,35 +790,63 @@
             <div class="section-card">
                 <h2>ISO 21001 Learner Safety Assessment</h2>
                 <div class="rating-grid">
-                    <div class="rating-item">
-                        <div class="rating-label">Physical Safety</div>
+                    <div class="rating-item {{ $response->physical_safety_rating <= 2 ? 'negative' : ($response->physical_safety_rating == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Physical Safety
+                            @if($response->physical_safety_rating <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->physical_safety_rating == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->physical_safety_rating ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->physical_safety_rating ? 'filled ' . ($response->physical_safety_rating <= 2 ? 'negative' : ($response->physical_safety_rating == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
-                    <div class="rating-item">
-                        <div class="rating-label">Psychological Safety</div>
+                    <div class="rating-item {{ $response->psychological_safety_rating <= 2 ? 'negative' : ($response->psychological_safety_rating == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Psychological Safety
+                            @if($response->psychological_safety_rating <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->psychological_safety_rating == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->psychological_safety_rating ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->psychological_safety_rating ? 'filled ' . ($response->psychological_safety_rating <= 2 ? 'negative' : ($response->psychological_safety_rating == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
-                    <div class="rating-item">
-                        <div class="rating-label">Bullying Prevention Effectiveness</div>
+                    <div class="rating-item {{ $response->bullying_prevention_effectiveness <= 2 ? 'negative' : ($response->bullying_prevention_effectiveness == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Bullying Prevention Effectiveness
+                            @if($response->bullying_prevention_effectiveness <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->bullying_prevention_effectiveness == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->bullying_prevention_effectiveness ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->bullying_prevention_effectiveness ? 'filled ' . ($response->bullying_prevention_effectiveness <= 2 ? 'negative' : ($response->bullying_prevention_effectiveness == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
-                    <div class="rating-item">
-                        <div class="rating-label">Emergency Preparedness</div>
+                    <div class="rating-item {{ $response->emergency_preparedness_rating <= 2 ? 'negative' : ($response->emergency_preparedness_rating == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Emergency Preparedness
+                            @if($response->emergency_preparedness_rating <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->emergency_preparedness_rating == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->emergency_preparedness_rating ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->emergency_preparedness_rating ? 'filled ' . ($response->emergency_preparedness_rating <= 2 ? 'negative' : ($response->emergency_preparedness_rating == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
@@ -691,35 +857,63 @@
             <div class="section-card">
                 <h2>ISO 21001 Learner Wellbeing Metrics</h2>
                 <div class="rating-grid">
-                    <div class="rating-item">
-                        <div class="rating-label">Mental Health Support</div>
+                    <div class="rating-item {{ $response->mental_health_support_rating <= 2 ? 'negative' : ($response->mental_health_support_rating == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Mental Health Support
+                            @if($response->mental_health_support_rating <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->mental_health_support_rating == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->mental_health_support_rating ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->mental_health_support_rating ? 'filled ' . ($response->mental_health_support_rating <= 2 ? 'negative' : ($response->mental_health_support_rating == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
-                    <div class="rating-item">
-                        <div class="rating-label">Stress Management Support</div>
+                    <div class="rating-item {{ $response->stress_management_support <= 2 ? 'negative' : ($response->stress_management_support == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Stress Management Support
+                            @if($response->stress_management_support <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->stress_management_support == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->stress_management_support ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->stress_management_support ? 'filled ' . ($response->stress_management_support <= 2 ? 'negative' : ($response->stress_management_support == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
-                    <div class="rating-item">
-                        <div class="rating-label">Physical Health Support</div>
+                    <div class="rating-item {{ $response->physical_health_support <= 2 ? 'negative' : ($response->physical_health_support == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Physical Health Support
+                            @if($response->physical_health_support <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->physical_health_support == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->physical_health_support ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->physical_health_support ? 'filled ' . ($response->physical_health_support <= 2 ? 'negative' : ($response->physical_health_support == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
-                    <div class="rating-item">
-                        <div class="rating-label">Overall Wellbeing</div>
+                    <div class="rating-item {{ $response->overall_wellbeing_rating <= 2 ? 'negative' : ($response->overall_wellbeing_rating == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Overall Wellbeing
+                            @if($response->overall_wellbeing_rating <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->overall_wellbeing_rating == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->overall_wellbeing_rating ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->overall_wellbeing_rating ? 'filled ' . ($response->overall_wellbeing_rating <= 2 ? 'negative' : ($response->overall_wellbeing_rating == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
@@ -730,11 +924,20 @@
             <div class="section-card">
                 <h2>Overall Satisfaction & Feedback</h2>
                 <div class="rating-grid">
-                    <div class="rating-item">
-                        <div class="rating-label">Overall Satisfaction</div>
+                    <div class="rating-item {{ $response->overall_satisfaction <= 2 ? 'negative' : ($response->overall_satisfaction == 3 ? 'warning' : 'positive') }}">
+                        <div class="rating-label">
+                            Overall Satisfaction
+                            @if($response->overall_satisfaction <= 2)
+                                <span class="rating-badge negative">Needs Attention</span>
+                            @elseif($response->overall_satisfaction == 3)
+                                <span class="rating-badge warning">Fair</span>
+                            @else
+                                <span class="rating-badge positive">Excellent</span>
+                            @endif
+                        </div>
                         <div class="rating-value">
                             @for ($i = 1; $i <= 5; $i++)
-                                <span class="star {{ $i <= $response->overall_satisfaction ? 'filled' : '' }}">★</span>
+                                <span class="star {{ $i <= $response->overall_satisfaction ? 'filled ' . ($response->overall_satisfaction <= 2 ? 'negative' : ($response->overall_satisfaction == 3 ? 'warning' : 'positive')) : '' }}">★</span>
                             @endfor
                         </div>
                     </div>
