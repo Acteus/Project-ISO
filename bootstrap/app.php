@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register cache response middleware
         $middleware->alias([
             'cache.response' => \App\Http\Middleware\CacheResponse::class,
+            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

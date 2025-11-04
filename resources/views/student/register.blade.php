@@ -462,9 +462,63 @@
                               console.log('Response data:', data);
 
                               if (data.message && data.redirect) {
-                                  // Show success message and redirect
-                                  alert(data.message);
-                                  window.location.href = data.redirect;
+                                  // Show verification message with custom styling
+                                  const modal = document.createElement('div');
+                                  modal.style.cssText = `
+                                      position: fixed;
+                                      top: 0;
+                                      left: 0;
+                                      width: 100%;
+                                      height: 100%;
+                                      background: rgba(0, 0, 0, 0.8);
+                                      display: flex;
+                                      align-items: center;
+                                      justify-content: center;
+                                      z-index: 10000;
+                                  `;
+
+                                  const modalContent = document.createElement('div');
+                                  modalContent.style.cssText = `
+                                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                      padding: 40px;
+                                      border-radius: 15px;
+                                      max-width: 500px;
+                                      text-align: center;
+                                      color: white;
+                                      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                                  `;
+
+                                  modalContent.innerHTML = `
+                                      <div style="font-size: 64px; margin-bottom: 20px;">✉️</div>
+                                      <h2 style="margin-bottom: 15px; font-family: 'Montserrat', sans-serif;">Registration Successful!</h2>
+                                      <p style="margin-bottom: 20px; line-height: 1.6; font-size: 15px;">
+                                          ${data.message}
+                                      </p>
+                                      <p style="margin-bottom: 25px; font-size: 14px; opacity: 0.9;">
+                                          Check your email: <strong>${data.user.email}</strong>
+                                      </p>
+                                      <button onclick="window.location.href='${data.redirect}'" style="
+                                          background: white;
+                                          color: #667eea;
+                                          border: none;
+                                          padding: 15px 40px;
+                                          border-radius: 8px;
+                                          font-size: 16px;
+                                          font-weight: 600;
+                                          cursor: pointer;
+                                          transition: all 0.3s ease;
+                                      " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                          Continue
+                                      </button>
+                                  `;
+
+                                  modal.appendChild(modalContent);
+                                  document.body.appendChild(modal);
+
+                                  // Redirect after 10 seconds if user doesn't click
+                                  setTimeout(() => {
+                                      window.location.href = data.redirect;
+                                  }, 10000);
                               } else if (data.errors) {
                                   // Show validation errors
                                   console.log('Validation errors:', data.errors);

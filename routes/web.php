@@ -35,6 +35,13 @@ Route::prefix('student')->name('student.')->group(function () {
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
 });
 
+// Email verification routes
+Route::prefix('email')->name('verification.')->group(function () {
+    Route::get('/verify', [StudentController::class, 'showVerificationNotice'])->middleware('auth')->name('notice');
+    Route::get('/verify/{id}/{hash}', [StudentController::class, 'verifyEmail'])->middleware(['signed'])->name('verify');
+    Route::post('/verification-notification', [StudentController::class, 'resendVerificationEmail'])->middleware(['auth', 'throttle:6,1'])->name('send');
+});
+
 // Password Reset Routes
 Route::prefix('password')->name('password.')->group(function () {
     Route::get('/forgot', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('request');
@@ -74,8 +81,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('qr-codes', QrCodeController::class);
 });
 
-// Survey routes
-Route::get('/survey', [SurveyController::class, 'showForm'])->name('survey.form');
+// Survey routes (protected by email verification)
+Route::get('/survey', [SurveyController::class, 'showForm'])->middleware(['auth', 'verified'])->name('survey.form');
 Route::get('/survey/landing', [SurveyController::class, 'landing'])->name('survey.landing');
 
 Route::get('/survey/about', function () {

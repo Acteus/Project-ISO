@@ -77,20 +77,29 @@ class StudentController extends Controller
             ],
         ]);
 
-        // Log the student in
+        // Send email verification notification
+        try {
+            $user->sendEmailVerificationNotification();
+            Log::info('Email verification sent to: ' . $user->email);
+        } catch (\Exception $e) {
+            Log::error('Failed to send verification email: ' . $e->getMessage());
+        }
+
+        // Log the student in (but they'll need to verify email)
         Auth::login($user);
 
         // Mark that we should regenerate on next request
         $request->session()->put('_should_regenerate', true);
 
         return response()->json([
-            'message' => 'Registration successful! Welcome to the ISO 21001 Survey System.',
-            'redirect' => route('survey.landing'),
+            'message' => 'Registration successful! Please check your email to verify your account.',
+            'redirect' => route('verification.notice'),
             'user' => [
                 'name' => $user->name,
                 'student_id' => $user->student_id,
                 'year_level' => $user->year_level,
                 'section' => $user->section,
+                'email' => $user->email,
             ]
         ]);
     }
@@ -182,6 +191,19 @@ class StudentController extends Controller
                 'description' => 'Student logged into ISO 21001 survey system',
                 'ip_address' => $request->ip(),
             ]);
+
+            // Check if email is verified
+            if (!$user->hasVerifiedEmail()) {
+                return response()->json([
+                    'message' => 'Please verify your email address before accessing the survey.',
+                    'redirect' => route('verification.notice'),
+                    'user' => [
+                        'name' => $user->name,
+                        'student_id' => $user->student_id,
+                        'email_verified' => false,
+                    ]
+                ]);
+            }
 
             return response()->json([
                 'message' => 'Login successful! Welcome back.',
@@ -281,6 +303,100 @@ class StudentController extends Controller
         }
 
         return view('student.dashboard', compact('user'));
+    }
+
+    /**
+     * Show the email verification notice.
+     */
+    public function showVerificationNotice()
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return redirect()->route('student.login');
+        }
+
+        // If already verified, redirect to survey landing
+        if ($user->hasVerifiedEmail()) {
+            return redirect()->route('survey.landing');
+        }
+
+        return view('student.verify-email');
+    }
+
+    /**
+     * Verify the user's email address.
+     */
+    public function verifyEmail(Request $request)
+    {
+        $user = User::findOrFail($request->route('id'));
+
+        // Check if hash matches
+        if (!hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
+            return redirect()->route('verification.notice')->with('error', 'Invalid verification link.');
+        }
+
+        // Check if already verified
+        if ($user->hasVerifiedEmail()) {
+            return redirect()->route('survey.landing')->with('success', 'Email already verified!');
+        }
+
+        // Mark as verified
+        if ($user->markEmailAsVerified()) {
+            // Log email verification for audit trail
+            AuditLog::create([
+                'user_id' => $user->id,
+                'action' => 'email_verified',
+                'description' => 'Student verified their email address',
+                'ip_address' => $request->ip(),
+            ]);
+
+            // Log the user in if not already logged in
+            if (!Auth::check()) {
+                Auth::login($user);
+            }
+
+            return redirect()->route('survey.landing')->with('success', 'Email verified successfully! You can now access the survey.');
+        }
+
+        return redirect()->route('verification.notice')->with('error', 'Failed to verify email. Please try again.');
+    }
+
+    /**
+     * Resend the email verification notification.
+     */
+    public function resendVerificationEmail(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['message' => 'User not authenticated.'], 401);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Email already verified.'], 400);
+        }
+
+        try {
+            $user->sendEmailVerificationNotification();
+
+            // Log resend for audit trail
+            AuditLog::create([
+                'user_id' => $user->id,
+                'action' => 'verification_email_resent',
+                'description' => 'Student requested verification email resend',
+                'ip_address' => $request->ip(),
+            ]);
+
+            return response()->json([
+                'message' => 'Verification email has been resent! Please check your inbox.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to resend verification email: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to send verification email. Please try again later.'
+            ], 500);
+        }
     }
 
     public function adminDashboard()
