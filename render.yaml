@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: laravel-app
+    runtime: docker
+    plan: starter
+    buildCommand: docker build -t laravel-app .
+    startCommand: docker run -p $PORT:80 laravel-app
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        value: mysql
+      - key: DB_PORT
+        value: 3306
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: SESSION_DRIVER
+        value: database
+    healthCheckPath: /up
+
+databases:
+  - name: mysql
+    databaseName: laravel
+    user: laravel
+    plan: starter
