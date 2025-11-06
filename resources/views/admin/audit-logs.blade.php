@@ -707,10 +707,18 @@
                                     </td>
                                     <td>
                                         <div style="font-weight: 600; color: #2c3e50;">
-                                            {{ $log->user_type ?? 'System' }}
+                                            @if($log->user_id)
+                                                Student
+                                            @elseif($log->admin_id)
+                                                Admin
+                                            @else
+                                                System
+                                            @endif
                                         </div>
                                         @if($log->user_id)
-                                            <small style="color: #666;">ID: {{ $log->user_id }}</small>
+                                            <small style="color: #666;">Student ID: {{ $log->user_id }}</small>
+                                        @elseif($log->admin_id)
+                                            <small style="color: #666;">Admin ID: {{ $log->admin_id }}</small>
                                         @endif
                                     </td>
                                     <td>

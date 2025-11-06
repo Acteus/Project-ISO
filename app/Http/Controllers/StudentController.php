@@ -512,7 +512,11 @@ class StudentController extends Controller
         }
 
         if ($userType && $userType !== 'all') {
-            $query->where('user_type', $userType);
+            if ($userType === 'student') {
+                $query->whereNotNull('user_id');
+            } elseif ($userType === 'admin') {
+                $query->whereNotNull('admin_id');
+            }
         }
 
         if ($dateFrom) {
@@ -537,8 +541,8 @@ class StudentController extends Controller
         // Get unique actions for filter dropdown
         $actions = AuditLog::select('action')->distinct()->orderBy('action')->pluck('action');
 
-        // Get unique user types for filter dropdown
-        $userTypes = AuditLog::select('user_type')->distinct()->whereNotNull('user_type')->orderBy('user_type')->pluck('user_type');
+        // Create user types manually since we derive them from user_id/admin_id
+        $userTypes = collect(['student', 'admin']);
 
         // Get statistics for filtered results
         $stats = [
