@@ -1053,15 +1053,24 @@
                 if (json?.success && json?.data) {
                     const d = json.data;
                     console.log('Updating metrics with data:', d);
-                    document.getElementById('total-predictions').textContent = d.total_predictions ?? 0;
-                    document.getElementById('accuracy-rate').textContent = (d.accuracy_rate ?? 0) + '%';
-                    document.getElementById('response-time').textContent = (d.avg_response_time ?? 0) + 'ms';
-                    document.getElementById('iso-compliance').textContent = (d.iso_compliance_score ?? 0) + '%';
-                    document.getElementById('risk-score').textContent = (d.overall_risk_score ?? 0) + '/100';
+
+                    // Safely update elements with null checks
+                    const totalPredEl = document.getElementById('total-predictions');
+                    const accuracyEl = document.getElementById('accuracy-rate');
+                    const responseTimeEl = document.getElementById('response-time');
+                    const complianceEl = document.getElementById('iso-compliance');
+                    const riskScoreEl = document.getElementById('risk-score');
+                    const totalResponsesEl = document.getElementById('total-responses-count');
+
+                    if (totalPredEl) totalPredEl.textContent = d.total_predictions ?? 0;
+                    if (accuracyEl) accuracyEl.textContent = (d.accuracy_rate ?? 0) + '%';
+                    if (responseTimeEl) responseTimeEl.textContent = (d.avg_response_time ?? 0) + 'ms';
+                    if (complianceEl) complianceEl.textContent = (d.iso_compliance_score ?? 0) + '%';
+                    if (riskScoreEl) riskScoreEl.textContent = (d.overall_risk_score ?? 0) + '/100';
 
                     // Update total responses count in the data stats display
-                    if (d.total_responses_analyzed !== undefined) {
-                        document.getElementById('total-responses-count').textContent = d.total_responses_analyzed;
+                    if (d.total_responses_analyzed !== undefined && totalResponsesEl) {
+                        totalResponsesEl.textContent = d.total_responses_analyzed;
                     }
                     console.log('Metrics updated successfully');
                 } else {
@@ -1085,10 +1094,13 @@
                     const analytics = json.data;
                     const dataRangeText = document.getElementById('data-range-text');
                     const dataStatsText = document.getElementById('data-stats-text');
+                    const totalResponsesEl = document.getElementById('total-responses-count');
 
                     // Update total responses
                     const totalResponses = analytics.total_responses || 0;
-                    document.getElementById('total-responses-count').textContent = totalResponses;
+                    if (totalResponsesEl) {
+                        totalResponsesEl.textContent = totalResponses;
+                    }
 
                     // Get date range from responses
                     if (analytics.date_range) {
@@ -1100,9 +1112,9 @@
                             return date.toLocaleDateString('en-US', options);
                         };
 
-                        dataRangeText.innerHTML = `<strong>Data Range:</strong> ${formatDate(startDate)} - ${formatDate(endDate)}`;
+                        if (dataRangeText) dataRangeText.innerHTML = `<strong>Data Range:</strong> ${formatDate(startDate)} - ${formatDate(endDate)}`;
                     } else {
-                        dataRangeText.innerHTML = '<strong>Analyzing All Available Data</strong>';
+                        if (dataRangeText) dataRangeText.innerHTML = '<strong>Analyzing All Available Data</strong>';
                     }
 
                     // Update data stats with more details
@@ -1110,18 +1122,21 @@
                         const tracks = Object.keys(analytics.distribution.track || {}).length;
                         const grades = Object.keys(analytics.distribution.grade_level || {}).length;
 
-                        dataStatsText.innerHTML = `Analyzing <strong>${totalResponses}</strong> survey responses across <strong>${tracks}</strong> tracks and <strong>${grades}</strong> grade levels`;
+                        if (dataStatsText) dataStatsText.innerHTML = `Analyzing <strong>${totalResponses}</strong> survey responses across <strong>${tracks}</strong> tracks and <strong>${grades}</strong> grade levels`;
                     } else {
-                        dataStatsText.innerHTML = `Analyzing <strong>${totalResponses}</strong> survey responses`;
+                        if (dataStatsText) dataStatsText.innerHTML = `Analyzing <strong>${totalResponses}</strong> survey responses`;
                     }
 
                 } else {
-                    document.getElementById('data-range-text').innerHTML = '<strong>No data available</strong>';
-                    document.getElementById('data-stats-text').innerHTML = 'No survey responses found';
+                    const dataRangeTextEl = document.getElementById('data-range-text');
+                    const dataStatsTextEl = document.getElementById('data-stats-text');
+                    if (dataRangeTextEl) dataRangeTextEl.innerHTML = '<strong>No data available</strong>';
+                    if (dataStatsTextEl) dataStatsTextEl.innerHTML = 'No survey responses found';
                 }
             } catch (err) {
                 console.error('Error loading data range info:', err);
-                document.getElementById('data-range-text').innerHTML = '<strong>Error loading data range</strong>';
+                const dataRangeTextEl = document.getElementById('data-range-text');
+                if (dataRangeTextEl) dataRangeTextEl.innerHTML = '<strong>Error loading data range</strong>';
             }
         }
 
