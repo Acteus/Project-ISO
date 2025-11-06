@@ -82,7 +82,7 @@
         .responses-header {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            color: white;
+            color: #2c3e50;
             padding: 40px 30px;
             border-radius: 20px;
             margin-bottom: 30px;
@@ -109,6 +109,7 @@
             margin: 0;
             font-size: 32px;
             font-weight: 800;
+            color: #2c3e50;
             text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
