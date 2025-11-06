@@ -1150,7 +1150,7 @@
                 console.log(`${type} analysis response status:`, res.status);
                 const json = await res.json();
                 console.log(`${type} analysis response:`, json);
-                
+
                 if (json?.success) {
                     console.log(`${type} analysis data:`, json.data);
                     displayResults(type, json.data ?? {});
