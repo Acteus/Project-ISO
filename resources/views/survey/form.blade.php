@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Survey - ISO Quality Education</title>
-    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}?v={{ time() }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         .logout-btn:hover {
@@ -803,7 +803,7 @@
 
     <script src="{{ asset('js/main.js') }}"></script>
     <script src="{{ asset('js/survey.js') }}"></script>
-    
+
     <!-- Logout Modal Script -->
     @include('partials.logout-modal')
 </body>
