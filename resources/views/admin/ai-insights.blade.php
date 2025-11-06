@@ -1262,7 +1262,9 @@
             // Update results heading
             const resultsHeading = resultsDiv.querySelector('h3 span');
             if (resultsHeading) {
-                resultsHeading.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} - Error`;
+                // Format type: replace underscores with spaces and title case each word
+                const formattedType = type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                resultsHeading.textContent = `${formattedType} - Error`;
             }
 
             // Display error card with helpful information
@@ -1637,19 +1639,20 @@
                 case 'risk_assessment': {
                     const r = data.assessment || data || {};
                     const overallRisk = Number(r.overall_risk_score) || 0;
+                    const roundedOverallRisk = Math.round(overallRisk * 100) / 100; // Round to 2 decimal places
                     const riskCategory = r.risk_category ?? 'Unknown';
                     const riskLevel = r.risk_level ?? 'Unknown';
                     const conf = Number(r.confidence) || 0;
 
                     // Determine risk color based on score
-                    const riskColor = overallRisk >= 70 ? '#dc3545' : overallRisk >= 40 ? '#ffc107' : '#28a745';
-                    const riskLabel = overallRisk >= 70 ? 'High Risk' : overallRisk >= 40 ? 'Medium Risk' : 'Low Risk';
+                    const riskColor = roundedOverallRisk >= 70 ? '#dc3545' : roundedOverallRisk >= 40 ? '#ffc107' : '#28a745';
+                    const riskLabel = roundedOverallRisk >= 70 ? 'High Risk' : roundedOverallRisk >= 40 ? 'Medium Risk' : 'Low Risk';
 
                     const html = `
                         <div style="margin: 15px 0;">
-                            <p style="margin-bottom: 8px;"><strong>Overall Risk Score:</strong> <span style="color: ${riskColor}; font-weight: 700; font-size: 22px;">${overallRisk}</span> / 100</p>
+                            <p style="margin-bottom: 8px;"><strong>Overall Risk Score:</strong> <span style="color: ${riskColor}; font-weight: 700; font-size: 22px;">${roundedOverallRisk.toFixed(2)}</span> / 100</p>
                             <div style="width: 100%; height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden;">
-                                <div style="width: ${overallRisk}%; height: 100%; background: ${riskColor}; transition: width 0.5s ease;"></div>
+                                <div style="width: ${roundedOverallRisk}%; height: 100%; background: ${riskColor}; transition: width 0.5s ease;"></div>
                             </div>
                             <p style="margin-top: 8px; color: ${riskColor}; font-weight: 700;">${riskLabel}</p>
                         </div>
@@ -1659,7 +1662,7 @@
                         <p><strong>Analysis Confidence:</strong> ${(conf * 100).toFixed(1)}%</p>
                         <p style="margin-top: 10px; font-size: 12px; color: #666; font-style: italic;">Comprehensive risk assessment across all ISO 21001 dimensions.</p>
                     `;
-                    parts.push(renderItem('Comprehensive Risk Assessment', `${overallRisk}/100`, html));
+                    parts.push(renderItem('Comprehensive Risk Assessment', `${roundedOverallRisk.toFixed(2)}/100`, html));
 
                     if (r.risk_breakdown){
                         const names = {
@@ -1672,19 +1675,20 @@
 
                         Object.entries(r.risk_breakdown).forEach(([k,v]) => {
                             const score = Number(v) || 0;
-                            const color = score >= 70 ? '#dc3545' : score >= 40 ? '#ffc107' : '#28a745';
-                            const categoryName = names[k] || k;
+                            const roundedScore = Math.round(score * 100) / 100; // Round to 2 decimal places
+                            const color = roundedScore >= 70 ? '#dc3545' : roundedScore >= 40 ? '#ffc107' : '#28a745';
+                            const categoryName = names[k] || k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
                             const breakdownHtml = `
                                 <div style="margin: 10px 0;">
-                                    <p style="margin-bottom: 5px;"><strong>Risk Score:</strong> <span style="color: ${color}; font-weight: 700; font-size: 18px;">${score}</span> / 100</p>
+                                    <p style="margin-bottom: 5px;"><strong>Risk Score:</strong> <span style="color: ${color}; font-weight: 700; font-size: 18px;">${roundedScore.toFixed(2)}</span> / 100</p>
                                     <div style="width: 100%; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
-                                        <div style="width: ${score}%; height: 100%; background: ${color}; transition: width 0.5s ease;"></div>
+                                        <div style="width: ${roundedScore}%; height: 100%; background: ${color}; transition: width 0.5s ease;"></div>
                                     </div>
                                 </div>
                                 <p style="font-size: 13px; color: #666;">ISO 21001 compliance risk for ${categoryName.toLowerCase()}.</p>
                             `;
-                            parts.push(renderItem(categoryName, `${score}/100`, breakdownHtml));
+                            parts.push(renderItem(categoryName, `${roundedScore.toFixed(2)}/100`, breakdownHtml));
                         });
                     }
                     break;
@@ -1855,7 +1859,9 @@
             // Update results heading with analysis type
             const resultsHeading = resultsDiv.querySelector('h3 span');
             if (resultsHeading) {
-                resultsHeading.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} Results`;
+                // Format type: replace underscores with spaces and title case each word
+                const formattedType = type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                resultsHeading.textContent = `${formattedType} Results`;
             }
         }
 
