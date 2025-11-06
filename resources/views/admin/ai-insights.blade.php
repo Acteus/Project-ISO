@@ -1407,7 +1407,7 @@
                             const details = `
                                 <p><strong>Risk Level:</strong> <span style="color: ${riskColor}; font-weight: 700;">${riskLevel}</span></p>
                                 <p><strong>Avg Satisfaction:</strong> ${avgSat ? `${Number(avgSat).toFixed(2)}/5.0` : 'N/A'}</p>
-                                <p><strong>Avg Performance:</strong> ${avgPerf ? `${Number(avgPerf).toFixed(2)}/4.0` : 'N/A'}</p>
+                                <p><strong>Avg Performance:</strong> ${avgPerf ? `${Number(avgPerf).toFixed(1)}%` : 'N/A'}</p>
                                 <div style="margin-top: 10px;">
                                     <p style="margin-bottom: 5px;"><strong>Key Characteristics:</strong></p>
                                     ${Array.isArray(cluster.characteristics) && cluster.characteristics.length

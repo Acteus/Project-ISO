@@ -513,9 +513,9 @@ class AIController extends Controller
                             'stress_management_support' => $response->stress_management_support,
                             'physical_health_support' => $response->physical_health_support,
                             'overall_wellbeing_rating' => $response->overall_wellbeing_rating,
-                            'attendance_rate' => $response->attendance_rate ?? 85,
-                            'grade_average' => $response->grade_average ?? 85,
-                            'participation_score' => $response->participation_score ?? 80,
+                            'attendance_rate' => $response->attendance_rate ?? 85, // Default to 85% attendance
+                            'grade_average' => $response->grade_average ?? 85, // Default to 85% grade (percentage scale 0-100)
+                            'participation_score' => $response->participation_score ?? 80, // Default to 80% participation
                             'extracurricular_hours' => $response->extracurricular_hours ?? 10,
                             'counseling_sessions' => $response->counseling_sessions ?? 2,
                             'track' => $response->track,
@@ -673,9 +673,9 @@ class AIController extends Controller
                                     'stress_management_support' => $response->stress_management_support,
                                     'physical_health_support' => $response->physical_health_support,
                                     'overall_wellbeing_rating' => $response->overall_wellbeing_rating,
-                                    'attendance_rate' => $response->attendance_rate ?? 85,
-                                    'grade_average' => $response->grade_average ?? 85,
-                                    'participation_score' => $response->participation_score ?? 80,
+                                    'attendance_rate' => $response->attendance_rate ?? 85, // Default to 85% attendance
+                                    'grade_average' => $response->grade_average ?? 85, // Default to 85% grade (percentage scale 0-100)
+                                    'participation_score' => $response->participation_score ?? 80, // Default to 80% participation
                                     'extracurricular_hours' => $response->extracurricular_hours ?? 10,
                                     'counseling_sessions' => $response->counseling_sessions ?? 2,
                                     'track' => $response->track,
