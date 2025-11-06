@@ -80,7 +80,8 @@ class FlaskAIClient
      */
     public function predictPerformance(array $data): ?array
     {
-        return $this->makeRequest('POST', '/api/v1/performance/predict', $data);
+        // Increase timeout for performance prediction as it may take longer
+        return $this->makeRequest('POST', '/api/v1/performance/predict', $data, 60);
     }
 
     /**
