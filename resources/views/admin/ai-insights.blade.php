@@ -843,18 +843,18 @@
 
                     <!-- Predictive Analytics -->
                     <article class="insight-card">
-                        <h3>Predictive Analytics</h3>
+                        <h3>Predictive Analytics <span style="color: #ffc107; font-size: 12px; font-weight: 600; background: rgba(255, 193, 7, 0.1); padding: 4px 8px; border-radius: 6px; margin-left: 8px;" title="This feature may be temporarily unavailable">⚠ Beta</span></h3>
                         <p>Advanced forecasting of student performance, satisfaction trends, and risk factors using time series analysis.</p>
                         <button type="button" class="btn btn-primary" onclick="runPredictiveAnalytics()" aria-describedby="predictive-desc">Forecast Future Performance</button>
-                        <div id="predictive-desc" class="sr-only">Forecasts future student performance and satisfaction trends</div>
+                        <div id="predictive-desc" class="sr-only">Forecasts future student performance and satisfaction trends. Note: This feature is in beta and may be temporarily unavailable.</div>
                     </article>
 
                     <!-- Comprehensive Risk Assessment -->
                     <article class="insight-card">
-                        <h3>Comprehensive Risk Assessment</h3>
+                        <h3>Comprehensive Risk Assessment <span style="color: #ffc107; font-size: 12px; font-weight: 600; background: rgba(255, 193, 7, 0.1); padding: 4px 8px; border-radius: 6px; margin-left: 8px;" title="This feature may be temporarily unavailable">⚠ Beta</span></h3>
                         <p>Complete ISO 21001 compliance risk evaluation across all learner-centric dimensions with intervention recommendations.</p>
                         <button type="button" class="btn btn-primary" onclick="runComprehensiveRiskAssessment()" aria-describedby="risk-desc">Run Comprehensive Risk Assessment</button>
-                        <div id="risk-desc" class="sr-only">Evaluates compliance risks across all ISO 21001 dimensions</div>
+                        <div id="risk-desc" class="sr-only">Evaluates compliance risks across all ISO 21001 dimensions. Note: This feature is in beta and may be temporarily unavailable.</div>
                     </article>
 
                     <!-- Trend Analysis -->
@@ -867,18 +867,18 @@
 
                     <!-- Performance Prediction -->
                     <article class="insight-card">
-                        <h3>Performance Prediction</h3>
+                        <h3>Performance Prediction <span style="color: #ffc107; font-size: 12px; font-weight: 600; background: rgba(255, 193, 7, 0.1); padding: 4px 8px; border-radius: 6px; margin-left: 8px;" title="This feature may be temporarily unavailable">⚠ Beta</span></h3>
                         <p>Predict student academic performance and identify at-risk students early.</p>
                         <button type="button" class="btn btn-primary" onclick="runPerformancePrediction()" aria-describedby="performance-desc">Predict Student Performance</button>
-                        <div id="performance-desc" class="sr-only">Predicts academic performance and identifies at-risk students</div>
+                        <div id="performance-desc" class="sr-only">Predicts academic performance and identifies at-risk students. Note: This feature is in beta and may be temporarily unavailable.</div>
                     </article>
 
                     <!-- Dropout Risk Assessment -->
                     <article class="insight-card">
-                        <h3>Dropout Risk Assessment</h3>
+                        <h3>Dropout Risk Assessment <span style="color: #ffc107; font-size: 12px; font-weight: 600; background: rgba(255, 193, 7, 0.1); padding: 4px 8px; border-radius: 6px; margin-left: 8px;" title="This feature may be temporarily unavailable">⚠ Beta</span></h3>
                         <p>Identify students at risk of dropping out using machine learning algorithms.</p>
                         <button type="button" class="btn btn-primary" onclick="runDropoutRiskAssessment()" aria-describedby="dropout-desc">Assess Dropout Risk</button>
-                        <div id="dropout-desc" class="sr-only">Identifies students at risk of dropping out</div>
+                        <div id="dropout-desc" class="sr-only">Identifies students at risk of dropping out. Note: This feature is in beta and may be temporarily unavailable.</div>
                     </article>
 
                     <!-- Comprehensive Analytics -->
@@ -1172,11 +1172,35 @@
                     showAlert('success', `${type.charAt(0).toUpperCase() + type.slice(1)} analysis completed successfully!`);
                 } else {
                     console.error(`${type} analysis failed:`, json);
-                    showAlert('error', json?.message || 'Analysis failed');
+
+                    // Provide more specific error messages based on analysis type
+                    let errorMessage = json?.message || 'Analysis failed';
+
+                    // Check if it's a 503 service unavailable error
+                    if (res.status === 503 || errorMessage.includes('unavailable')) {
+                        const modelNames = {
+                            'predictive': 'Predictive Analytics',
+                            'performance': 'Performance Prediction',
+                            'dropout': 'Dropout Risk Assessment',
+                            'risk_assessment': 'Risk Assessment'
+                        };
+
+                        const modelName = modelNames[type] || type.charAt(0).toUpperCase() + type.slice(1);
+                        errorMessage = `${modelName} service is currently unavailable. The AI model may be initializing or temporarily offline. Please try again in a few moments, or contact support if the issue persists.`;
+                    }
+
+                    showAlert('error', errorMessage);
+
+                    // Show error state in results panel
+                    displayErrorResult(type, errorMessage);
                 }
             } catch (err) {
                 console.error(`runAIAnalysis error for ${type}:`, err);
-                showAlert('error', 'An error occurred during analysis: ' + err.message);
+                const userFriendlyMessage = err.message.includes('Failed to fetch')
+                    ? 'Unable to connect to the AI service. Please check your internet connection and try again.'
+                    : 'An error occurred during analysis: ' + err.message;
+                showAlert('error', userFriendlyMessage);
+                displayErrorResult(type, userFriendlyMessage);
             } finally { hideLoading(); }
         }
 
@@ -1229,6 +1253,60 @@
                     <p style="font-size: 13px; color: #bbb; margin-top: 10px;">Click any analysis button to get started</p>
                 </div>
             `;
+        }
+
+        function displayErrorResult(type, errorMessage) {
+            const container = document.getElementById('results-container');
+            const resultsDiv = document.getElementById('ai-results');
+
+            // Update results heading
+            const resultsHeading = resultsDiv.querySelector('h3 span');
+            if (resultsHeading) {
+                resultsHeading.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} - Error`;
+            }
+
+            // Display error card with helpful information
+            const errorHtml = `
+                <div class="result-item" style="background: linear-gradient(135deg, rgba(220, 53, 69, 0.05), rgba(232, 62, 97, 0.05)); border-left: 4px solid #dc3545;">
+                    <div class="result-header">
+                        <div class="result-title" style="color: #dc3545;">
+                            <svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 8px; fill: #dc3545;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                            </svg>
+                            Service Unavailable
+                        </div>
+                    </div>
+                    <div class="result-details">
+                        <p style="margin: 10px 0;">${errorMessage}</p>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.7); border-radius: 8px; border-left: 3px solid #ffc107;">
+                            <p style="margin: 0 0 10px 0; font-weight: 600; color: #856404;">
+                                <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; fill: #ffc107;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                </svg>
+                                Possible Solutions:
+                            </p>
+                            <ul style="margin: 0; padding-left: 20px; color: #666;">
+                                <li>Wait a few moments and try again</li>
+                                <li>Check if the Python Flask AI service is running</li>
+                                <li>Verify the AI service URL configuration in your .env file</li>
+                                <li>Try one of the other available analyses (Compliance, Sentiment, or Clustering)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = errorHtml;
+
+            // Announce error to screen readers
+            const announcement = document.createElement('div');
+            announcement.setAttribute('aria-live', 'assertive');
+            announcement.setAttribute('aria-atomic', 'true');
+            announcement.className = 'sr-only';
+            announcement.textContent = `Error: ${errorMessage}`;
+            document.body.appendChild(announcement);
+
+            setTimeout(() => document.body.removeChild(announcement), 3000);
         }
 
         function displayResults(type, data){
