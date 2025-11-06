@@ -445,39 +445,24 @@
 
         /* Header styling enhancement */
         .header {
-            background: rgba(255, 255, 255, 0.15) !important;
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(255, 140, 0, 0.1));
-            z-index: -1;
+            background: linear-gradient(135deg, #1e5a9e 0%, #0d3a6b 100%) !important;
+            border-bottom: none;
+            box-shadow: 0 4px 15px rgba(30, 90, 158, 0.3);
         }
 
         .logo a {
-            color: white !important;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            color: #ffff !important;
             font-weight: 800;
         }
 
         .nav-link {
-            color: white !important;
+            color: #ffff !important;
             transition: all 0.3s ease;
             font-weight: 600;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .nav-link:hover {
-            color: #FFD700 !important;
+            color: #ffff !important;
             transform: translateY(-2px);
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
