@@ -119,7 +119,7 @@ class FlaskAIClient
     /**
      * Make HTTP request to Flask service with retry logic
      */
-    protected function makeRequest(string $method, string $endpoint, array $data = []): ?array
+    protected function makeRequest(string $method, string $endpoint, array $data = [], int $customTimeout = null): ?array
     {
         $url = $this->baseUrl . $endpoint;
         $cacheKey = 'flask_ai_' . md5($method . $url . json_encode($data));
@@ -131,10 +131,11 @@ class FlaskAIClient
 
         $attempts = 0;
         $lastException = null;
+        $timeout = $customTimeout ?? $this->timeout;
 
         while ($attempts < $this->retries) {
             try {
-                $httpClient = Http::timeout($this->timeout);
+                $httpClient = Http::timeout($timeout);
 
                 // Add API key if configured
                 if ($this->apiKey) {
