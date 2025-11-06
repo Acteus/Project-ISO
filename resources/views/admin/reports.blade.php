@@ -831,13 +831,22 @@
             <div class="reports-header">
                 <h1>Report Management</h1>
                 <p>Send weekly progress reports and monthly compliance reports to administrators via Google SMTP</p>
-                <div style="margin-top: 25px;">
+                <div style="margin-top: 25px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                     <button type="button" onclick="showTestEmailModal()" class="btn btn-secondary" style="padding: 12px 20px; font-size: 14px;">
                         <svg style="width: 18px; height: 18px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                             <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
                         </svg>
                         Test Email Configuration
                     </button>
+                    <button type="button" onclick="generateWeeklyMetrics()" class="btn btn-primary" style="padding: 12px 20px; font-size: 14px;">
+                        <svg style="width: 18px; height: 18px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                        </svg>
+                        Generate Weekly Metrics
+                    </button>
+                </div>
+                <div style="margin-top: 20px; padding: 15px 25px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.08), rgba(255, 215, 0, 0.08)); border-radius: 12px; font-size: 14px; color: #5a6c7d; max-width: 800px; margin-left: auto; margin-right: auto;">
+                    <strong style="color: #2c3e50;">📊 Important:</strong> Weekly metrics must be generated before you can preview or send <strong>both weekly and monthly reports</strong>. Click "Generate Weekly Metrics" to aggregate survey data from the last 12 weeks. Monthly reports are calculated from weekly metrics.
                 </div>
             </div>
 
@@ -1407,6 +1416,39 @@
                 hideLoading();
             }
         });
+
+        // Generate Weekly Metrics
+        async function generateWeeklyMetrics() {
+            if (!confirm('This will generate weekly metrics from survey responses. This may take a moment. Continue?')) {
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch('/admin/reports/generate-metrics', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('success', result.message + (result.weeks_generated ? ` (${result.weeks_generated} weeks generated)` : ''));
+                } else {
+                    showAlert('error', result.message);
+                }
+            } catch (error) {
+                console.error('Generate metrics error:', error);
+                showAlert('error', 'An error occurred while generating metrics.');
+            } finally {
+                hideLoading();
+            }
+        }
 
         console.log('Enhanced Report management page loaded');
     </script>
