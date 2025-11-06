@@ -17,17 +17,20 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        Admin::create([
-            'name' => 'System Administrator',
-            'username' => 'admin',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('Admin@1'),
-            'email_verified_at' => now(),
-        ]);
+        // Use updateOrCreate to avoid duplicate entry errors
+        Admin::updateOrCreate(
+            ['username' => 'admin'],
+            [
+                'name' => 'Kwadra Team Admin',
+                'email' => 'kwadrateam@gmail.com',
+                'password' => Hash::make('Admin@01'),
+                'email_verified_at' => now(),
+            ]
+        );
 
         $this->command->info('Admin account created successfully.');
+        $this->command->info('Email: kwadrateam@gmail.com');
         $this->command->info('Username: admin');
-        $this->command->info('Password: Admin@1');
-        $this->command->warn('Please change the default password after first login.');
+        $this->command->info('Password: Admin@01');
     }
 }

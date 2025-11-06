@@ -723,7 +723,7 @@
                 <nav class="desktop-nav" aria-label="Main navigation">
                     <a href="{{ route('admin.dashboard') }}" class="nav-link" aria-label="Go to Admin Dashboard">Dashboard</a>
                     <a href="{{ route('admin.ai.insights') }}" class="nav-link active" aria-current="page" aria-label="AI Insights - Current page">AI Insights</a>
-                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;" aria-label="Logout form">
+                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;" aria-label="Logout form" onsubmit="handleAdminLogout(event)">
                         @csrf
                         <button type="submit" class="nav-link logout-btn" aria-label="Logout from admin account" style="background: linear-gradient(135deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 700; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;">
                             <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 8px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
@@ -1794,5 +1794,7 @@
 
         console.log('Enhanced AI Insights page loaded');
     </script>
+
+    @include('partials.admin-logout-modal')
 </body>
 </html>

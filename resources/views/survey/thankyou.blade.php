@@ -356,14 +356,14 @@
         .contact-section {
             margin-top: 50px;
             padding: 30px;
-            background: linear-gradient(135deg, #fef5e7 0%, #fff9e6 100%);
+            background: linear-gradient(135deg, #e3f2fd 0%, #e1f5fe 100%);
             border-radius: 20px;
-            border-left: 4px solid #f39c12;
+            border-left: 4px solid #4285F4;
             animation: fadeInUp 0.8s ease-out 0.8s both;
         }
 
         .contact-section p {
-            color: #856404;
+            color: #1565c0;
             font-size: 15px;
             margin: 0;
             display: flex;
@@ -382,6 +382,11 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             text-align: center;
             color: white;
+        }
+
+        .footer .container {
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .logout-btn:hover {
@@ -631,25 +636,19 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-main">
-                    <h3 class="footer-title" style="color: white; margin-bottom: 15px; font-size: 24px; font-weight: 700;">ISO Learner-Centric Quality Education</h3>
-                    <p class="footer-description" style="color: rgba(255,255,255,0.9); font-size: 16px; margin-bottom: 20px;">
-                        Empowering CSS Strand Students through Learner-Centric Quality Education
-                    </p>
-                    <p style="color: rgba(255,255,255,0.8); font-size: 14px;">
-                        Jose Rizal University - Senior High School<br>
-                        Contact: academic.affairs@jru.edu
-                    </p>
-                </div>
-            </div>
-            <div class="footer-bottom" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2);">
-                <p class="footer-copyright" style="color: rgba(255,255,255,0.9); font-size: 14px; margin: 0;">
-                    © <span id="currentYear"></span> JRU Senior High School. All rights reserved.
-                </p>
-            </div>
+    <footer class="footer" style="text-align: center;">
+        <div style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <h3 style="color: white; margin-bottom: 15px; font-size: 24px; font-weight: 700;">ISO Learner-Centric Quality Education</h3>
+            <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin-bottom: 20px;">
+                Empowering CSS Strand Students through Learner-Centric Quality Education
+            </p>
+            <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin-bottom: 30px;">
+                Jose Rizal University - Senior High School<br>
+                Contact: academic.affairs@jru.edu
+            </p>
+            <p style="color: rgba(255,255,255,0.9); font-size: 14px; margin: 0;">
+                © <span id="currentYear"></span> JRU Senior High School. All rights reserved.
+            </p>
         </div>
     </footer>
 
@@ -755,5 +754,7 @@
 
         console.log('Thank you page loaded with enhanced animations');
     </script>
+
+    @include('partials.logout-modal')
 </body>
 </html>

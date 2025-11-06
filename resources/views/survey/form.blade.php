@@ -803,5 +803,8 @@
 
     <script src="{{ asset('js/main.js') }}"></script>
     <script src="{{ asset('js/survey.js') }}"></script>
+    
+    <!-- Logout Modal Script -->
+    @include('partials.logout-modal')
 </body>
 </html>

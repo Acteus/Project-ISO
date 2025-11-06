@@ -249,9 +249,6 @@
             <div class="nav-wrapper">
                 <div class="logo">
                     <a href="{{ route('survey.landing') }}">
-                        <svg style="width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 8px;" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 11.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.3l7-3.11v8.8z"/>
-                        </svg>
                         ISO Quality Education
                     </a>
                 </div>
@@ -260,12 +257,8 @@
                 <nav class="desktop-nav">
                     @auth
                         <!-- Show for logged-in students -->
-                        <span class="user-greeting">{{ Auth::user()->name }}</span>
                         <a href="{{ route('student.dashboard') }}" class="btn-profile">
-                            <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                            </svg>
-                            Profile
+                            {{ Auth::user()->name }}
                         </a>
                         <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                             @csrf
@@ -278,12 +271,8 @@
                         </form>
                     @elseif(session('admin'))
                         <!-- Show for logged-in admins -->
-                        <span class="user-greeting">{{ session('admin')->name }}</span>
                         <a href="{{ route('admin.dashboard') }}" class="btn-profile">
-                            <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 11.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.3l7-3.11v8.8z"/>
-                            </svg>
-                            Admin Dashboard
+                            {{ session('admin')->name }}
                         </a>
                         <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                             @csrf
@@ -324,12 +313,8 @@
             <!-- Mobile navigation -->
             <nav class="mobile-nav" id="mobileNav">
                 @auth
-                    <span class="user-greeting" style="margin-bottom: 0.5rem;">{{ Auth::user()->name }}</span>
                     <a href="{{ route('student.dashboard') }}" class="btn-profile" style="text-align: center; display: block; margin-bottom: 0.5rem;">
-                        <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                        </svg>
-                        Profile
+                        {{ Auth::user()->name }}
                     </a>
                     <form method="POST" action="{{ route('student.logout') }}">
                         @csrf
@@ -341,12 +326,8 @@
                         </button>
                     </form>
                 @elseif(session('admin'))
-                    <span class="user-greeting" style="margin-bottom: 0.5rem;">{{ session('admin')->name }}</span>
                     <a href="{{ route('admin.dashboard') }}" class="btn-profile" style="text-align: center; display: block; margin-bottom: 0.5rem;">
-                        <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 11.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.3l7-3.11v8.8z"/>
-                        </svg>
-                        Admin Dashboard
+                        {{ session('admin')->name }}
                     </a>
                     <form method="POST" action="{{ route('student.logout') }}">
                         @csrf
@@ -460,21 +441,6 @@
         </div>
     </footer>
 
-    <!-- Debug Info (Remove in production) -->
-    @if(config('app.debug'))
-    <div style="position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; border-radius: 8px; font-size: 12px; z-index: 9999;">
-        <strong>Auth Debug:</strong><br>
-        @auth
-            ✅ Authenticated<br>
-            User: {{ Auth::user()->name }}<br>
-            ID: {{ Auth::user()->id }}
-        @else
-            ❌ Not Authenticated<br>
-            Guest User
-        @endauth
-    </div>
-    @endif
-
     <script src="{{ asset('js/main.js') }}"></script>
     <script>
         // Mobile menu toggle for landing page
@@ -493,5 +459,8 @@
             }
         });
     </script>
+
+    <!-- Logout Modal Script -->
+    @include('partials.logout-modal')
 </body>
 </html>

@@ -49,6 +49,14 @@ class AdminAuthController extends Controller
 
         $request->user()->currentAccessToken()->delete();
 
+        // Check if it's an AJAX request
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'message' => 'Logged out successfully',
+                'redirect' => route('student.login')
+            ]);
+        }
+
         return response()->json([
             'message' => 'Logged out successfully'
         ]);

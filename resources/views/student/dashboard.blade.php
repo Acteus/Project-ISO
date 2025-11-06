@@ -51,23 +51,47 @@
         }
 
         .dashboard-header {
-            background: linear-gradient(135deg, #4285F4, #2c6cd6);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            color: #333;
+            padding: 40px 30px;
+            border-radius: 20px;
             margin-bottom: 30px;
             text-align: center;
+            box-shadow: 0 20px 60px rgba(66, 133, 244, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #4285F4, #FF8C00, #FFD700);
         }
 
         .dashboard-header h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 700;
+            margin: 0 0 20px 0;
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1.3;
+            color: #2c3e50;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .dashboard-header p {
-            margin: 10px 0 0 0;
-            opacity: 0.9;
+            margin: 0;
+            font-size: 18px;
+            line-height: 1.6;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            color: #5a6c7d;
+            font-weight: 500;
         }
 
         .student-info-card {
@@ -237,11 +261,14 @@
         }
 
         .footer {
-            margin-top: 50px;
-            padding: 20px;
-            background: #f8f9fa;
+            margin-top: 30px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
             text-align: center;
-            color: #666;
+            color: #5a6c7d;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .logout-btn:hover {
@@ -417,20 +444,14 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-main">
-                    <h3 class="footer-title">ISO Learner-Centric Quality Education</h3>
-                    <p class="footer-description">
-                        Empowering CSS Strand Students through Learner-Centric Quality Education
-                    </p>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p class="footer-copyright">
-                    © <span id="currentYear"></span> JRU Senior High School. All rights reserved.
-                </p>
-            </div>
+        <div style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <h3 style="color: #2c3e50; font-weight: 700; margin-bottom: 15px; font-size: 24px;">ISO Learner-Centric Quality Education</h3>
+            <p style="color: #5a6c7d; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                Empowering CSS Strand Students through Learner-Centric Quality Education
+            </p>
+            <p style="color: #6c757d; font-weight: 500; font-size: 14px; margin: 0;">
+                © <span id="currentYear"></span> JRU Senior High School. All rights reserved.
+            </p>
         </div>
     </footer>
 

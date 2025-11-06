@@ -349,6 +349,8 @@
     </footer>
 
     <script src="{{ asset('js/main.js') }}"></script>
+
+    @include('partials.logout-modal')
 </body>
 </html>
 

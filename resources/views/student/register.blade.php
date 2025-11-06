@@ -305,8 +305,8 @@
 
         <div class="form-group">
           <label>Email Address</label>
-          <input type="email" name="email" required placeholder="yourname@my.jru.edu">
-          <div class="error-message">Please enter a valid @my.jru.edu email address</div>
+          <input type="email" name="email" required placeholder="your.email@example.com">
+          <div class="error-message">Please enter a valid email address</div>
         </div>
 
         <div class="form-group">
@@ -423,6 +423,9 @@
               console.log('Event listener attached to radio button:', radio.value);
           });
 
+          // Real-time validation removed - all validation happens on submit only
+          // This allows users to freely enter their credentials without interference
+
           // Also add a manual test function for debugging
           window.testUpdateSections = function() {
               console.log('Manual test of updateSections');
@@ -442,9 +445,14 @@
 
           const modal = document.createElement('div');
           modal.className = 'custom-modal-overlay';
+          
+          // Use different colors for errors
+          const bgGradient = isError 
+              ? 'linear-gradient(135deg, #dc3545, #ff6b6b)' 
+              : 'linear-gradient(135deg, #4285f4, #ffd700)';
 
           modal.innerHTML = `
-              <div class="custom-modal-content">
+              <div class="custom-modal-content" style="background: ${bgGradient};">
                   <div class="custom-modal-icon">${icon}</div>
                   <div class="custom-modal-title">${title}</div>
                   <div class="custom-modal-message">${message}</div>
@@ -621,9 +629,15 @@
                               } else if (data.errors) {
                                   // Show validation errors
                                   console.log('Validation errors:', data.errors);
+                                  
+                                  // Collect all error messages
+                                  let errorMessages = [];
+                                  
                                   Object.keys(data.errors).forEach(key => {
                                       const errorMsg = data.errors[key][0];
                                       console.log(`Error for ${key}:`, errorMsg);
+                                      errorMessages.push(errorMsg);
+                                      
                                       const field = document.querySelector(`[name="${key}"]`);
                                       if (field) {
                                           const formGroup = field.closest('.form-group');
@@ -635,7 +649,21 @@
                                           }
                                       }
                                   });
-                                  showCustomModal('Please fix the validation errors and try again.', '⚠️', 'Validation Error', true);
+                                  
+                                  // Show modal with all error messages
+                                  const errorList = errorMessages.map(msg => `• ${msg}`).join('<br>');
+                                  showCustomModal(
+                                      `<div style="text-align: left; margin: 20px 0;">${errorList}</div>`, 
+                                      '⚠️', 
+                                      'Please Fix These Errors', 
+                                      true
+                                  );
+                                  
+                                  // Scroll to first error
+                                  const firstError = document.querySelector('.form-group.error');
+                                  if (firstError) {
+                                      firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                  }
                               } else {
                                   console.error('Unexpected response format:', data);
                                   showCustomModal('Unexpected response from server. Please check console for details.', '❌', 'Error', true);

@@ -527,7 +527,7 @@
                 <!-- Desktop navigation -->
                 <nav class="desktop-nav">
                     <a href="{{ route('admin.dashboard') }}" class="nav-link active">Dashboard</a>
-                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
+                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;" onsubmit="handleAdminLogout(event)">
                         @csrf
                         <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(135deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 700; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;">
                             <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 8px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -1093,5 +1093,7 @@
 
         console.log('Enhanced Response Detail page loaded');
     </script>
+
+    @include('partials.admin-logout-modal')
 </body>
 </html>

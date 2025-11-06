@@ -23,24 +23,17 @@ class StudentController extends Controller
         $validator = Validator::make($request->all(), [
             'firstname' => 'required|string|max:255',
             'lastname' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                'unique:users',
-                'regex:/^[a-zA-Z0-9._%+-]+@my\.jru\.edu$/',
-            ],
+            'email' => 'required|string|email|max:255|unique:users',
             'year' => 'required|in:11,12',
             'section' => 'required|string|max:10',
             'studentid' => 'required|string|unique:users,student_id',
             'password' => 'required|string|min:8|confirmed',
             'acknowledge' => 'required|accepted',
         ], [
-            'email.regex' => 'Email must be a valid @my.jru.edu address.',
             'email.unique' => 'This email is already registered.',
             'studentid.unique' => 'This student ID is already registered.',
             'password.min' => 'Password must be at least 8 characters.',
+            'password.confirmed' => 'Password confirmation does not match.',
         ]);
 
         if ($validator->fails()) {
@@ -77,23 +70,42 @@ class StudentController extends Controller
             ],
         ]);
 
-        // Send email verification notification
-        try {
-            $user->sendEmailVerificationNotification();
-            Log::info('Email verification sent to: ' . $user->email);
-        } catch (\Exception $e) {
-            Log::error('Failed to send verification email: ' . $e->getMessage());
-        }
-
-        // Log the student in (but they'll need to verify email)
+        // Log the student in
         Auth::login($user);
 
         // Mark that we should regenerate on next request
         $request->session()->put('_should_regenerate', true);
 
+        // By default send verification email and redirect to verification notice.
+        // For local development or when explicitly configured, auto-verify to simplify testing.
+        $skipVerification = env('SKIP_EMAIL_VERIFICATION', false) || app()->environment('local');
+
+        if ($skipVerification) {
+            try {
+                // Mark user as verified for local/testing environments
+                $user->markEmailAsVerified();
+                Log::info('Auto-verified email for local/testing: ' . $user->email);
+            } catch (\Exception $e) {
+                Log::error('Failed to auto-verify email: ' . $e->getMessage());
+            }
+
+            $redirect = route('survey.landing');
+            $message = 'Registration successful! You have been auto-verified for local testing.';
+        } else {
+            try {
+                $user->sendEmailVerificationNotification();
+                Log::info('Email verification sent to: ' . $user->email);
+            } catch (\Exception $e) {
+                Log::error('Failed to send verification email: ' . $e->getMessage());
+            }
+
+            $redirect = route('verification.notice');
+            $message = 'Registration successful! Please check your email to verify your account.';
+        }
+
         return response()->json([
-            'message' => 'Registration successful! Please check your email to verify your account.',
-            'redirect' => route('verification.notice'),
+            'message' => $message,
+            'redirect' => $redirect,
             'user' => [
                 'name' => $user->name,
                 'student_id' => $user->student_id,
@@ -253,13 +265,16 @@ class StudentController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // If it's an AJAX request, return JSON
+        // Always return JSON for modal-based logout
         if ($request->ajax() || $request->wantsJson()) {
-            return response()->json(['message' => 'Logged out successfully']);
+            return response()->json([
+                'message' => 'Logged out successfully',
+                'redirect' => route('student.login')
+            ]);
         }
 
-        // Otherwise, show the beautiful logout page
-        return view('logout');
+        // For non-AJAX requests, redirect to login with message
+        return redirect()->route('student.login')->with('success', 'Logged out successfully');
     }
 
     /**

@@ -24,14 +24,53 @@
 
         /* Enhanced Modern Dashboard Styles */
         body {
-            background: linear-gradient(135deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Textured Background with JRU Colors (Blue, Gold, White) */
+            background-color: #e8f4f8;
+            background-image: 
+                /* Diagonal stripes texture */
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(66, 133, 244, 0.03) 10px,
+                    rgba(66, 133, 244, 0.03) 20px
+                ),
+                repeating-linear-gradient(
+                    -45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(255, 193, 7, 0.02) 10px,
+                    rgba(255, 193, 7, 0.02) 20px
+                ),
+                /* Dot pattern texture */
+                radial-gradient(circle at 25% 25%, rgba(66, 133, 244, 0.04) 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, rgba(255, 193, 7, 0.04) 2px, transparent 2px),
+                /* Subtle gradient overlay */
+                linear-gradient(135deg, 
+                    rgba(179, 217, 255, 0.4) 0%,
+                    rgba(255, 233, 179, 0.3) 50%,
+                    rgba(179, 229, 252, 0.4) 100%
+                );
+            background-size: 
+                100% 100%,
+                100% 100%,
+                20px 20px,
+                20px 20px,
+                100% 100%;
+            background-position: 
+                0 0,
+                0 0,
+                0 0,
+                10px 10px,
+                0 0;
+            background-attachment: fixed;
         }
 
         .survey-main {
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(10px);
+            background: transparent;
+            backdrop-filter: none;
         }
 
         .dashboard-container {
@@ -447,7 +486,7 @@
         }
 
         .footer {
-            margin-top: 60px;
+            margin-top: 30px;
             padding: 30px;
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(15px);
@@ -504,39 +543,24 @@
 
         /* Header styling enhancement */
         .header {
-            background: rgba(255, 255, 255, 0.15) !important;
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(255, 140, 0, 0.1));
-            z-index: -1;
+            background: linear-gradient(135deg, #1e5a9e 0%, #0d3a6b 100%) !important;
+            border-bottom: none;
+            box-shadow: 0 4px 15px rgba(30, 90, 158, 0.3);
         }
 
         .logo a {
-            color: white !important;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            color: #ffff !important;
             font-weight: 800;
         }
 
         .nav-link {
-            color: white !important;
+            color: #ffff !important;
             transition: all 0.3s ease;
             font-weight: 600;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .nav-link:hover {
-            color: #FFD700 !important;
+            color: #ffff !important;
             transform: translateY(-2px);
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
@@ -584,7 +608,7 @@
                     <a href="{{ route('api.survey.analytics') }}" class="nav-link" target="_blank">Analytics</a>
                     <a href="{{ route('admin.ai.insights') }}" class="nav-link">AI Insights</a>
                     <a href="{{ route('admin.reports') }}" class="nav-link">Reports</a>
-                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
+                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;" onsubmit="handleAdminLogout(event)">
                         @csrf
                         <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(135deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 700; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;">
                             <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 8px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -767,20 +791,14 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-main">
-                    <h3 class="footer-title" style="color: #2c3e50; font-weight: 700; margin-bottom: 15px;">ISO Learner-Centric Quality Education</h3>
-                    <p class="footer-description" style="color: #5a6c7d; font-size: 16px; line-height: 1.6;">
-                        Empowering CSS Students through Learner-Centric Quality Education
-                    </p>
-                </div>
-            </div>
-            <div class="footer-bottom" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1);">
-                <p class="footer-copyright" style="color: #6c757d; font-weight: 500;">
-                    © <span id="currentYear"></span> JRU Senior High School. All rights reserved.
-                </p>
-            </div>
+        <div style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <h3 style="color: #2c3e50; font-weight: 700; margin-bottom: 15px; font-size: 24px;">ISO Learner-Centric Quality Education</h3>
+            <p style="color: #5a6c7d; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                Empowering CSS Students through Learner-Centric Quality Education
+            </p>
+            <p style="color: #6c757d; font-weight: 500; font-size: 14px; margin: 0;">
+                © <span id="currentYear"></span> JRU Senior High School. All rights reserved.
+            </p>
         </div>
     </footer>
 
@@ -882,5 +900,7 @@
 
         console.log('Enhanced Admin dashboard loaded with modern styling');
     </script>
+
+    @include('partials.admin-logout-modal')
 </body>
 </html>
