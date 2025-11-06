@@ -16,13 +16,53 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
             min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Textured Background with JRU Colors (Blue, Gold, White) */
+            background-color: #e8f4f8;
+            background-image:
+                /* Diagonal stripes texture */
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(66, 133, 244, 0.03) 10px,
+                    rgba(66, 133, 244, 0.03) 20px
+                ),
+                repeating-linear-gradient(
+                    -45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(255, 193, 7, 0.02) 10px,
+                    rgba(255, 193, 7, 0.02) 20px
+                ),
+                /* Dot pattern texture */
+                radial-gradient(circle at 25% 25%, rgba(66, 133, 244, 0.04) 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, rgba(255, 193, 7, 0.04) 2px, transparent 2px),
+                /* Subtle gradient overlay */
+                linear-gradient(135deg,
+                    rgba(179, 217, 255, 0.4) 0%,
+                    rgba(255, 233, 179, 0.3) 50%,
+                    rgba(179, 229, 252, 0.4) 100%
+                );
+            background-size:
+                100% 100%,
+                100% 100%,
+                20px 20px,
+                20px 20px,
+                100% 100%;
+            background-position:
+                0 0,
+                0 0,
+                0 0,
+                10px 10px,
+                0 0;
+            background-attachment: fixed;
         }
 
         .survey-main {
-            background-image: none !important;
+            background: transparent;
+            backdrop-filter: none;
             padding: 20px;
         }
 
@@ -478,6 +518,36 @@
         .logout-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        /* Header styling enhancement */
+        .header {
+            background: linear-gradient(135deg, #1e5a9e 0%, #0d3a6b 100%) !important;
+            border-bottom: none;
+            box-shadow: 0 4px 15px rgba(30, 90, 158, 0.3);
+        }
+
+        .logo a {
+            color: #ffff !important;
+            font-weight: 800;
+        }
+
+        .nav-link {
+            color: #ffff !important;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .nav-link:hover {
+            color: #ffff !important;
+            transform: translateY(-2px);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-link.active {
+            color: #FFD700 !important;
+            font-weight: 700;
+            text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
         }
 
         /* Sentiment Analysis Section */
