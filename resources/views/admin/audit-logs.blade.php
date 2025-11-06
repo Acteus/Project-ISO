@@ -538,25 +538,143 @@
             <div class="logs-header">
                 <h1>System Audit Logs</h1>
                 <p>Comprehensive audit trail for ISO 21001 compliance and system security monitoring</p>
+                @if(request()->has('action') || request()->has('user_type') || request()->has('date_from') || request()->has('date_to') || request()->has('search'))
+                    <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(255, 140, 0, 0.1)); border-radius: 12px; border-left: 4px solid #4285F4;">
+                        <strong style="color: #4285F4;">
+                            <svg style="width: 18px; height: 18px; vertical-align: middle; margin-right: 6px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                            Filters Active:
+                        </strong>
+                        <span style="color: #5a6c7d; font-weight: 500;">
+                            @if(request()->has('action') && request('action') !== 'all')
+                                Action: <em>{{ ucfirst(str_replace('_', ' ', request('action'))) }}</em>
+                            @endif
+                            @if(request()->has('user_type') && request('user_type') !== 'all')
+                                {{ request()->has('action') && request('action') !== 'all' ? ' | ' : '' }}
+                                User Type: <em>{{ ucfirst(request('user_type')) }}</em>
+                            @endif
+                            @if(request()->has('date_from'))
+                                {{ (request()->has('action') && request('action') !== 'all') || (request()->has('user_type') && request('user_type') !== 'all') ? ' | ' : '' }}
+                                From: <em>{{ request('date_from') }}</em>
+                            @endif
+                            @if(request()->has('date_to'))
+                                | To: <em>{{ request('date_to') }}</em>
+                            @endif
+                            @if(request()->has('search'))
+                                | Search: <em>"{{ request('search') }}"</em>
+                            @endif
+                        </span>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Filter Section -->
+            <div class="logs-table-container" style="margin-bottom: 30px;">
+                <h3 style="color: #2c3e50; font-size: 20px; font-weight: 700; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid transparent; border-image: linear-gradient(90deg, #4285F4, #FF8C00) 1;">
+                    <svg style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
+                    </svg>
+                    Filter Audit Logs
+                </h3>
+                <form method="GET" action="{{ route('admin.audit.logs') }}" id="filterForm">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                        <!-- Action Filter -->
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Action Type</label>
+                            <select name="action" class="filter-select" style="width: 100%; padding: 12px; border: 2px solid rgba(66, 133, 244, 0.2); border-radius: 10px; font-size: 14px; background: white; transition: all 0.3s ease;">
+                                <option value="all">All Actions</option>
+                                @foreach($actions as $actionOption)
+                                    <option value="{{ $actionOption }}" {{ request('action') == $actionOption ? 'selected' : '' }}>
+                                        {{ ucfirst(str_replace('_', ' ', $actionOption)) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- User Type Filter -->
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">User Type</label>
+                            <select name="user_type" class="filter-select" style="width: 100%; padding: 12px; border: 2px solid rgba(66, 133, 244, 0.2); border-radius: 10px; font-size: 14px; background: white; transition: all 0.3s ease;">
+                                <option value="all">All Users</option>
+                                @foreach($userTypes as $type)
+                                    <option value="{{ $type }}" {{ request('user_type') == $type ? 'selected' : '' }}>
+                                        {{ ucfirst($type) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Date From -->
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Date From</label>
+                            <input type="date" name="date_from" value="{{ request('date_from') }}" class="filter-input" style="width: 100%; padding: 12px; border: 2px solid rgba(66, 133, 244, 0.2); border-radius: 10px; font-size: 14px; transition: all 0.3s ease;">
+                        </div>
+
+                        <!-- Date To -->
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Date To</label>
+                            <input type="date" name="date_to" value="{{ request('date_to') }}" class="filter-input" style="width: 100%; padding: 12px; border: 2px solid rgba(66, 133, 244, 0.2); border-radius: 10px; font-size: 14px; transition: all 0.3s ease;">
+                        </div>
+
+                        <!-- Search -->
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Search</label>
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Description, IP, User ID..." class="filter-input" style="width: 100%; padding: 12px; border: 2px solid rgba(66, 133, 244, 0.2); border-radius: 10px; font-size: 14px; transition: all 0.3s ease;">
+                        </div>
+
+                        <!-- Per Page -->
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Results Per Page</label>
+                            <select name="per_page" class="filter-select" style="width: 100%; padding: 12px; border: 2px solid rgba(66, 133, 244, 0.2); border-radius: 10px; font-size: 14px; background: white; transition: all 0.3s ease;">
+                                <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
+                                <option value="20" {{ request('per_page', 20) == 20 ? 'selected' : '' }}>20</option>
+                                <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                                <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <button type="submit" style="background: linear-gradient(135deg, #4285F4, #1e88e5); color: white; padding: 12px 24px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;">
+                            <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
+                            </svg>
+                            Apply Filters
+                        </button>
+                        <a href="{{ route('admin.audit.logs') }}" style="background: rgba(108, 117, 125, 0.1); color: #6c757d; padding: 12px 24px; border: 2px solid #6c757d; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; display: inline-block;">
+                            <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                            </svg>
+                            Clear Filters
+                        </a>
+                        <button type="button" onclick="exportLogs()" style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 12px 24px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; margin-left: auto;">
+                            <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2z"/>
+                            </svg>
+                            Export CSV
+                        </button>
+                    </div>
+                </form>
             </div>
 
             <!-- Stats Bar -->
             <div class="stats-bar">
                 <div class="stat-item">
                     <div class="stat-value">{{ $auditLogs->total() }}</div>
-                    <div class="stat-label">Total Audit Events</div>
+                    <div class="stat-label">Filtered Results</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">{{ $auditLogs->currentPage() }}</div>
-                    <div class="stat-label">Current Page</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">{{ $auditLogs->lastPage() }}</div>
-                    <div class="stat-label">Total Pages</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">{{ \App\Models\AuditLog::where('action', 'login')->count() }}</div>
+                    <div class="stat-value">{{ $stats['loginCount'] ?? 0 }}</div>
                     <div class="stat-label">Login Events</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ $stats['logoutCount'] ?? 0 }}</div>
+                    <div class="stat-label">Logout Events</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ $stats['submissionCount'] ?? 0 }}</div>
+                    <div class="stat-label">Survey Submissions</div>
                 </div>
             </div>
 
@@ -644,23 +762,29 @@
                 <div class="log-card">
                     <h3 style="color: #2c3e50; font-size: 20px; font-weight: 700; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid transparent; border-image: linear-gradient(90deg, #4285F4, #FF8C00) 1;">Recent Login Activity</h3>
                     @php
-                        $recentLogins = \App\Models\AuditLog::where('action', 'login')->latest()->take(5)->get();
+                        $recentLogins = \App\Models\AuditLog::whereIn('action', ['student_login', 'admin_login'])->latest()->take(5)->get();
                     @endphp
 
-                    @foreach($recentLogins as $login)
-                        <div class="log-item">
-                            <div class="log-header">
-                                <div class="log-action">Login Event</div>
-                                <div class="log-timestamp">{{ $login->created_at->format('M j, g:i A') }}</div>
+                    @if($recentLogins->count() > 0)
+                        @foreach($recentLogins as $login)
+                            <div class="log-item">
+                                <div class="log-header">
+                                    <div class="log-action">{{ ucfirst(str_replace('_', ' ', $login->action)) }}</div>
+                                    <div class="log-timestamp">{{ $login->created_at->format('M j, g:i A') }}</div>
+                                </div>
+                                <div class="log-details">
+                                    {{ $login->description ?? 'User logged in' }}
+                                    @if($login->ip_address)
+                                        <div class="log-ip">IP: {{ $login->ip_address }}</div>
+                                    @endif
+                                </div>
                             </div>
-                            <div class="log-details">
-                                {{ $login->description ?? 'User logged in' }}
-                                @if($login->ip_address)
-                                    <div class="log-ip">IP: {{ $login->ip_address }}</div>
-                                @endif
-                            </div>
+                        @endforeach
+                    @else
+                        <div style="text-align: center; padding: 20px; color: #6c757d; font-style: italic;">
+                            No recent login activity
                         </div>
-                    @endforeach
+                    @endif
                 </div>
 
                 <div class="log-card">
@@ -669,20 +793,26 @@
                         $recentSubmissions = \App\Models\AuditLog::where('action', 'submit_survey_response')->latest()->take(5)->get();
                     @endphp
 
-                    @foreach($recentSubmissions as $submission)
-                        <div class="log-item">
-                            <div class="log-header">
-                                <div class="log-action">Survey Submission</div>
-                                <div class="log-timestamp">{{ $submission->created_at->format('M j, g:i A') }}</div>
+                    @if($recentSubmissions->count() > 0)
+                        @foreach($recentSubmissions as $submission)
+                            <div class="log-item">
+                                <div class="log-header">
+                                    <div class="log-action">Survey Submission</div>
+                                    <div class="log-timestamp">{{ $submission->created_at->format('M j, g:i A') }}</div>
+                                </div>
+                                <div class="log-details">
+                                    {{ $submission->description ?? 'Survey response submitted' }}
+                                    @if($submission->ip_address)
+                                        <div class="log-ip">IP: {{ $submission->ip_address }}</div>
+                                    @endif
+                                </div>
                             </div>
-                            <div class="log-details">
-                                {{ $submission->description ?? 'Survey response submitted' }}
-                                @if($submission->ip_address)
-                                    <div class="log-ip">IP: {{ $submission->ip_address }}</div>
-                                @endif
-                            </div>
+                        @endforeach
+                    @else
+                        <div style="text-align: center; padding: 20px; color: #6c757d; font-style: italic;">
+                            No recent survey submissions
                         </div>
-                    @endforeach
+                    @endif
                 </div>
             </div>
             @endif
@@ -739,10 +869,80 @@
                     item.style.transform = 'translateX(0)';
                 }, index * 50);
             });
+
+            // Add focus effects to filter inputs
+            const filterInputs = document.querySelectorAll('.filter-input, .filter-select');
+            filterInputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.style.borderColor = '#4285F4';
+                    this.style.boxShadow = '0 0 0 3px rgba(66, 133, 244, 0.1)';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.style.borderColor = 'rgba(66, 133, 244, 0.2)';
+                    this.style.boxShadow = 'none';
+                });
+            });
         });
 
-        console.log('Enhanced Audit Logs page loaded');
+        // Export logs functionality
+        function exportLogs() {
+            const form = document.getElementById('filterForm');
+            const params = new URLSearchParams(new FormData(form));
+            
+            // Show loading state
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; animation: spin 1s linear infinite;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg> Exporting...';
+            button.disabled = true;
+            
+            // Create a downloadable CSV
+            const url = new URL(window.location.href);
+            url.searchParams.set('export', 'csv');
+            params.forEach((value, key) => {
+                if (value) url.searchParams.set(key, value);
+            });
+            
+            // For now, just show an alert (you would implement actual export in Laravel)
+            setTimeout(() => {
+                alert('Export functionality would be implemented here. This would generate a CSV file with all filtered audit logs.');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 1000);
+        }
+
+        // Auto-submit on filter change (optional - commented out for now)
+        // document.querySelectorAll('.filter-select').forEach(select => {
+        //     select.addEventListener('change', function() {
+        //         document.getElementById('filterForm').submit();
+        //     });
+        // });
+
+        console.log('Enhanced Audit Logs page with filters loaded');
     </script>
+    
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .filter-input:hover,
+        .filter-select:hover {
+            border-color: #4285F4 !important;
+        }
+        
+        button[type="submit"]:hover,
+        button[type="button"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.3);
+        }
+        
+        a[href*="audit.logs"]:hover {
+            background: rgba(108, 117, 125, 0.2) !important;
+            transform: translateY(-2px);
+        }
+    </style>
 
     @include('partials.admin-logout-modal')
 </body>
