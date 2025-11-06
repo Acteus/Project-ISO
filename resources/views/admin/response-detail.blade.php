@@ -24,9 +24,48 @@
 
         /* Enhanced Modern Response Detail Styles */
         body {
-            background: linear-gradient(135deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Textured Background with JRU Colors (Blue, Gold, White) */
+            background-color: #e8f4f8;
+            background-image:
+                /* Diagonal stripes texture */
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(66, 133, 244, 0.03) 10px,
+                    rgba(66, 133, 244, 0.03) 20px
+                ),
+                repeating-linear-gradient(
+                    -45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(255, 193, 7, 0.02) 10px,
+                    rgba(255, 193, 7, 0.02) 20px
+                ),
+                /* Dot pattern texture */
+                radial-gradient(circle at 25% 25%, rgba(66, 133, 244, 0.04) 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, rgba(255, 193, 7, 0.04) 2px, transparent 2px),
+                /* Subtle gradient overlay */
+                linear-gradient(135deg,
+                    rgba(179, 217, 255, 0.4) 0%,
+                    rgba(255, 233, 179, 0.3) 50%,
+                    rgba(179, 229, 252, 0.4) 100%
+                );
+            background-size:
+                100% 100%,
+                100% 100%,
+                20px 20px,
+                20px 20px,
+                100% 100%;
+            background-position:
+                0 0,
+                0 0,
+                0 0,
+                10px 10px,
+                0 0;
+            background-attachment: fixed;
         }
 
         .survey-main {
