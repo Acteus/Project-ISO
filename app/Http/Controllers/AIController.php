@@ -488,7 +488,8 @@ class AIController extends Controller
 
                 case 'clustering':
                     // Get recent responses for clustering - extract only relevant numeric fields
-                    $responses = \App\Models\SurveyResponse::latest()->take(20)->get()->map(function($response) {
+                    // Use up to 100 responses for better cluster analysis (previously limited to 20)
+                    $responses = \App\Models\SurveyResponse::latest()->take(100)->get()->map(function($response) {
                         return [
                             'id' => $response->id,
                             'overall_satisfaction' => $response->overall_satisfaction,
@@ -523,7 +524,9 @@ class AIController extends Controller
                     })->toArray();
 
                     if (count($responses) >= 3) {
-                        $result = $flaskClient->clusterStudents($responses, 3);
+                        // Dynamically determine optimal number of clusters (3-5 based on data size)
+                        $optimalClusters = min(5, max(3, intval(sqrt(count($responses) / 2))));
+                        $result = $flaskClient->clusterStudents($responses, $optimalClusters);
                     }
                     break;
 
