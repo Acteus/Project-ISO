@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Mail\WeeklyProgressReport;
 use App\Mail\MonthlyComplianceReport;
+use App\Mail\TestEmail;
 use App\Models\Admin;
 use App\Models\WeeklyMetric;
 use App\Models\QrCode;
@@ -40,21 +41,10 @@ class ReportController extends Controller
                 'from_name' => config('mail.from.name'),
             ];
 
-            // Send test email
-            Mail::mailer('smtp')->raw(
-                "This is a test email from Jose Rizal University ISO 21001 System.\n\n" .
-                "If you received this email, your email configuration is working correctly!\n\n" .
-                "Mail Configuration:\n" .
-                "- Host: {$mailConfig['host']}\n" .
-                "- Port: {$mailConfig['port']}\n" .
-                "- From: {$mailConfig['from_name']} <{$mailConfig['from_address']}>\n\n" .
-                "This email was sent at: " . now()->format('Y-m-d H:i:s'),
-                function ($message) use ($request, $mailConfig) {
-                    $message->to($request->test_email)
-                            ->subject('Test Email - ISO 21001 System')
-                            ->from($mailConfig['from_address'], $mailConfig['from_name']);
-                }
-            );
+            // Send test email using the styled template
+            Mail::mailer('smtp')
+                ->to($request->test_email)
+                ->send(new TestEmail($mailConfig));
 
             Log::info('Test email sent successfully', [
                 'recipient' => $request->test_email,

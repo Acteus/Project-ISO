@@ -40,13 +40,10 @@ class VerifyEmailNotification extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->subject('Verify Your Email Address - ISO 21001 Survey System')
-            ->greeting('Hello ' . $notifiable->first_name . '!')
-            ->line('Thank you for registering with the ISO 21001 Survey System.')
-            ->line('Please click the button below to verify your email address.')
-            ->action('Verify Email Address', $verificationUrl)
-            ->line('This verification link will expire in 60 minutes.')
-            ->line('If you did not create an account, no further action is required.')
-            ->salutation('Best regards, ISO 21001 Survey Team');
+            ->view('emails.verify-email', [
+                'verificationUrl' => $verificationUrl,
+                'userName' => $notifiable->first_name ?? null,
+            ]);
     }
 
     /**
