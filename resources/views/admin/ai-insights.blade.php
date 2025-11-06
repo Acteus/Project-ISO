@@ -1141,21 +1141,27 @@
         async function runAIAnalysis(type, loadingMessage){
             showLoading(loadingMessage);
             try {
+                console.log(`Starting ${type} analysis...`);
                 const res = await fetch(`/api/ai/analyze/${type}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
                     body: JSON.stringify({})
                 });
+                console.log(`${type} analysis response status:`, res.status);
                 const json = await res.json();
+                console.log(`${type} analysis response:`, json);
+                
                 if (json?.success) {
+                    console.log(`${type} analysis data:`, json.data);
                     displayResults(type, json.data ?? {});
                     showAlert('success', `${type.charAt(0).toUpperCase() + type.slice(1)} analysis completed successfully!`);
                 } else {
+                    console.error(`${type} analysis failed:`, json);
                     showAlert('error', json?.message || 'Analysis failed');
                 }
             } catch (err) {
-                console.error('runAIAnalysis error:', err);
-                showAlert('error', 'An error occurred during analysis');
+                console.error(`runAIAnalysis error for ${type}:`, err);
+                showAlert('error', 'An error occurred during analysis: ' + err.message);
             } finally { hideLoading(); }
         }
 
@@ -1230,8 +1236,10 @@
             }, 1000);
 
             // Debug logging
-            console.log('displayResults called with type:', type);
-            console.log('data:', JSON.stringify(data, null, 2));
+            console.log('=== displayResults START ===');
+            console.log('Analysis type:', type);
+            console.log('Data received:', JSON.stringify(data, null, 2));
+            console.log('Data keys:', Object.keys(data || {}));
 
             switch(type){
                 case 'compliance': {
@@ -1739,6 +1747,10 @@
                 default:
                     parts.push(renderItem('Analysis Results', '', '<p>No results available for this analysis type.</p>'));
             }
+
+            console.log('Generated parts count:', parts.length);
+            console.log('Generated HTML length:', parts.join('').length);
+            console.log('=== displayResults END ===');
 
             container.innerHTML = parts.join('');
 
