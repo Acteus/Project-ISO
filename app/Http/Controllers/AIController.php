@@ -526,7 +526,11 @@ class AIController extends Controller
                     if (count($responses) >= 3) {
                         // Dynamically determine optimal number of clusters (3-5 based on data size)
                         $optimalClusters = min(5, max(3, intval(sqrt(count($responses) / 2))));
+                        \Illuminate\Support\Facades\Log::info('Clustering: Sending ' . count($responses) . ' responses with ' . $optimalClusters . ' clusters to Flask');
                         $result = $flaskClient->clusterStudents($responses, $optimalClusters);
+                        \Illuminate\Support\Facades\Log::info('Clustering result from Flask:', ['result' => $result]);
+                    } else {
+                        \Illuminate\Support\Facades\Log::warning('Clustering: Not enough responses (' . count($responses) . '), need at least 3');
                     }
                     break;
 
@@ -543,7 +547,11 @@ class AIController extends Controller
                             'participation_score' => $recentResponse->participation_score ?? 80,
                             'overall_satisfaction' => $recentResponse->overall_satisfaction
                         ];
+                        \Illuminate\Support\Facades\Log::info('Performance: Sending data to Flask', ['data' => $data]);
                         $result = $flaskClient->predictPerformance($data);
+                        \Illuminate\Support\Facades\Log::info('Performance result from Flask:', ['result' => $result]);
+                    } else {
+                        \Illuminate\Support\Facades\Log::warning('Performance: No recent response found');
                     }
                     break;
 
