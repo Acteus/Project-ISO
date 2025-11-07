@@ -445,9 +445,19 @@ function updateNavigationButtons() {
     if (currentStep === surveySections.length - 1) {
         if (nextBtn) nextBtn.style.display = 'none';
         if (submitBtn) submitBtn.style.display = 'inline-flex';
+        // Show consent section on last step
+        const consentSection = document.getElementById('consentSection');
+        if (consentSection) {
+            consentSection.style.display = 'block';
+        }
     } else {
         if (nextBtn) nextBtn.style.display = 'inline-flex';
         if (submitBtn) submitBtn.style.display = 'none';
+        // Hide consent section on other steps
+        const consentSection = document.getElementById('consentSection');
+        if (consentSection) {
+            consentSection.style.display = 'none';
+        }
     }
 }
 
@@ -523,8 +533,8 @@ function mapFieldsForLaravelAPI(frontendData) {
         improvement_suggestions: extractImprovementSuggestions(frontendData.open_feedback),
         additional_comments: frontendData.open_feedback || '',
 
-        // Consent and privacy
-        consent_given: true, // Assume consent given when survey is submitted
+        // Consent and privacy (GDPR & ISO 27001 compliant)
+        consent_given: document.getElementById('consentGiven') ? document.getElementById('consentGiven').checked : false,
 
         // Indirect metrics (optional - can be populated from student records later)
         attendance_rate: null,
@@ -753,8 +763,8 @@ async function submitSurveyLaravel(event) {
             improvement_suggestions: extractImprovementSuggestions(additionalFeedbackField ? additionalFeedbackField.value : ''),
             additional_comments: additionalFeedbackField ? additionalFeedbackField.value : '',
 
-            // Consent and privacy
-            consent_given: true,
+            // Consent and privacy (GDPR & ISO 27001 compliant)
+            consent_given: document.getElementById('consentGiven') ? document.getElementById('consentGiven').checked : false,
 
             // Indirect metrics (optional)
             attendance_rate: null,

@@ -11,6 +11,8 @@ use Illuminate\Auth\Passwords\CanResetPassword as CanResetPasswordTrait;
 use Laravel\Sanctum\HasApiTokens;
 use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
+use App\Services\EncryptionService;
+use Illuminate\Support\Facades\Cache;
 
 class User extends Authenticatable implements CanResetPassword, MustVerifyEmail
 {
@@ -76,6 +78,52 @@ class User extends Authenticatable implements CanResetPassword, MustVerifyEmail
         'role' => 'string',
         'year_level' => 'integer',
     ];
+
+    /**
+     * Get encryption service instance
+     * 
+     * @return EncryptionService
+     */
+    protected function encryptionService(): EncryptionService
+    {
+        return app(EncryptionService::class);
+    }
+
+    /**
+     * Encrypt student_id when setting (AES-256)
+     * 
+     * @param string|null $value
+     * @return void
+     */
+    public function setStudentIdAttribute(?string $value): void
+    {
+        $this->attributes['student_id'] = !empty($value) 
+            ? $this->encryptionService()->encrypt($value) 
+            : $value;
+    }
+
+    /**
+     * Decrypt student_id when getting
+     * 
+     * @param string|null $value
+     * @return string|null
+     */
+    public function getStudentIdAttribute(?string $value): ?string
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        // Get raw encrypted value from attributes
+        $rawValue = $this->attributes['student_id'] ?? $value;
+        
+        // Cache decrypted value
+        $cacheKey = "user_student_id_{$this->id}";
+        
+        return Cache::remember($cacheKey, 3600, function () use ($rawValue) {
+            return $this->encryptionService()->decrypt($rawValue);
+        });
+    }
 
     /**
      * Get the attributes that should be cast.

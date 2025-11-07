@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use App\Services\EncryptionService;
+use App\Services\AnonymizationService;
 
 /**
  * SurveyResponse Model
@@ -110,25 +112,53 @@ class SurveyResponse extends Model
         'ip_address',
     ];
 
-    // Mutators for encryption
+    /**
+     * Get encryption service instance
+     * 
+     * @return EncryptionService
+     */
+    protected function encryptionService(): EncryptionService
+    {
+        return app(EncryptionService::class);
+    }
+
+    /**
+     * Get anonymization service instance
+     * 
+     * @return AnonymizationService
+     */
+    protected function anonymizationService(): AnonymizationService
+    {
+        return app(AnonymizationService::class);
+    }
+
+    // Mutators for encryption using EncryptionService (AES-256)
     public function setStudentIdAttribute($value)
     {
-        $this->attributes['student_id'] = !empty($value) ? Crypt::encryptString($value) : $value;
+        $this->attributes['student_id'] = !empty($value) 
+            ? $this->encryptionService()->encrypt($value) 
+            : $value;
     }
 
     public function setPositiveAspectsAttribute($value)
     {
-        $this->attributes['positive_aspects'] = !empty($value) ? Crypt::encryptString($value) : $value;
+        $this->attributes['positive_aspects'] = !empty($value) 
+            ? $this->encryptionService()->encrypt($value) 
+            : $value;
     }
 
     public function setImprovementSuggestionsAttribute($value)
     {
-        $this->attributes['improvement_suggestions'] = !empty($value) ? Crypt::encryptString($value) : $value;
+        $this->attributes['improvement_suggestions'] = !empty($value) 
+            ? $this->encryptionService()->encrypt($value) 
+            : $value;
     }
 
     public function setAdditionalCommentsAttribute($value)
     {
-        $this->attributes['additional_comments'] = !empty($value) ? Crypt::encryptString($value) : $value;
+        $this->attributes['additional_comments'] = !empty($value) 
+            ? $this->encryptionService()->encrypt($value) 
+            : $value;
     }
 
     /**
@@ -148,7 +178,7 @@ class SurveyResponse extends Model
         // Try to get from cache first
         return Cache::remember($cacheKey, $cacheDuration, function () use ($encryptedValue, $field) {
             try {
-                return Crypt::decryptString($encryptedValue);
+                return $this->encryptionService()->decrypt($encryptedValue);
             } catch (\Exception $e) {
                 Log::error("Failed to decrypt {$field}: " . $e->getMessage(), [
                     'response_id' => $this->id,
@@ -216,9 +246,39 @@ class SurveyResponse extends Model
         return $this->getCachedDecryptedValue('additional_comments', $rawValue);
     }
 
-    // Generate anonymous ID for analytics
+    /**
+     * Generate anonymous ID for analytics using SHA-256 (GDPR & ISO 27001 compliant)
+     * 
+     * @return string SHA-256 anonymous ID
+     */
     public function getAnonymousIdAttribute()
     {
-        return hash('sha256', $this->student_id . $this->created_at);
+        $studentId = $this->attributes['student_id'] ?? null;
+        if (!$studentId) {
+            return null;
+        }
+
+        // Decrypt student_id to generate consistent anonymous ID
+        try {
+            $decryptedStudentId = $this->encryptionService()->decrypt($studentId);
+            if ($decryptedStudentId) {
+                return $this->anonymizationService()->getResponseAnonymousId(
+                    $decryptedStudentId,
+                    $this->created_at?->toIso8601String()
+                );
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to generate anonymous ID', [
+                'response_id' => $this->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Fallback: use encrypted value directly (less ideal but still anonymous)
+        return $this->anonymizationService()->anonymizeForAnalytics(
+            $studentId,
+            ['created_at' => $this->created_at?->toIso8601String()]
+        );
     }
 }
+

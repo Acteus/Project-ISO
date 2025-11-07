@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\SurveyResponse;
 use App\Models\AuditLog;
+use App\Services\ConsentService;
+use App\Services\AnonymizationService;
+use App\Services\DataMinimizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -146,6 +149,52 @@ class SurveyController extends Controller
         }
 
         $data = $request->all();
+
+        // Enforce data minimization - only essential ISO 21001 metrics (GDPR & ISO 27001 compliant)
+        $minimizationService = app(DataMinimizationService::class);
+        $minimizationCheck = $minimizationService->validateDataMinimization($data);
+        
+        if (!$minimizationCheck['valid']) {
+            Log::warning('Data minimization violation detected', [
+                'rejected_fields' => $minimizationCheck['rejected_fields'],
+                'ip' => $request->ip(),
+            ]);
+            
+            return response()->json([
+                'message' => 'Invalid data fields detected',
+                'errors' => [
+                    'data_minimization' => 'Only essential ISO 21001 metrics are allowed. Rejected fields: ' . implode(', ', $minimizationCheck['rejected_fields'])
+                ]
+            ], 422);
+        }
+
+        // Filter to only allowed fields
+        $data = $minimizationService->filterAllowedFields($data);
+
+        // Validate and record explicit consent (GDPR & ISO 27001 compliant)
+        $consentService = app(ConsentService::class);
+        try {
+            $consentService->validateAndRecordConsent(
+                (bool) ($data['consent_given'] ?? false),
+                $data['student_id'] ?? null,
+                $request->ip(),
+                [
+                    'purpose' => 'survey_response',
+                    'consent_version' => '1.0',
+                    'survey_track' => $data['track'] ?? null,
+                ]
+            );
+        } catch (\Exception $e) {
+            Log::warning('Survey submission rejected due to consent', [
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Consent is required to submit this survey',
+                'error' => $e->getMessage()
+            ], 403);
+        }
 
         // Determine student_id from multiple sources
         // Only generate anonymous ID if student_id is truly not provided (null or empty string after trim)
@@ -434,9 +483,13 @@ class SurveyController extends Controller
 
         $responses = $query->paginate($perPage);
 
-        // Add anonymous IDs for privacy
-        $responses->getCollection()->transform(function ($response) {
-            $response->anonymous_id = $response->anonymous_id;
+        // Add anonymous IDs for privacy (GDPR & ISO 27001 compliant)
+        $anonymizationService = app(AnonymizationService::class);
+        $responses->getCollection()->transform(function ($response) use ($anonymizationService) {
+            // Use anonymization service for analytics
+            if ($anonymizationService->useForAnalytics()) {
+                $response->anonymous_id = $response->anonymous_id;
+            }
             return $response->makeHidden(['student_id', 'positive_aspects', 'improvement_suggestions', 'additional_comments', 'ip_address']);
         });
 
