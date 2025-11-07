@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Mail\TestEmail;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -55,23 +56,10 @@ class TestEmailConfig extends Command
         );
 
         try {
-            Mail::mailer('smtp')->raw(
-                "This is a test email from Jose Rizal University ISO 21001 System.\n\n" .
-                "If you received this email, your Google SMTP email configuration is working correctly!\n\n" .
-                "Mail Configuration:\n" .
-                "- Host: {$mailConfig['host']}\n" .
-                "- Port: {$mailConfig['port']}\n" .
-                "- Username: {$mailConfig['username']}\n" .
-                "- From: {$mailConfig['from_name']} <{$mailConfig['from_address']}>\n\n" .
-                "This email was sent at: " . now()->format('Y-m-d H:i:s') . "\n\n" .
-                "Best regards,\n" .
-                "Jose Rizal University ISO 21001 System",
-                function ($message) use ($recipient, $mailConfig) {
-                    $message->to($recipient)
-                            ->subject('Test Email - ISO 21001 System')
-                            ->from($mailConfig['from_address'], $mailConfig['from_name']);
-                }
-            );
+            // Send test email using the styled template
+            Mail::mailer('smtp')
+                ->to($recipient)
+                ->send(new TestEmail($mailConfig));
 
             Log::info('Test email sent successfully via command line', [
                 'recipient' => $recipient,

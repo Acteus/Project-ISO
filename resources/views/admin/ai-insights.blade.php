@@ -72,9 +72,48 @@
 
         /* Enhanced Modern AI Insights Styles */
         body {
-            background: linear-gradient(135deg, rgba(66, 133, 244, 1), rgba(255, 215, 0, 1));
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Textured Background with JRU Colors (Blue, Gold, White) */
+            background-color: #e8f4f8;
+            background-image:
+                /* Diagonal stripes texture */
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(66, 133, 244, 0.03) 10px,
+                    rgba(66, 133, 244, 0.03) 20px
+                ),
+                repeating-linear-gradient(
+                    -45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(255, 193, 7, 0.02) 10px,
+                    rgba(255, 193, 7, 0.02) 20px
+                ),
+                /* Dot pattern texture */
+                radial-gradient(circle at 25% 25%, rgba(66, 133, 244, 0.04) 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, rgba(255, 193, 7, 0.04) 2px, transparent 2px),
+                /* Subtle gradient overlay */
+                linear-gradient(135deg,
+                    rgba(179, 217, 255, 0.4) 0%,
+                    rgba(255, 233, 179, 0.3) 50%,
+                    rgba(179, 229, 252, 0.4) 100%
+                );
+            background-size:
+                100% 100%,
+                100% 100%,
+                20px 20px,
+                20px 20px,
+                100% 100%;
+            background-position:
+                0 0,
+                0 0,
+                0 0,
+                10px 10px,
+                0 0;
+            background-attachment: fixed;
         }
 
         .survey-main {
@@ -585,39 +624,24 @@
 
         /* Header styling enhancement */
         .header {
-            background: rgba(255, 255, 255, 0.15) !important;
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(255, 140, 0, 0.1));
-            z-index: -1;
+            background: linear-gradient(135deg, #1e5a9e 0%, #0d3a6b 100%) !important;
+            border-bottom: none;
+            box-shadow: 0 4px 15px rgba(30, 90, 158, 0.3);
         }
 
         .logo a {
-            color: white !important;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            color: #ffff !important;
             font-weight: 800;
         }
 
         .nav-link {
-            color: white !important;
+            color: #ffff !important;
             transition: all 0.3s ease;
             font-weight: 600;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .nav-link:hover {
-            color: #FFD700 !important;
+            color: #ffff !important;
             transform: translateY(-2px);
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
@@ -819,18 +843,18 @@
 
                     <!-- Predictive Analytics -->
                     <article class="insight-card">
-                        <h3>Predictive Analytics</h3>
+                        <h3>Predictive Analytics <span style="color: #ffc107; font-size: 12px; font-weight: 600; background: rgba(255, 193, 7, 0.1); padding: 4px 8px; border-radius: 6px; margin-left: 8px;" title="This feature may be temporarily unavailable">⚠ Beta</span></h3>
                         <p>Advanced forecasting of student performance, satisfaction trends, and risk factors using time series analysis.</p>
                         <button type="button" class="btn btn-primary" onclick="runPredictiveAnalytics()" aria-describedby="predictive-desc">Forecast Future Performance</button>
-                        <div id="predictive-desc" class="sr-only">Forecasts future student performance and satisfaction trends</div>
+                        <div id="predictive-desc" class="sr-only">Forecasts future student performance and satisfaction trends. Note: This feature is in beta and may be temporarily unavailable.</div>
                     </article>
 
                     <!-- Comprehensive Risk Assessment -->
                     <article class="insight-card">
-                        <h3>Comprehensive Risk Assessment</h3>
+                        <h3>Comprehensive Risk Assessment <span style="color: #ffc107; font-size: 12px; font-weight: 600; background: rgba(255, 193, 7, 0.1); padding: 4px 8px; border-radius: 6px; margin-left: 8px;" title="This feature may be temporarily unavailable">⚠ Beta</span></h3>
                         <p>Complete ISO 21001 compliance risk evaluation across all learner-centric dimensions with intervention recommendations.</p>
                         <button type="button" class="btn btn-primary" onclick="runComprehensiveRiskAssessment()" aria-describedby="risk-desc">Run Comprehensive Risk Assessment</button>
-                        <div id="risk-desc" class="sr-only">Evaluates compliance risks across all ISO 21001 dimensions</div>
+                        <div id="risk-desc" class="sr-only">Evaluates compliance risks across all ISO 21001 dimensions. Note: This feature is in beta and may be temporarily unavailable.</div>
                     </article>
 
                     <!-- Trend Analysis -->
@@ -843,18 +867,18 @@
 
                     <!-- Performance Prediction -->
                     <article class="insight-card">
-                        <h3>Performance Prediction</h3>
+                        <h3>Performance Prediction <span style="color: #ffc107; font-size: 12px; font-weight: 600; background: rgba(255, 193, 7, 0.1); padding: 4px 8px; border-radius: 6px; margin-left: 8px;" title="This feature may be temporarily unavailable">⚠ Beta</span></h3>
                         <p>Predict student academic performance and identify at-risk students early.</p>
                         <button type="button" class="btn btn-primary" onclick="runPerformancePrediction()" aria-describedby="performance-desc">Predict Student Performance</button>
-                        <div id="performance-desc" class="sr-only">Predicts academic performance and identifies at-risk students</div>
+                        <div id="performance-desc" class="sr-only">Predicts academic performance and identifies at-risk students. Note: This feature is in beta and may be temporarily unavailable.</div>
                     </article>
 
                     <!-- Dropout Risk Assessment -->
                     <article class="insight-card">
-                        <h3>Dropout Risk Assessment</h3>
+                        <h3>Dropout Risk Assessment <span style="color: #ffc107; font-size: 12px; font-weight: 600; background: rgba(255, 193, 7, 0.1); padding: 4px 8px; border-radius: 6px; margin-left: 8px;" title="This feature may be temporarily unavailable">⚠ Beta</span></h3>
                         <p>Identify students at risk of dropping out using machine learning algorithms.</p>
                         <button type="button" class="btn btn-primary" onclick="runDropoutRiskAssessment()" aria-describedby="dropout-desc">Assess Dropout Risk</button>
-                        <div id="dropout-desc" class="sr-only">Identifies students at risk of dropping out</div>
+                        <div id="dropout-desc" class="sr-only">Identifies students at risk of dropping out. Note: This feature is in beta and may be temporarily unavailable.</div>
                     </article>
 
                     <!-- Comprehensive Analytics -->
@@ -1029,15 +1053,24 @@
                 if (json?.success && json?.data) {
                     const d = json.data;
                     console.log('Updating metrics with data:', d);
-                    document.getElementById('total-predictions').textContent = d.total_predictions ?? 0;
-                    document.getElementById('accuracy-rate').textContent = (d.accuracy_rate ?? 0) + '%';
-                    document.getElementById('response-time').textContent = (d.avg_response_time ?? 0) + 'ms';
-                    document.getElementById('iso-compliance').textContent = (d.iso_compliance_score ?? 0) + '%';
-                    document.getElementById('risk-score').textContent = (d.overall_risk_score ?? 0) + '/100';
+
+                    // Safely update elements with null checks
+                    const totalPredEl = document.getElementById('total-predictions');
+                    const accuracyEl = document.getElementById('accuracy-rate');
+                    const responseTimeEl = document.getElementById('response-time');
+                    const complianceEl = document.getElementById('iso-compliance');
+                    const riskScoreEl = document.getElementById('risk-score');
+                    const totalResponsesEl = document.getElementById('total-responses-count');
+
+                    if (totalPredEl) totalPredEl.textContent = d.total_predictions ?? 0;
+                    if (accuracyEl) accuracyEl.textContent = (d.accuracy_rate ?? 0) + '%';
+                    if (responseTimeEl) responseTimeEl.textContent = (d.avg_response_time ?? 0) + 'ms';
+                    if (complianceEl) complianceEl.textContent = (d.iso_compliance_score ?? 0) + '%';
+                    if (riskScoreEl) riskScoreEl.textContent = (d.overall_risk_score ?? 0) + '/100';
 
                     // Update total responses count in the data stats display
-                    if (d.total_responses_analyzed !== undefined) {
-                        document.getElementById('total-responses-count').textContent = d.total_responses_analyzed;
+                    if (d.total_responses_analyzed !== undefined && totalResponsesEl) {
+                        totalResponsesEl.textContent = d.total_responses_analyzed;
                     }
                     console.log('Metrics updated successfully');
                 } else {
@@ -1061,10 +1094,13 @@
                     const analytics = json.data;
                     const dataRangeText = document.getElementById('data-range-text');
                     const dataStatsText = document.getElementById('data-stats-text');
+                    const totalResponsesEl = document.getElementById('total-responses-count');
 
                     // Update total responses
                     const totalResponses = analytics.total_responses || 0;
-                    document.getElementById('total-responses-count').textContent = totalResponses;
+                    if (totalResponsesEl) {
+                        totalResponsesEl.textContent = totalResponses;
+                    }
 
                     // Get date range from responses
                     if (analytics.date_range) {
@@ -1076,9 +1112,9 @@
                             return date.toLocaleDateString('en-US', options);
                         };
 
-                        dataRangeText.innerHTML = `<strong>Data Range:</strong> ${formatDate(startDate)} - ${formatDate(endDate)}`;
+                        if (dataRangeText) dataRangeText.innerHTML = `<strong>Data Range:</strong> ${formatDate(startDate)} - ${formatDate(endDate)}`;
                     } else {
-                        dataRangeText.innerHTML = '<strong>Analyzing All Available Data</strong>';
+                        if (dataRangeText) dataRangeText.innerHTML = '<strong>Analyzing All Available Data</strong>';
                     }
 
                     // Update data stats with more details
@@ -1086,18 +1122,21 @@
                         const tracks = Object.keys(analytics.distribution.track || {}).length;
                         const grades = Object.keys(analytics.distribution.grade_level || {}).length;
 
-                        dataStatsText.innerHTML = `Analyzing <strong>${totalResponses}</strong> survey responses across <strong>${tracks}</strong> tracks and <strong>${grades}</strong> grade levels`;
+                        if (dataStatsText) dataStatsText.innerHTML = `Analyzing <strong>${totalResponses}</strong> survey responses across <strong>${tracks}</strong> tracks and <strong>${grades}</strong> grade levels`;
                     } else {
-                        dataStatsText.innerHTML = `Analyzing <strong>${totalResponses}</strong> survey responses`;
+                        if (dataStatsText) dataStatsText.innerHTML = `Analyzing <strong>${totalResponses}</strong> survey responses`;
                     }
 
                 } else {
-                    document.getElementById('data-range-text').innerHTML = '<strong>No data available</strong>';
-                    document.getElementById('data-stats-text').innerHTML = 'No survey responses found';
+                    const dataRangeTextEl = document.getElementById('data-range-text');
+                    const dataStatsTextEl = document.getElementById('data-stats-text');
+                    if (dataRangeTextEl) dataRangeTextEl.innerHTML = '<strong>No data available</strong>';
+                    if (dataStatsTextEl) dataStatsTextEl.innerHTML = 'No survey responses found';
                 }
             } catch (err) {
                 console.error('Error loading data range info:', err);
-                document.getElementById('data-range-text').innerHTML = '<strong>Error loading data range</strong>';
+                const dataRangeTextEl = document.getElementById('data-range-text');
+                if (dataRangeTextEl) dataRangeTextEl.innerHTML = '<strong>Error loading data range</strong>';
             }
         }
 
@@ -1117,21 +1156,51 @@
         async function runAIAnalysis(type, loadingMessage){
             showLoading(loadingMessage);
             try {
+                console.log(`Starting ${type} analysis...`);
                 const res = await fetch(`/api/ai/analyze/${type}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
                     body: JSON.stringify({})
                 });
+                console.log(`${type} analysis response status:`, res.status);
                 const json = await res.json();
+                console.log(`${type} analysis response:`, json);
+
                 if (json?.success) {
+                    console.log(`${type} analysis data:`, json.data);
                     displayResults(type, json.data ?? {});
                     showAlert('success', `${type.charAt(0).toUpperCase() + type.slice(1)} analysis completed successfully!`);
                 } else {
-                    showAlert('error', json?.message || 'Analysis failed');
+                    console.error(`${type} analysis failed:`, json);
+
+                    // Provide more specific error messages based on analysis type
+                    let errorMessage = json?.message || 'Analysis failed';
+
+                    // Check if it's a 503 service unavailable error
+                    if (res.status === 503 || errorMessage.includes('unavailable')) {
+                        const modelNames = {
+                            'predictive': 'Predictive Analytics',
+                            'performance': 'Performance Prediction',
+                            'dropout': 'Dropout Risk Assessment',
+                            'risk_assessment': 'Risk Assessment'
+                        };
+
+                        const modelName = modelNames[type] || type.charAt(0).toUpperCase() + type.slice(1);
+                        errorMessage = `${modelName} service is currently unavailable. The AI model may be initializing or temporarily offline. Please try again in a few moments, or contact support if the issue persists.`;
+                    }
+
+                    showAlert('error', errorMessage);
+
+                    // Show error state in results panel
+                    displayErrorResult(type, errorMessage);
                 }
             } catch (err) {
-                console.error('runAIAnalysis error:', err);
-                showAlert('error', 'An error occurred during analysis');
+                console.error(`runAIAnalysis error for ${type}:`, err);
+                const userFriendlyMessage = err.message.includes('Failed to fetch')
+                    ? 'Unable to connect to the AI service. Please check your internet connection and try again.'
+                    : 'An error occurred during analysis: ' + err.message;
+                showAlert('error', userFriendlyMessage);
+                displayErrorResult(type, userFriendlyMessage);
             } finally { hideLoading(); }
         }
 
@@ -1186,6 +1255,62 @@
             `;
         }
 
+        function displayErrorResult(type, errorMessage) {
+            const container = document.getElementById('results-container');
+            const resultsDiv = document.getElementById('ai-results');
+
+            // Update results heading
+            const resultsHeading = resultsDiv.querySelector('h3 span');
+            if (resultsHeading) {
+                // Format type: replace underscores with spaces and title case each word
+                const formattedType = type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                resultsHeading.textContent = `${formattedType} - Error`;
+            }
+
+            // Display error card with helpful information
+            const errorHtml = `
+                <div class="result-item" style="background: linear-gradient(135deg, rgba(220, 53, 69, 0.05), rgba(232, 62, 97, 0.05)); border-left: 4px solid #dc3545;">
+                    <div class="result-header">
+                        <div class="result-title" style="color: #dc3545;">
+                            <svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 8px; fill: #dc3545;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                            </svg>
+                            Service Unavailable
+                        </div>
+                    </div>
+                    <div class="result-details">
+                        <p style="margin: 10px 0;">${errorMessage}</p>
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.7); border-radius: 8px; border-left: 3px solid #ffc107;">
+                            <p style="margin: 0 0 10px 0; font-weight: 600; color: #856404;">
+                                <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; fill: #ffc107;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                </svg>
+                                Possible Solutions:
+                            </p>
+                            <ul style="margin: 0; padding-left: 20px; color: #666;">
+                                <li>Wait a few moments and try again</li>
+                                <li>Check if the Python Flask AI service is running</li>
+                                <li>Verify the AI service URL configuration in your .env file</li>
+                                <li>Try one of the other available analyses (Compliance, Sentiment, or Clustering)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = errorHtml;
+
+            // Announce error to screen readers
+            const announcement = document.createElement('div');
+            announcement.setAttribute('aria-live', 'assertive');
+            announcement.setAttribute('aria-atomic', 'true');
+            announcement.className = 'sr-only';
+            announcement.textContent = `Error: ${errorMessage}`;
+            document.body.appendChild(announcement);
+
+            setTimeout(() => document.body.removeChild(announcement), 3000);
+        }
+
         function displayResults(type, data){
             const container = document.getElementById('results-container');
             const resultsDiv = document.getElementById('ai-results');
@@ -1206,8 +1331,10 @@
             }, 1000);
 
             // Debug logging
-            console.log('displayResults called with type:', type);
-            console.log('data:', JSON.stringify(data, null, 2));
+            console.log('=== displayResults START ===');
+            console.log('Analysis type:', type);
+            console.log('Data received:', JSON.stringify(data, null, 2));
+            console.log('Data keys:', Object.keys(data || {}));
 
             switch(type){
                 case 'compliance': {
@@ -1398,7 +1525,7 @@
                     const clusterCount = c.clusters ?? c.cluster_count ?? 0;
                     parts.push(renderItem('Student Clustering Results', `${clusterCount} Groups Identified`, html));
                     if (Array.isArray(c.detailed_clusters) && c.detailed_clusters.length){
-                        c.detailed_clusters.slice(0,3).forEach(cluster => {
+                        c.detailed_clusters.forEach(cluster => { // Show all clusters, not just first 3
                             const riskLevel = cluster.risk_profile?.risk_level ?? 'Unknown';
                             const riskColor = riskLevel === 'High' ? '#dc3545' : riskLevel === 'Medium' ? '#ffc107' : '#28a745';
                             const avgSat = cluster.average_satisfaction;
@@ -1407,7 +1534,7 @@
                             const details = `
                                 <p><strong>Risk Level:</strong> <span style="color: ${riskColor}; font-weight: 700;">${riskLevel}</span></p>
                                 <p><strong>Avg Satisfaction:</strong> ${avgSat ? `${Number(avgSat).toFixed(2)}/5.0` : 'N/A'}</p>
-                                <p><strong>Avg Performance:</strong> ${avgPerf ? `${Number(avgPerf).toFixed(2)}/4.0` : 'N/A'}</p>
+                                <p><strong>Avg Performance:</strong> ${avgPerf ? `${Number(avgPerf).toFixed(1)}%` : 'N/A'}</p>
                                 <div style="margin-top: 10px;">
                                     <p style="margin-bottom: 5px;"><strong>Key Characteristics:</strong></p>
                                     ${Array.isArray(cluster.characteristics) && cluster.characteristics.length
@@ -1512,19 +1639,20 @@
                 case 'risk_assessment': {
                     const r = data.assessment || data || {};
                     const overallRisk = Number(r.overall_risk_score) || 0;
+                    const roundedOverallRisk = Math.round(overallRisk * 100) / 100; // Round to 2 decimal places
                     const riskCategory = r.risk_category ?? 'Unknown';
                     const riskLevel = r.risk_level ?? 'Unknown';
                     const conf = Number(r.confidence) || 0;
 
                     // Determine risk color based on score
-                    const riskColor = overallRisk >= 70 ? '#dc3545' : overallRisk >= 40 ? '#ffc107' : '#28a745';
-                    const riskLabel = overallRisk >= 70 ? 'High Risk' : overallRisk >= 40 ? 'Medium Risk' : 'Low Risk';
+                    const riskColor = roundedOverallRisk >= 70 ? '#dc3545' : roundedOverallRisk >= 40 ? '#ffc107' : '#28a745';
+                    const riskLabel = roundedOverallRisk >= 70 ? 'High Risk' : roundedOverallRisk >= 40 ? 'Medium Risk' : 'Low Risk';
 
                     const html = `
                         <div style="margin: 15px 0;">
-                            <p style="margin-bottom: 8px;"><strong>Overall Risk Score:</strong> <span style="color: ${riskColor}; font-weight: 700; font-size: 22px;">${overallRisk}</span> / 100</p>
+                            <p style="margin-bottom: 8px;"><strong>Overall Risk Score:</strong> <span style="color: ${riskColor}; font-weight: 700; font-size: 22px;">${roundedOverallRisk.toFixed(2)}</span> / 100</p>
                             <div style="width: 100%; height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden;">
-                                <div style="width: ${overallRisk}%; height: 100%; background: ${riskColor}; transition: width 0.5s ease;"></div>
+                                <div style="width: ${roundedOverallRisk}%; height: 100%; background: ${riskColor}; transition: width 0.5s ease;"></div>
                             </div>
                             <p style="margin-top: 8px; color: ${riskColor}; font-weight: 700;">${riskLabel}</p>
                         </div>
@@ -1534,7 +1662,7 @@
                         <p><strong>Analysis Confidence:</strong> ${(conf * 100).toFixed(1)}%</p>
                         <p style="margin-top: 10px; font-size: 12px; color: #666; font-style: italic;">Comprehensive risk assessment across all ISO 21001 dimensions.</p>
                     `;
-                    parts.push(renderItem('Comprehensive Risk Assessment', `${overallRisk}/100`, html));
+                    parts.push(renderItem('Comprehensive Risk Assessment', `${roundedOverallRisk.toFixed(2)}/100`, html));
 
                     if (r.risk_breakdown){
                         const names = {
@@ -1547,19 +1675,20 @@
 
                         Object.entries(r.risk_breakdown).forEach(([k,v]) => {
                             const score = Number(v) || 0;
-                            const color = score >= 70 ? '#dc3545' : score >= 40 ? '#ffc107' : '#28a745';
-                            const categoryName = names[k] || k;
+                            const roundedScore = Math.round(score * 100) / 100; // Round to 2 decimal places
+                            const color = roundedScore >= 70 ? '#dc3545' : roundedScore >= 40 ? '#ffc107' : '#28a745';
+                            const categoryName = names[k] || k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
                             const breakdownHtml = `
                                 <div style="margin: 10px 0;">
-                                    <p style="margin-bottom: 5px;"><strong>Risk Score:</strong> <span style="color: ${color}; font-weight: 700; font-size: 18px;">${score}</span> / 100</p>
+                                    <p style="margin-bottom: 5px;"><strong>Risk Score:</strong> <span style="color: ${color}; font-weight: 700; font-size: 18px;">${roundedScore.toFixed(2)}</span> / 100</p>
                                     <div style="width: 100%; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
-                                        <div style="width: ${score}%; height: 100%; background: ${color}; transition: width 0.5s ease;"></div>
+                                        <div style="width: ${roundedScore}%; height: 100%; background: ${color}; transition: width 0.5s ease;"></div>
                                     </div>
                                 </div>
                                 <p style="font-size: 13px; color: #666;">ISO 21001 compliance risk for ${categoryName.toLowerCase()}.</p>
                             `;
-                            parts.push(renderItem(categoryName, `${score}/100`, breakdownHtml));
+                            parts.push(renderItem(categoryName, `${roundedScore.toFixed(2)}/100`, breakdownHtml));
                         });
                     }
                     break;
@@ -1716,6 +1845,10 @@
                     parts.push(renderItem('Analysis Results', '', '<p>No results available for this analysis type.</p>'));
             }
 
+            console.log('Generated parts count:', parts.length);
+            console.log('Generated HTML length:', parts.join('').length);
+            console.log('=== displayResults END ===');
+
             container.innerHTML = parts.join('');
 
             // Scroll to top of results
@@ -1726,7 +1859,9 @@
             // Update results heading with analysis type
             const resultsHeading = resultsDiv.querySelector('h3 span');
             if (resultsHeading) {
-                resultsHeading.textContent = `${type.charAt(0).toUpperCase() + type.slice(1)} Results`;
+                // Format type: replace underscores with spaces and title case each word
+                const formattedType = type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                resultsHeading.textContent = `${formattedType} Results`;
             }
         }
 

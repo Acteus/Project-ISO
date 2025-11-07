@@ -69,9 +69,25 @@ class SurveyResponseFactory extends Factory
             'overall_satisfaction' => $generateRating(), // q21: Confident about future
 
             // Section 8: Demographics & Open-ended (from form)
-            'positive_aspects' => null, // Year level captured in grade_level
-            'improvement_suggestions' => null, // Gender not stored separately in current schema
-            'additional_comments' => fake()->optional(0.7)->randomElement([
+            'positive_aspects' => fake()->optional(0.85)->randomElement([
+                'The instructors are excellent and very supportive.',
+                'I love the hands-on training and practical exercises.',
+                'The facilities and equipment are modern and well-maintained.',
+                'Great career guidance and industry connections.',
+                'The curriculum is comprehensive and relevant to real-world applications.',
+                'I appreciate the collaborative learning environment.',
+                'The program has built my confidence in technical skills.',
+            ]),
+            'improvement_suggestions' => fake()->optional(0.85)->randomElement([
+                'More equipment for hands-on practice would be helpful.',
+                'Could benefit from more industry internship opportunities.',
+                'Would like to see more focus on emerging technologies.',
+                'Need better internet connectivity in labs.',
+                'More software licenses for home practice would help.',
+                'Additional tutorial sessions for struggling students.',
+                'More industry guest speakers and workshops.',
+            ]),
+            'additional_comments' => fake()->optional(0.85)->randomElement([
                 'The CSS program has greatly improved my technical skills.',
                 'I appreciate the hands-on approach to learning.',
                 'More equipment and updated software would be helpful.',
@@ -79,6 +95,8 @@ class SurveyResponseFactory extends Factory
                 'I wish we had more industry exposure and internship opportunities.',
                 'The program prepares us well for technical certifications.',
                 'More focus on emerging technologies would be beneficial.',
+                'Overall, I am satisfied with the quality of education.',
+                'The school provides a good balance of theory and practice.',
             ]),
 
             // Consent and Privacy
@@ -87,7 +105,7 @@ class SurveyResponseFactory extends Factory
 
             // Indirect Metrics (optional - typically from admin data, not student survey)
             'attendance_rate' => fake()->randomFloat(1, 75, 100),
-            'grade_average' => fake()->randomFloat(2, 2.5, 4.0),
+            'grade_average' => fake()->randomFloat(2, 75, 98), // Changed to percentage scale (0-100) for consistency
             'participation_score' => fake()->numberBetween(60, 100),
             'extracurricular_hours' => fake()->numberBetween(0, 15),
             'counseling_sessions' => fake()->numberBetween(0, 5),

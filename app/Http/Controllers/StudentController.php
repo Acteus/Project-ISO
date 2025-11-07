@@ -497,15 +497,26 @@ class StudentController extends Controller
 
         // Get filter parameters
         $action = $request->get('action');
+        $userType = $request->get('user_type');
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
+        $search = $request->get('search');
+        $perPage = $request->get('per_page', 20);
 
         // Build query
         $query = AuditLog::with('user')->orderBy('created_at', 'desc');
 
         // Apply filters
-        if ($action) {
+        if ($action && $action !== 'all') {
             $query->where('action', $action);
+        }
+
+        if ($userType && $userType !== 'all') {
+            if ($userType === 'student') {
+                $query->whereNotNull('user_id');
+            } elseif ($userType === 'admin') {
+                $query->whereNotNull('admin_id');
+            }
         }
 
         if ($dateFrom) {
@@ -516,11 +527,30 @@ class StudentController extends Controller
             $query->whereDate('created_at', '<=', $dateTo);
         }
 
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('description', 'LIKE', "%{$search}%")
+                  ->orWhere('ip_address', 'LIKE', "%{$search}%")
+                  ->orWhere('user_id', 'LIKE', "%{$search}%");
+            });
+        }
+
         // Get paginated results
-        $auditLogs = $query->paginate(20);
+        $auditLogs = $query->paginate($perPage)->appends($request->except('page'));
 
         // Get unique actions for filter dropdown
-        $actions = AuditLog::select('action')->distinct()->pluck('action');
+        $actions = AuditLog::select('action')->distinct()->orderBy('action')->pluck('action');
+
+        // Create user types manually since we derive them from user_id/admin_id
+        $userTypes = collect(['student', 'admin']);
+
+        // Get statistics for filtered results
+        $stats = [
+            'total' => $query->count(),
+            'loginCount' => AuditLog::whereIn('action', ['student_login', 'admin_login'])->count(),
+            'logoutCount' => AuditLog::whereIn('action', ['student_logout', 'admin_logout'])->count(),
+            'submissionCount' => AuditLog::where('action', 'submit_survey_response')->count(),
+        ];
 
         // Log viewing of audit logs
         AuditLog::create([
@@ -530,7 +560,7 @@ class StudentController extends Controller
             'ip_address' => request()->ip(),
         ]);
 
-        return view('admin.audit-logs', compact('admin', 'auditLogs', 'actions', 'action', 'dateFrom', 'dateTo'));
+        return view('admin.audit-logs', compact('admin', 'auditLogs', 'actions', 'userTypes', 'action', 'userType', 'dateFrom', 'dateTo', 'search', 'perPage', 'stats'));
     }
 
     public function aiInsights()

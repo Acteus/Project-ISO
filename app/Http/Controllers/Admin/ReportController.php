@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Mail\WeeklyProgressReport;
 use App\Mail\MonthlyComplianceReport;
+use App\Mail\TestEmail;
 use App\Models\Admin;
 use App\Models\WeeklyMetric;
 use App\Models\QrCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Artisan;
 
 class ReportController extends Controller
 {
@@ -40,21 +42,10 @@ class ReportController extends Controller
                 'from_name' => config('mail.from.name'),
             ];
 
-            // Send test email
-            Mail::mailer('smtp')->raw(
-                "This is a test email from Jose Rizal University ISO 21001 System.\n\n" .
-                "If you received this email, your email configuration is working correctly!\n\n" .
-                "Mail Configuration:\n" .
-                "- Host: {$mailConfig['host']}\n" .
-                "- Port: {$mailConfig['port']}\n" .
-                "- From: {$mailConfig['from_name']} <{$mailConfig['from_address']}>\n\n" .
-                "This email was sent at: " . now()->format('Y-m-d H:i:s'),
-                function ($message) use ($request, $mailConfig) {
-                    $message->to($request->test_email)
-                            ->subject('Test Email - ISO 21001 System')
-                            ->from($mailConfig['from_address'], $mailConfig['from_name']);
-                }
-            );
+            // Send test email using the styled template
+            Mail::mailer('smtp')
+                ->to($request->test_email)
+                ->send(new TestEmail($mailConfig));
 
             Log::info('Test email sent successfully', [
                 'recipient' => $request->test_email,
@@ -81,6 +72,50 @@ class ReportController extends Controller
         }
     }
 
+    /**
+     * Generate weekly metrics from survey responses
+     */
+    public function generateMetrics(Request $request)
+    {
+        try {
+            Log::info('Starting weekly metrics generation via web interface');
+
+            // Call the Artisan command to aggregate weekly metrics
+            Artisan::call('app:aggregate-weekly-metrics', [
+                '--force' => true // Force re-aggregation
+            ]);
+
+            $output = Artisan::output();
+
+            // Count how many weeks were processed
+            $weeksGenerated = substr_count($output, 'Created metrics for Week') +
+                             substr_count($output, 'Updated metrics for Week');
+
+            Log::info('Weekly metrics generated successfully', [
+                'weeks_generated' => $weeksGenerated,
+                'output' => $output
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Weekly metrics generated successfully! You can now preview and send reports.',
+                'weeks_generated' => $weeksGenerated,
+                'output' => $output
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to generate weekly metrics', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate metrics: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function sendWeeklyReport(Request $request)
     {
         $request->validate([
@@ -96,7 +131,7 @@ class ReportController extends Controller
             if (!$weeklyData) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No data available for the selected week period.'
+                    'message' => 'No data available for the selected week period. Please generate weekly metrics first by clicking the "Generate Weekly Metrics" button.'
                 ], 404);
             }
 
@@ -151,7 +186,7 @@ class ReportController extends Controller
             if (!$monthlyData) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No data available for the selected month.'
+                    'message' => 'No data available for the selected month. Please generate weekly metrics first by clicking the "Generate Weekly Metrics" button. Monthly reports are calculated from weekly metrics.'
                 ], 404);
             }
 
@@ -207,7 +242,7 @@ class ReportController extends Controller
         if (!$weeklyData) {
             return response()->json([
                 'success' => false,
-                'message' => 'No data available for the selected week period.'
+                'message' => 'No data available for the selected week period. Please generate weekly metrics first by clicking the "Generate Weekly Metrics" button.'
             ], 404);
         }
 
@@ -235,7 +270,7 @@ class ReportController extends Controller
         if (!$monthlyData) {
             return response()->json([
                 'success' => false,
-                'message' => 'No data available for the selected month.'
+                'message' => 'No data available for the selected month. Please generate weekly metrics first by clicking the "Generate Weekly Metrics" button. Monthly reports are calculated from weekly metrics.'
             ], 404);
         }
 

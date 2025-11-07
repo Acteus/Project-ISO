@@ -28,7 +28,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             /* Textured Background with JRU Colors (Blue, Gold, White) */
             background-color: #e8f4f8;
-            background-image: 
+            background-image:
                 /* Diagonal stripes texture */
                 repeating-linear-gradient(
                     45deg,
@@ -48,18 +48,18 @@
                 radial-gradient(circle at 25% 25%, rgba(66, 133, 244, 0.04) 2px, transparent 2px),
                 radial-gradient(circle at 75% 75%, rgba(255, 193, 7, 0.04) 2px, transparent 2px),
                 /* Subtle gradient overlay */
-                linear-gradient(135deg, 
+                linear-gradient(135deg,
                     rgba(179, 217, 255, 0.4) 0%,
                     rgba(255, 233, 179, 0.3) 50%,
                     rgba(179, 229, 252, 0.4) 100%
                 );
-            background-size: 
+            background-size:
                 100% 100%,
                 100% 100%,
                 20px 20px,
                 20px 20px,
                 100% 100%;
-            background-position: 
+            background-position:
                 0 0,
                 0 0,
                 0 0,
@@ -591,6 +591,369 @@
                 padding: 25px 20px;
             }
         }
+
+        /* Export Modal Styles - Enhanced Stylish Design */
+        .export-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .export-modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes modalEnter {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .export-modal {
+            background: linear-gradient(135deg, #4285f4, #ffd700);
+            border-radius: 24px;
+            padding: 3px;
+            max-width: 680px;
+            width: 90%;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.5);
+            animation: modalEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            position: relative;
+        }
+
+        .export-modal-inner {
+            background: white;
+            border-radius: 22px;
+            padding: 45px 40px;
+            position: relative;
+        }
+
+        .export-modal-icon-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .export-modal-main-icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+            animation: iconBounce 0.6s ease;
+        }
+
+        @keyframes iconBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .export-modal-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .export-modal-header h2 {
+            font-size: 32px;
+            background: linear-gradient(135deg, #4285F4, #FF8C00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            font-weight: 800;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .export-modal-header p {
+            color: #5a6c7d;
+            font-size: 17px;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .export-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 35px;
+        }
+
+        .export-option {
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.08), rgba(255, 215, 0, 0.08));
+            border: 3px solid transparent;
+            border-radius: 18px;
+            padding: 32px 18px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .export-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.15), rgba(255, 215, 0, 0.15));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .export-option:hover::before {
+            opacity: 1;
+        }
+
+        .export-option:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 15px 40px rgba(66, 133, 244, 0.3);
+            border-color: rgba(66, 133, 244, 0.5);
+        }
+
+        .export-option.selected {
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.2), rgba(255, 215, 0, 0.2));
+            border-color: #4285F4;
+            box-shadow: 0 15px 45px rgba(66, 133, 244, 0.4);
+            transform: translateY(-8px) scale(1.05);
+        }
+
+        .export-option.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #4285F4, #2c6cd6);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
+        }
+
+        .export-option-icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+            display: block;
+            transition: transform 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .export-option:hover .export-option-icon {
+            transform: scale(1.15) rotate(5deg);
+        }
+
+        .export-option-title {
+            font-size: 19px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-family: 'Montserrat', sans-serif;
+            position: relative;
+            z-index: 1;
+        }
+
+        .export-option-desc {
+            font-size: 13px;
+            color: #6c757d;
+            line-height: 1.5;
+            position: relative;
+            z-index: 1;
+        }
+
+        .export-modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .modal-btn {
+            padding: 16px 40px;
+            border: none;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-family: 'Montserrat', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modal-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .modal-btn:hover::before {
+            left: 100%;
+        }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #4285F4, #2c6cd6);
+            color: white;
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.4);
+        }
+
+        .modal-btn-primary:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 40px rgba(66, 133, 244, 0.6);
+        }
+
+        .modal-btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .modal-btn-secondary {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
+            color: white;
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
+        }
+
+        .modal-btn-secondary:hover {
+            background: linear-gradient(135deg, #5a6268, #495057);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(108, 117, 125, 0.5);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(108, 117, 125, 0.2);
+            font-size: 24px;
+            color: #6c757d;
+            cursor: pointer;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            font-weight: 300;
+            z-index: 10;
+        }
+
+        .modal-close:hover {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            border-color: transparent;
+            transform: rotate(90deg) scale(1.1);
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .export-modal {
+                max-width: 95%;
+                padding: 2px;
+            }
+
+            .export-modal-inner {
+                padding: 35px 25px;
+            }
+
+            .export-modal-main-icon {
+                font-size: 60px;
+            }
+
+            .export-modal-header h2 {
+                font-size: 26px;
+            }
+
+            .export-modal-header p {
+                font-size: 15px;
+            }
+
+            .export-options {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .export-option {
+                padding: 28px 20px;
+            }
+
+            .export-option-icon {
+                font-size: 48px;
+            }
+
+            .export-modal-actions {
+                flex-direction: column;
+            }
+
+            .modal-btn {
+                width: 100%;
+                padding: 18px 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .export-modal-inner {
+                padding: 30px 20px;
+            }
+
+            .export-modal-header h2 {
+                font-size: 22px;
+            }
+
+            .export-option {
+                padding: 24px 16px;
+            }
+
+            .export-option-icon {
+                font-size: 42px;
+            }
+
+            .export-option-title {
+                font-size: 17px;
+            }
+
+            .modal-btn {
+                font-size: 14px;
+                padding: 16px 24px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -717,7 +1080,7 @@
                     </div>
                     <h3>Export Data</h3>
                     <p>Export survey responses and analytics reports in Excel, CSV, or PDF format for further analysis.</p>
-                    <a href="{{ route('api.export.excel') }}" class="btn btn-success" target="_blank">Export Excel</a>
+                    <button onclick="showExportModal()" class="btn btn-success">Export Data</button>
                 </div>
 
                 <div class="action-card audit">
@@ -802,8 +1165,140 @@
         </div>
     </footer>
 
+    <!-- Export Format Selection Modal - Enhanced Stylish Design -->
+    <div class="export-modal-overlay" id="exportModal">
+        <div class="export-modal">
+            <div class="export-modal-inner">
+                <button class="modal-close" onclick="closeExportModal()">&times;</button>
+
+                <div class="export-modal-icon-header">
+                    <div class="export-modal-main-icon">📊</div>
+                </div>
+
+                <div class="export-modal-header">
+                    <h2>Choose Export Format</h2>
+                    <p>Select your preferred format for exporting survey data</p>
+                </div>
+
+                <div class="export-options">
+                    <div class="export-option" data-format="excel" onclick="selectFormat('excel')">
+                        <span class="export-option-icon">📗</span>
+                        <div class="export-option-title">Excel</div>
+                        <div class="export-option-desc">Best for data analysis and spreadsheets</div>
+                    </div>
+                    <div class="export-option" data-format="csv" onclick="selectFormat('csv')">
+                        <span class="export-option-icon">📄</span>
+                        <div class="export-option-title">CSV</div>
+                        <div class="export-option-desc">Universal format for all systems</div>
+                    </div>
+                    <div class="export-option" data-format="pdf" onclick="selectFormat('pdf')">
+                        <span class="export-option-icon">📕</span>
+                        <div class="export-option-title">PDF</div>
+                        <div class="export-option-desc">Professional report format</div>
+                    </div>
+                </div>
+
+                <div class="export-modal-actions">
+                    <button class="modal-btn modal-btn-secondary" onclick="closeExportModal()">Cancel</button>
+                    <button class="modal-btn modal-btn-primary" id="exportButton" onclick="performExport()" disabled>
+                        Export Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="{{ asset('js/main.js') }}"></script>
     <script>
+        // Export Modal Functions
+        let selectedFormat = null;
+
+        function showExportModal() {
+            document.getElementById('exportModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.remove('active');
+            document.body.style.overflow = '';
+            // Reset selection
+            selectedFormat = null;
+            document.querySelectorAll('.export-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.getElementById('exportButton').disabled = true;
+        }
+
+        function selectFormat(format) {
+            selectedFormat = format;
+
+            // Remove selected class from all options
+            document.querySelectorAll('.export-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+
+            // Add selected class to clicked option
+            document.querySelector(`[data-format="${format}"]`).classList.add('selected');
+
+            // Enable export button
+            document.getElementById('exportButton').disabled = false;
+        }
+
+        function performExport() {
+            if (!selectedFormat) {
+                alert('Please select a format first');
+                return;
+            }
+
+            // Show loading state
+            const exportButton = document.getElementById('exportButton');
+            const originalText = exportButton.textContent;
+            exportButton.textContent = 'Exporting...';
+            exportButton.disabled = true;
+
+            // Determine the export route based on format
+            let exportUrl = '';
+            switch(selectedFormat) {
+                case 'excel':
+                    exportUrl = '{{ route("api.export.excel") }}';
+                    break;
+                case 'csv':
+                    exportUrl = '{{ route("api.export.csv") }}';
+                    break;
+                case 'pdf':
+                    exportUrl = '{{ route("api.export.pdf") }}';
+                    break;
+                default:
+                    alert('Invalid format selected');
+                    exportButton.textContent = originalText;
+                    exportButton.disabled = false;
+                    return;
+            }
+
+            // Open export URL in new tab
+            window.open(exportUrl, '_blank');
+
+            // Reset button state after a short delay
+            setTimeout(() => {
+                exportButton.textContent = originalText;
+                closeExportModal();
+            }, 1000);
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('exportModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeExportModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('exportModal').classList.contains('active')) {
+                closeExportModal();
+            }
+        });
+
         // Set current year
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
