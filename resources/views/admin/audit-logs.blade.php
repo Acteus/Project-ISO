@@ -743,12 +743,51 @@
                                         </span>
                                     </td>
                                     <td>
-                                        @if($log->resource_type)
+                                        @php
+                                            // Infer resource type from action/description if not explicitly set
+                                            $resourceType = $log->resource_type;
+                                            $resourceId = $log->resource_id;
+                                            
+                                            // If resource_type is null, try to infer it from the action
+                                            if (!$resourceType) {
+                                                $action = strtolower($log->action ?? '');
+                                                $description = strtolower($log->description ?? '');
+                                                
+                                                // Map actions to resource types
+                                                if (in_array($action, ['authentication', 'admin_login', 'student_login', 'admin_logout', 'student_logout']) || 
+                                                    strpos($description, 'login') !== false || 
+                                                    strpos($description, 'logout') !== false) {
+                                                    $resourceType = 'session';
+                                                    // Try to get resource_id from user_id if available
+                                                    $resourceId = $resourceId ?: $log->user_id;
+                                                } elseif (strpos($description, 'survey') !== false || 
+                                                          strpos($action, 'survey') !== false || 
+                                                          strpos($action, 'submission') !== false) {
+                                                    $resourceType = 'survey_response';
+                                                } elseif (strpos($description, 'consent') !== false || 
+                                                          strpos($action, 'consent') !== false) {
+                                                    $resourceType = 'consent_record';
+                                                } elseif (strpos($action, 'ai_analysis') !== false || 
+                                                          strpos($action, 'view_ai') !== false) {
+                                                    $resourceType = 'ai_analysis';
+                                                } elseif (strpos($action, 'export') !== false || 
+                                                          strpos($description, 'export') !== false) {
+                                                    $resourceType = 'export';
+                                                } elseif (strpos($action, 'view') !== false || 
+                                                          strpos($action, 'access') !== false) {
+                                                    $resourceType = 'data_access';
+                                                }
+                                            }
+                                        @endphp
+                                        
+                                        @if($resourceType)
                                             <div style="font-weight: 600; color: #4285F4;">
-                                                {{ ucfirst(str_replace('_', ' ', $log->resource_type)) }}
+                                                {{ ucfirst(str_replace('_', ' ', $resourceType)) }}
                                             </div>
-                                            @if($log->resource_id)
-                                                <small style="color: #666;">ID: {{ $log->resource_id }}</small>
+                                            @if($resourceId)
+                                                <small style="color: #666;">ID: {{ $resourceId }}</small>
+                                            @elseif($log->user_id && $resourceType === 'session')
+                                                <small style="color: #666;">User ID: {{ $log->user_id }}</small>
                                             @endif
                                         @else
                                             <span style="color: #999; font-style: italic;" title="This action is not associated with a specific resource (system-level event)">
