@@ -411,7 +411,7 @@
             }
 
             /* Ensure desktop nav is completely hidden */
-            .header .desktop-nav {
+            .landing-header .desktop-nav {
                 display: none !important;
                 visibility: hidden !important;
                 width: 0 !important;
