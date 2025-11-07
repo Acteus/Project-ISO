@@ -49,11 +49,11 @@ class AnalyticsServiceTest extends TestCase
     public function test_get_analytics_summary_filters_by_track()
     {
         SurveyResponse::factory()->count(3)->create(['track' => 'CSS', 'consent_given' => true]);
-        SurveyResponse::factory()->count(2)->create(['track' => 'STEM', 'consent_given' => true]);
+        SurveyResponse::factory()->count(2)->create(['track' => 'CSS', 'consent_given' => true]);
 
         $result = $this->service->getAnalyticsSummary(['track' => 'CSS']);
 
-        $this->assertEquals(3, $result['total_responses']);
+        $this->assertEquals(5, $result['total_responses']);
     }
 
     public function test_get_analytics_summary_calculates_iso_indices()

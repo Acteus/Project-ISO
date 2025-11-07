@@ -148,7 +148,8 @@ class SurveyController extends Controller
         $data = $request->all();
 
         // Determine student_id from multiple sources
-        if (!isset($data['student_id']) || empty($data['student_id'])) {
+        // Only generate anonymous ID if student_id is truly not provided (null or empty string after trim)
+        if (!isset($data['student_id']) || (is_string($data['student_id']) && trim($data['student_id']) === '')) {
             // Try to get from authenticated user
             if (Auth::check() && Auth::user()->student_id) {
                 $data['student_id'] = Auth::user()->student_id;

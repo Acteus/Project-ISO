@@ -1029,6 +1029,110 @@ class VisualizationService
     }
 
     /**
+     * Generate line chart data for trend analysis
+     */
+    public function generateLineChartData($track = null, $gradeLevel = null, $academicYear = null, $semester = null)
+    {
+        $query = SurveyResponse::query();
+
+        if ($track) {
+            $query->where('track', $track);
+        }
+
+        if ($gradeLevel) {
+            $query->where('grade_level', $gradeLevel);
+        }
+
+        if ($academicYear) {
+            $query->where('academic_year', $academicYear);
+        }
+
+        if ($semester) {
+            $query->where('semester', $semester);
+        }
+
+        $responses = $query->orderBy('created_at', 'asc')->get();
+
+        // If no responses, return empty structure
+        if ($responses->isEmpty()) {
+            return [
+                'labels' => [],
+                'datasets' => [
+                    [
+                        'label' => 'Overall Satisfaction',
+                        'data' => [],
+                        'borderColor' => 'rgba(54, 162, 235, 1)',
+                        'backgroundColor' => 'rgba(54, 162, 235, 0.1)',
+                        'tension' => 0.4,
+                        'fill' => true,
+                    ]
+                ]
+            ];
+        }
+
+        // Group by date (day)
+        $groupedData = $responses->groupBy(function($response) {
+            return $response->created_at->format('Y-m-d');
+        });
+
+        $labels = [];
+        $satisfactionData = [];
+        $learnerNeedsData = [];
+        $safetyData = [];
+
+        foreach ($groupedData as $date => $dateResponses) {
+            $labels[] = $date;
+            $satisfactionData[] = round($dateResponses->avg('overall_satisfaction'), 2);
+            
+            // Learner Needs Index
+            $learnerNeedsData[] = round((
+                $dateResponses->avg('curriculum_relevance_rating') +
+                $dateResponses->avg('learning_pace_appropriateness') +
+                $dateResponses->avg('individual_support_availability') +
+                $dateResponses->avg('learning_style_accommodation')
+            ) / 4, 2);
+            
+            // Safety Index
+            $safetyData[] = round((
+                $dateResponses->avg('physical_safety_rating') +
+                $dateResponses->avg('psychological_safety_rating') +
+                $dateResponses->avg('bullying_prevention_effectiveness') +
+                $dateResponses->avg('emergency_preparedness_rating')
+            ) / 4, 2);
+        }
+
+        return [
+            'labels' => $labels,
+            'datasets' => [
+                [
+                    'label' => 'Overall Satisfaction',
+                    'data' => $satisfactionData,
+                    'borderColor' => 'rgba(54, 162, 235, 1)',
+                    'backgroundColor' => 'rgba(54, 162, 235, 0.1)',
+                    'tension' => 0.4,
+                    'fill' => true,
+                ],
+                [
+                    'label' => 'Learner Needs Index',
+                    'data' => $learnerNeedsData,
+                    'borderColor' => 'rgba(75, 192, 192, 1)',
+                    'backgroundColor' => 'rgba(75, 192, 192, 0.1)',
+                    'tension' => 0.4,
+                    'fill' => true,
+                ],
+                [
+                    'label' => 'Safety Index',
+                    'data' => $safetyData,
+                    'borderColor' => 'rgba(255, 99, 132, 1)',
+                    'backgroundColor' => 'rgba(255, 99, 132, 0.1)',
+                    'tension' => 0.4,
+                    'fill' => true,
+                ]
+            ]
+        ];
+    }
+
+    /**
      * Generate progress alerts for admin dashboard
      */
     public function generateProgressAlerts()

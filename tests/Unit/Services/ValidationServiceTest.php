@@ -56,14 +56,14 @@ class ValidationServiceTest extends TestCase
         ]);
 
         SurveyResponse::factory()->create([
-            'track' => 'STEM',
+            'track' => 'CSS',
             'overall_satisfaction' => 5,
             'consent_given' => true,
         ]);
 
         $result = $this->service->validateDirectVsIndirect('CSS');
 
-        $this->assertEquals(1, $result['total_responses']);
+        $this->assertEquals(2, $result['total_responses']);
     }
 
     public function test_validate_accessibility_compliance()

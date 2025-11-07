@@ -36,6 +36,16 @@ class AuditLog extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        // user_id can reference either Admin or User
+        // Check if it's an admin by checking if the ID exists in admins table
+        if ($this->user_id && \App\Models\Admin::find($this->user_id)) {
+            return $this->belongsTo(Admin::class, 'user_id');
+        }
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function admin(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class, 'user_id');
     }
 }

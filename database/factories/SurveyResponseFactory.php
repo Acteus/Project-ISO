@@ -105,7 +105,7 @@ class SurveyResponseFactory extends Factory
 
             // Indirect Metrics (optional - typically from admin data, not student survey)
             'attendance_rate' => fake()->randomFloat(1, 75, 100),
-            'grade_average' => fake()->randomFloat(2, 75, 98), // Changed to percentage scale (0-100) for consistency
+            'grade_average' => fake()->randomFloat(2, 1.0, 4.0), // GPA scale (1.0-4.0) to match validation
             'participation_score' => fake()->numberBetween(60, 100),
             'extracurricular_hours' => fake()->numberBetween(0, 15),
             'counseling_sessions' => fake()->numberBetween(0, 5),

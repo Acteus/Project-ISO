@@ -118,12 +118,14 @@ class QrCodeTest extends TestCase
 
     public function test_qr_code_scopes()
     {
-        QrCode::factory()->active()->create();
-        QrCode::factory()->inactive()->create();
-        QrCode::factory()->create(['track' => 'CSS']);
+        // Create QR codes with explicit tracks to avoid random track assignment
+        QrCode::factory()->active()->create(['track' => 'GAS']); // First active with different track
+        QrCode::factory()->inactive()->create(['track' => 'ABM']); // Inactive
+        QrCode::factory()->active()->create(['track' => 'CSS']); // Active with CSS track
+        QrCode::factory()->active()->create(['track' => 'STEM']); // Another active with different track
 
-        $this->assertCount(1, QrCode::active()->get());
-        $this->assertCount(1, QrCode::byTrack('CSS')->get());
+        $this->assertCount(3, QrCode::active()->get()); // 3 active QR codes
+        $this->assertCount(1, QrCode::byTrack('CSS')->get()); // Only 1 with CSS track
     }
 
     public function test_qr_code_casts()

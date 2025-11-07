@@ -43,6 +43,9 @@ class Admin extends Authenticatable
 
     public function auditLogs()
     {
-        return $this->hasMany(AuditLog::class);
+        // Note: user_id in audit_logs references users table, not admins
+        // This relationship may not work if Admin IDs don't exist in users table
+        // For now, we'll use a custom foreign key lookup
+        return $this->hasMany(AuditLog::class, 'user_id');
     }
 }

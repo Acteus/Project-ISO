@@ -28,7 +28,7 @@ class QrCodeFactory extends Factory
         $currentYear = date('Y');
         $academicYear = $currentYear . '-' . ($currentYear + 1);
         
-        $formats = ['png', 'svg', 'pdf'];
+        $formats = ['png', 'svg'];
         $tracks = ['CSS', 'STEM', 'GAS', 'ABM', 'HUMSS'];
         $sections = ['A', 'B', 'C', 'D'];
 
@@ -54,6 +54,16 @@ class QrCodeFactory extends Factory
             'custom_options' => [],
             'created_by' => User::factory(),
         ];
+    }
+
+    /**
+     * Indicate that the QR code is active.
+     */
+    public function active(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_active' => true,
+        ]);
     }
 
     /**
