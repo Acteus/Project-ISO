@@ -416,34 +416,21 @@ class StudentController extends Controller
         try {
             $consentService = app(\App\Services\ConsentService::class);
 
-            // Record consent
-            $consentRecord = $consentService->validateAndRecordConsent(
-                $user->student_id,
-                'survey_response',
-                $request->ip(),
+            // Record consent (method signature: bool $consentGiven, ?string $studentId, ?string $ipAddress, array $context)
+            $consentGiven = $consentService->validateAndRecordConsent(
                 true, // consent given
+                $user->student_id,
+                $request->ip(),
                 [
+                    'purpose' => 'survey_response',
                     'source' => 'existing_user_consent_page',
                     'user_id' => $user->id,
                     'email' => $user->email,
+                    'consent_version' => '1.0',
                 ]
             );
 
-            if ($consentRecord) {
-                // Log the consent acceptance for audit trail
-                AuditLog::create([
-                    'user_id' => $user->id,
-                    'action' => 'consent_given',
-                    'description' => 'Student provided consent for survey data processing (existing user)',
-                    'ip_address' => $request->ip(),
-                    'new_values' => [
-                        'student_id' => '***REDACTED***',
-                        'purpose' => 'survey_response',
-                        'consent_version' => $consentRecord->consent_version ?? '1.0',
-                        'timestamp' => now()->toIso8601String(),
-                    ],
-                ]);
-
+            if ($consentGiven) {
                 // Determine redirect based on where user came from
                 $redirectTo = $request->input('redirect_to', route('student.dashboard'));
 
