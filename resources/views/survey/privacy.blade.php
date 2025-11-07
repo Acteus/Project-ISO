@@ -299,7 +299,7 @@
                     </p>
                     <ul>
                         <li><strong>Academic Affairs Office</strong></li>
-                        <li><strong>Email:</strong> <a href="mailto:support@jru.edu" style="color: #4285f4; text-decoration: underline;">support@jru.edu</a></li>
+                        <li><strong>Email:</strong> <a href="mailto:support@kwadrateam.dev" style="color: #4285f4; text-decoration: underline;">support@kwadrateam.dev</a></li>
                         <li><strong>Alternative:</strong> Visit our <a href="{{ route('survey.contact') }}" style="color: #4285f4; text-decoration: underline;">Contact Academic Affairs</a> page</li>
                     </ul>
 
