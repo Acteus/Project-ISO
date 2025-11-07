@@ -136,7 +136,7 @@ class GoalTest extends TestCase
     {
         // Clear any existing goals
         Goal::query()->delete();
-        
+
         // Create goals with explicit dates to avoid timing issues
         $activeGoal = Goal::factory()->create([
             'status' => 'active',
@@ -144,14 +144,14 @@ class GoalTest extends TestCase
             'target_value' => 100.0,
             'current_value' => 50.0,
         ]);
-        
+
         $achievedGoal = Goal::factory()->create([
             'status' => 'achieved',
             'target_date' => now()->subMonths(3), // In the past
             'target_value' => 100.0,
             'current_value' => 110.0, // Exceeds target
         ]);
-        
+
         $overdueGoal = Goal::factory()->create([
             'status' => 'active',
             'target_date' => now()->subWeeks(2), // In the past
