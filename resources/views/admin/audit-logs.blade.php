@@ -823,42 +823,123 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <div style="color: #5a6c7d; font-size: 14px; line-height: 1.5;">
-                                            {{ $log->description ?? 'No description available' }}
-                                            @if($log->new_values && is_array($log->new_values))
-                                                @php
-                                                    // Redact sensitive data for privacy (GDPR & ISO 27001)
+                                        <div style="color: #5a6c7d; font-size: 14px; line-height: 1.6; max-width: 500px;">
+                                            <!-- Description -->
+                                            <div style="font-weight: 500; color: #2c3e50; margin-bottom: 8px;">
+                                                {{ $log->description ?? 'No description available' }}
+                                            </div>
+
+                                            @php
+                                                // Extract and format key information from JSON data
+                                                $hasDetails = false;
+                                                $summaryItems = [];
+                                                $fullDetails = [];
+
+                                                // Process new_values
+                                                if ($log->new_values && is_array($log->new_values)) {
                                                     $redactedValues = $log->new_values;
                                                     if (isset($redactedValues['student_id']) && $redactedValues['student_id'] !== '***REDACTED***') {
                                                         $redactedValues['student_id'] = '***REDACTED***';
                                                     }
-                                                @endphp
-                                                @if(!empty($redactedValues))
-                                                    <div style="margin-top: 8px; padding: 8px; background: rgba(66, 133, 244, 0.05); border-radius: 6px; font-size: 12px;">
-                                                        <strong style="color: #4285F4;">New Values:</strong>
-                                                        <pre style="margin: 4px 0 0 0; font-size: 11px; color: #666; white-space: pre-wrap; word-break: break-word;">{{ json_encode($redactedValues, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
-                                                    </div>
-                                                @endif
-                                            @endif
-                                            @if($log->old_values && is_array($log->old_values))
-                                                @php
-                                                    // Redact sensitive data
+                                                    
+                                                    // Extract key fields for summary
+                                                    $keyFields = ['auth_action', 'success', 'user_type', 'admin_id', 'access_action', 'resource_type', 'resource_id', 'action'];
+                                                    foreach ($keyFields as $key) {
+                                                        if (isset($redactedValues[$key])) {
+                                                            $summaryItems[] = [
+                                                                'label' => ucfirst(str_replace('_', ' ', $key)),
+                                                                'value' => is_bool($redactedValues[$key]) ? ($redactedValues[$key] ? 'Yes' : 'No') : $redactedValues[$key],
+                                                                'type' => 'new'
+                                                            ];
+                                                        }
+                                                    }
+                                                    
+                                                    // Store full data for expandable view
+                                                    if (!empty($redactedValues)) {
+                                                        $fullDetails['new_values'] = $redactedValues;
+                                                        $hasDetails = true;
+                                                    }
+                                                }
+
+                                                // Process old_values
+                                                if ($log->old_values && is_array($log->old_values)) {
                                                     $redactedOldValues = $log->old_values;
                                                     if (isset($redactedOldValues['student_id']) && $redactedOldValues['student_id'] !== '***REDACTED***') {
                                                         $redactedOldValues['student_id'] = '***REDACTED***';
                                                     }
-                                                @endphp
-                                                @if(!empty($redactedOldValues))
-                                                    <div style="margin-top: 8px; padding: 8px; background: rgba(255, 140, 0, 0.05); border-radius: 6px; font-size: 12px;">
-                                                        <strong style="color: #FF8C00;">Old Values:</strong>
-                                                        <pre style="margin: 4px 0 0 0; font-size: 11px; color: #666; white-space: pre-wrap; word-break: break-word;">{{ json_encode($redactedOldValues, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
-                                                    </div>
-                                                @endif
+                                                    
+                                                    if (!empty($redactedOldValues)) {
+                                                        $fullDetails['old_values'] = $redactedOldValues;
+                                                        $hasDetails = true;
+                                                    }
+                                                }
+
+                                                // Process metadata (exclude verbose nested objects from summary)
+                                                if ($log->metadata && is_array($log->metadata)) {
+                                                    // Extract simple key-value pairs for summary
+                                                    foreach ($log->metadata as $key => $value) {
+                                                        // Skip complex nested objects (like admin object) in summary
+                                                        if (!is_array($value) && !is_object($value)) {
+                                                            $summaryItems[] = [
+                                                                'label' => ucfirst(str_replace('_', ' ', $key)),
+                                                                'value' => is_bool($value) ? ($value ? 'Yes' : 'No') : $value,
+                                                                'type' => 'meta'
+                                                            ];
+                                                        }
+                                                    }
+                                                    
+                                                    $fullDetails['metadata'] = $log->metadata;
+                                                    if (!empty($log->metadata)) {
+                                                        $hasDetails = true;
+                                                    }
+                                                }
+                                            @endphp
+
+                                            <!-- Summary of key information -->
+                                            @if(!empty($summaryItems))
+                                                <div style="margin-top: 8px; padding: 8px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.08), rgba(255, 140, 0, 0.05)); border-radius: 8px; border-left: 3px solid #4285F4;">
+                                                    @foreach($summaryItems as $item)
+                                                        <div style="display: flex; gap: 8px; margin-bottom: 4px; font-size: 12px;">
+                                                            <span style="color: #666; font-weight: 600; min-width: 80px;">{{ $item['label'] }}:</span>
+                                                            <span style="color: #2c3e50;">{{ $item['value'] }}</span>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
                                             @endif
-                                            @if($log->metadata && is_array($log->metadata))
-                                                <div style="margin-top: 8px; padding: 8px; background: rgba(108, 117, 125, 0.05); border-radius: 6px; font-size: 12px;">
-                                                    <strong style="color: #6c757d;">Metadata:</strong>
-                                                    <pre style="margin: 4px 0 0 0; font-size: 11px; color: #666; white-space: pre-wrap; word-break: break-word;">{{ json_encode($log->metadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+
+                                            <!-- Expandable full details -->
+                                            @if($hasDetails)
+                                                <div style="margin-top: 8px;">
+                                                    <button type="button" 
+                                                            onclick="toggleDetails({{ $log->id }})" 
+                                                            class="details-toggle-btn"
+                                                            id="toggle-btn-{{ $log->id }}"
+                                                            style="background: rgba(66, 133, 244, 0.1); border: 1px solid rgba(66, 133, 244, 0.3); color: #4285F4; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                                                        <span id="toggle-text-{{ $log->id }}">Show Details</span>
+                                                        <svg id="toggle-icon-{{ $log->id }}" style="width: 14px; height: 14px; vertical-align: middle; margin-left: 4px; display: inline-block; transition: transform 0.3s;" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                    </button>
+                                                    <div id="details-{{ $log->id }}" style="display: none; margin-top: 8px; animation: fadeIn 0.3s ease-in;">
+                                                        @if(isset($fullDetails['new_values']) && !empty($fullDetails['new_values']))
+                                                            <div style="padding: 10px; background: rgba(66, 133, 244, 0.05); border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #4285F4;">
+                                                                <strong style="color: #4285F4; font-size: 12px; display: block; margin-bottom: 6px;">New Values:</strong>
+                                                                <pre style="margin: 0; font-size: 11px; color: #555; white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto; background: rgba(255,255,255,0.5); padding: 8px; border-radius: 4px;">{{ json_encode($fullDetails['new_values'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                                            </div>
+                                                        @endif
+                                                        @if(isset($fullDetails['old_values']) && !empty($fullDetails['old_values']))
+                                                            <div style="padding: 10px; background: rgba(255, 140, 0, 0.05); border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #FF8C00;">
+                                                                <strong style="color: #FF8C00; font-size: 12px; display: block; margin-bottom: 6px;">Old Values:</strong>
+                                                                <pre style="margin: 0; font-size: 11px; color: #555; white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto; background: rgba(255,255,255,0.5); padding: 8px; border-radius: 4px;">{{ json_encode($fullDetails['old_values'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                                            </div>
+                                                        @endif
+                                                        @if(isset($fullDetails['metadata']) && !empty($fullDetails['metadata']))
+                                                            <div style="padding: 10px; background: rgba(108, 117, 125, 0.05); border-radius: 6px; border-left: 3px solid #6c757d;">
+                                                                <strong style="color: #6c757d; font-size: 12px; display: block; margin-bottom: 6px;">Metadata:</strong>
+                                                                <pre style="margin: 0; font-size: 11px; color: #555; white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto; background: rgba(255,255,255,0.5); padding: 8px; border-radius: 4px;">{{ json_encode($fullDetails['metadata'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                                            </div>
+                                                        @endif
+                                                    </div>
                                                 </div>
                                             @endif
                                         </div>
@@ -1140,6 +1221,43 @@
         //     });
         // });
 
+        // Toggle details visibility
+        function toggleDetails(logId) {
+            const detailsDiv = document.getElementById('details-' + logId);
+            const toggleText = document.getElementById('toggle-text-' + logId);
+            const toggleIcon = document.getElementById('toggle-icon-' + logId);
+            const toggleBtn = document.getElementById('toggle-btn-' + logId);
+            
+            if (detailsDiv.style.display === 'none' || !detailsDiv.style.display) {
+                detailsDiv.style.display = 'block';
+                toggleText.textContent = 'Hide Details';
+                toggleIcon.style.transform = 'rotate(180deg)';
+                toggleBtn.style.background = 'rgba(66, 133, 244, 0.2)';
+            } else {
+                detailsDiv.style.display = 'none';
+                toggleText.textContent = 'Show Details';
+                toggleIcon.style.transform = 'rotate(0deg)';
+                toggleBtn.style.background = 'rgba(66, 133, 244, 0.1)';
+            }
+        }
+
+        // Add hover effects to toggle buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleButtons = document.querySelectorAll('.details-toggle-btn');
+            toggleButtons.forEach(btn => {
+                btn.addEventListener('mouseenter', function() {
+                    this.style.background = 'rgba(66, 133, 244, 0.2)';
+                    this.style.transform = 'translateY(-1px)';
+                });
+                btn.addEventListener('mouseleave', function() {
+                    if (this.getAttribute('aria-expanded') !== 'true') {
+                        this.style.background = 'rgba(66, 133, 244, 0.1)';
+                    }
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+
         console.log('Enhanced Audit Logs page with filters loaded');
     </script>
 
@@ -1147,6 +1265,21 @@
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .details-toggle-btn:hover {
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.2);
         }
 
         .filter-input:hover,
