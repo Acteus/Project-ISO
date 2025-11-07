@@ -622,25 +622,9 @@
                     <a href="{{ route('survey.landing') }}">ISO Quality Education</a>
                 </div>
 
-                <!-- Simple student navigation with quick actions -->
+                <!-- Simple student navigation -->
                 <nav class="desktop-nav" style="display: flex !important; align-items: center; gap: 12px; flex-wrap: wrap;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span class="nav-link" style="font-weight: 600; cursor: default; color: #2c3e50;">{{ Auth::user()->name }}</span>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <a href="{{ route('survey.form') }}" class="header-action-btn" style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;" title="Take Survey">
-                                <svg style="width: 16px; height: 16px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                    <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-                                </svg>
-                                <span class="desktop-text">Survey</span>
-                            </a>
-                            <a href="{{ route('survey.landing') }}" class="header-action-btn" style="background: linear-gradient(135deg, #4285F4, #2c6cd6); color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;" title="Back to Home">
-                                <svg style="width: 16px; height: 16px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                                </svg>
-                                <span class="desktop-text">Home</span>
-                            </a>
-                        </div>
-                    </div>
+                    <span class="nav-link" style="font-weight: 600; cursor: default; color: #ffffff; font-size: 16px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">{{ Auth::user()->name }}</span>
                     <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                         @csrf
                         <button type="submit" class="logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 6px;">
@@ -665,21 +649,7 @@
             <!-- Mobile navigation -->
             <nav class="mobile-nav" id="mobileNav">
                 <div style="margin-bottom: 15px;">
-                    <span class="mobile-nav-link" style="font-weight: 600; display: block; margin-bottom: 15px; font-size: 18px; color: #2c3e50;">{{ Auth::user()->name }}</span>
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <a href="{{ route('survey.form') }}" style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 12px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px; justify-content: center;">
-                            <svg style="width: 18px; height: 18px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-                            </svg>
-                            Take Survey
-                        </a>
-                        <a href="{{ route('survey.landing') }}" style="background: linear-gradient(135deg, #4285F4, #2c6cd6); color: white; padding: 12px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px; justify-content: center;">
-                            <svg style="width: 18px; height: 18px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                            </svg>
-                            Back to Home
-                        </a>
-                    </div>
+                    <span class="mobile-nav-link" style="font-weight: 600; display: block; margin-bottom: 15px; font-size: 18px; color: #ffffff; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">{{ Auth::user()->name }}</span>
                 </div>
                 <form method="POST" action="{{ route('student.logout') }}" style="margin-top: 10px;">
                     @csrf
@@ -955,30 +925,6 @@
                         Update Password
                     </button>
                 </form>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="survey-history">
-                <h3 style="display: flex; align-items: center; gap: 12px;">
-                    <svg style="width: 28px; height: 28px; fill: #667eea;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
-                    </svg>
-                    Quick Actions
-                </h3>
-                <div style="display: flex; gap: 15px; flex-wrap: wrap; padding: 10px 0;">
-                    <a href="{{ route('survey.form') }}" class="btn btn-success">
-                        <svg style="width: 18px; height: 18px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-                        </svg>
-                        Take Survey
-                    </a>
-                    <a href="{{ route('survey.landing') }}" class="btn btn-primary">
-                        <svg style="width: 18px; height: 18px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                        </svg>
-                        Back to Home
-                    </a>
-                </div>
             </div>
         </div>
     </main>
