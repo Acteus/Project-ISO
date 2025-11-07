@@ -44,7 +44,7 @@ class EncryptionService
      * Decrypt sensitive data
      * 
      * @param string|null $encryptedValue The encrypted value to decrypt
-     * @return string|null Decrypted value or null if input is empty
+     * @return string|null Decrypted value or null if input is empty or decryption fails
      */
     public function decrypt(?string $encryptedValue): ?string
     {
@@ -53,14 +53,25 @@ class EncryptionService
         }
 
         try {
+            // Check if value looks encrypted (Laravel's Crypt format)
+            // Laravel encrypted strings start with base64 encoded JSON: "eyJpdiI6"
+            if (!preg_match('/^eyJpdiI6/', $encryptedValue)) {
+                // Doesn't look like Laravel encrypted format
+                // This is expected for legacy unencrypted data (e.g., "24-262830")
+                return null;
+            }
+
             return Crypt::decryptString($encryptedValue);
+        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+            // This is expected for unencrypted legacy data or wrong encryption key
+            // Don't log as error, just return null
+            return null;
         } catch (\Exception $e) {
             Log::error('Decryption failed', [
                 'error' => $e->getMessage(),
                 'field' => 'encrypted_field',
             ]);
             // Return null instead of throwing to prevent breaking the application
-            // Log the error for investigation
             return null;
         }
     }

@@ -104,24 +104,48 @@ class User extends Authenticatable implements CanResetPassword, MustVerifyEmail
 
     /**
      * Decrypt student_id when getting
+     * Handles both encrypted (new) and unencrypted (legacy) values
      * 
      * @param string|null $value
      * @return string|null
      */
     public function getStudentIdAttribute(?string $value): ?string
     {
-        if (empty($value)) {
+        // Get raw value from attributes (bypasses accessor to avoid recursion)
+        $rawValue = $this->attributes['student_id'] ?? $value;
+        
+        if (empty($rawValue)) {
             return null;
         }
 
-        // Get raw encrypted value from attributes
-        $rawValue = $this->attributes['student_id'] ?? $value;
+        // Check if value is encrypted (Laravel's Crypt format starts with "eyJpdiI6")
+        // Laravel encrypted strings are base64 encoded JSON objects
+        $isEncrypted = preg_match('/^eyJpdiI6/', $rawValue);
         
-        // Cache decrypted value
+        if (!$isEncrypted) {
+            // Value is not encrypted (legacy data like "24-262830"), return as-is
+            return $rawValue;
+        }
+
+        // Value appears encrypted, try to decrypt
+        // Cache decrypted value to avoid repeated decryption
         $cacheKey = "user_student_id_{$this->id}";
         
         return Cache::remember($cacheKey, 3600, function () use ($rawValue) {
-            return $this->encryptionService()->decrypt($rawValue);
+            try {
+                $decrypted = $this->encryptionService()->decrypt($rawValue);
+                // If decryption returns null, the value might be corrupted
+                // Return original value as fallback
+                return $decrypted ?? $rawValue;
+            } catch (\Exception $e) {
+                // If decryption fails completely, return original value
+                // This handles edge cases where encryption format changed
+                \Illuminate\Support\Facades\Log::warning('Failed to decrypt student_id, returning original', [
+                    'user_id' => $this->id,
+                    'error' => $e->getMessage(),
+                ]);
+                return $rawValue;
+            }
         });
     }
 
