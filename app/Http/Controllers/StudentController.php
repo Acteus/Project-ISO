@@ -168,10 +168,11 @@ class StudentController extends Controller
             ]);
         }
 
-        // If admin lookup found a user but password was wrong, return specific error
+        // If admin lookup found a user but password was wrong, return error
+        // Don't reveal whether it's an admin account for security
         if ($admin) {
             return response()->json([
-                'message' => 'Invalid admin credentials. Please check your username and password.'
+                'message' => 'Invalid credentials. Please check your username and password.'
             ], 401);
         }
 
@@ -234,8 +235,9 @@ class StudentController extends Controller
             ]);
         }
 
+        // Generic error message for security (don't reveal if username exists)
         return response()->json([
-            'message' => 'Invalid credentials. Please check your Student ID and password.'
+            'message' => 'Invalid credentials. Please check your username and password.'
         ], 401);
     }
 
