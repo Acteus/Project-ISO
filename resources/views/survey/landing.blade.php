@@ -4,243 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ISO Quality Education Survey</title>
-    <link rel="stylesheet" href="{{ asset('css/styles.css') }}?v={{ time() }}">
-    <style>
-        /* Landing Page Header - Clean and Modern */
-        .landing-header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        .landing-header .nav-wrapper {
-            padding: 1.25rem 0;
-        }
-
-        .landing-header .logo a {
-            color: #312e81;
-            font-size: 1.5rem;
-            font-weight: 800;
-            text-decoration: none;
-            transition: color 0.3s ease;
-            letter-spacing: -0.5px;
-        }
-
-        .landing-header .logo a:hover {
-            color: #4338ca;
-        }
-
-        .landing-header .desktop-nav {
-            gap: 1.5rem;
-        }
-
-        .landing-header .nav-link {
-            color: #374151;
-            font-weight: 600;
-            font-size: 0.95rem;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .landing-header .nav-link:hover {
-            color: #4338ca;
-            background: rgba(67, 56, 202, 0.1);
-        }
-
-        .landing-header .btn-login {
-            background: transparent;
-            color: #4338ca;
-            border: 2px solid #4338ca;
-            padding: 0.5rem 1.25rem;
-            border-radius: 8px;
-            font-weight: 700;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .landing-header .btn-login:hover {
-            background: #4338ca;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(67, 56, 202, 0.3);
-        }
-
-        .landing-header .btn-register {
-            background: linear-gradient(135deg, #4338ca, #6366f1);
-            color: white;
-            padding: 0.5rem 1.25rem;
-            border-radius: 8px;
-            font-weight: 700;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            border: none;
-        }
-
-        .landing-header .btn-register:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(67, 56, 202, 0.4);
-            background: linear-gradient(135deg, #312e81, #4338ca);
-        }
-
-        .landing-header .btn-profile {
-            background: linear-gradient(135deg, #4338ca, #6366f1);
-            color: white;
-            padding: 0.5rem 1.25rem;
-            border-radius: 8px;
-            font-weight: 700;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            border: none;
-        }
-
-        .landing-header .btn-profile:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(67, 56, 202, 0.4);
-            background: linear-gradient(135deg, #312e81, #4338ca);
-            color: white;
-        }
-
-        .landing-header .logout-btn {
-            background: linear-gradient(90deg, #dc3545, #c82333);
-            border: none;
-            color: white;
-            cursor: pointer;
-            padding: 0.5rem 1.25rem;
-            border-radius: 8px;
-            font-weight: 700;
-            transition: all 0.3s ease;
-        }
-
-        .landing-header .logout-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
-        }
-
-        .landing-header .user-greeting {
-            color: #374151;
-            font-weight: 600;
-            padding: 0.5rem 1rem;
-            background: rgba(67, 56, 202, 0.08);
-            border-radius: 8px;
-        }
-
-        /* Mobile menu for landing page */
-        .landing-header .mobile-menu-btn {
-            display: block;
-        }
-
-        .landing-header .menu-toggle {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .landing-header .hamburger {
-            width: 1.5rem;
-            height: 2px;
-            background-color: #312e81;
-            transition: all 0.3s ease;
-        }
-
-        .landing-header .mobile-nav {
-            display: none;
-            padding-top: 1rem;
-            padding-bottom: 0.75rem;
-            gap: 0.75rem;
-            flex-direction: column;
-        }
-
-        .landing-header .mobile-nav.show {
-            display: flex;
-        }
-
-        .landing-header .mobile-nav .nav-link {
-            color: #374151;
-            text-align: left;
-            padding: 0.75rem 1rem;
-        }
-
-        @media (min-width: 768px) {
-            .landing-header .desktop-nav {
-                display: flex !important;
-            }
-
-            .landing-header .mobile-menu-btn {
-                display: none;
-            }
-        }
-
-        /* Additional mobile improvements for landing page */
-        @media (max-width: 768px) {
-            .hero-section {
-                height: 400px;
-                padding: 20px 0;
-            }
-
-            .hero-content {
-                text-align: center;
-                padding: 0 20px;
-            }
-
-            .hero-title {
-                font-size: 2.5rem;
-                margin-bottom: 1rem;
-            }
-
-            .hero-description {
-                font-size: 1rem;
-                margin-bottom: 1.5rem;
-            }
-
-            .hero-btn {
-                width: 100%;
-                max-width: 300px;
-                margin: 0 auto;
-                display: block;
-                min-height: 48px;
-                font-size: 16px;
-            }
-
-            .info-section {
-                padding: 3rem 0;
-            }
-
-            .section-title {
-                font-size: 1.75rem;
-            }
-
-            .info-grid {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
-
-            .info-card {
-                padding: 1.5rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .hero-title {
-                font-size: 2rem;
-            }
-
-            .hero-section {
-                height: 350px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}?v={{ \Illuminate\Support\Facades\File::lastModified(public_path('css/styles.css')) }}">
+    <link rel="preload" as="image" href="{{ asset('images/HomeBG.jpg') }}" fetchpriority="high">
 </head>
 <body>
     <!-- Landing Page Header -->
@@ -254,7 +19,7 @@
                 </div>
 
                 <!-- Desktop navigation -->
-                <nav class="desktop-nav">
+                <nav class="desktop-nav" role="navigation" aria-label="Primary">
                     @auth
                         <!-- Show for logged-in students -->
                         <a href="{{ route('student.dashboard') }}" class="btn-profile">
@@ -302,7 +67,7 @@
 
                 <!-- Mobile menu button -->
                 <div class="mobile-menu-btn">
-                    <button class="menu-toggle" onclick="toggleMobileMenu()">
+                    <button id="mobileMenuButton" class="menu-toggle" onclick="toggleMobileMenu()" aria-controls="mobileNav" aria-expanded="false" aria-label="Toggle navigation menu">
                         <span class="hamburger"></span>
                         <span class="hamburger"></span>
                         <span class="hamburger"></span>
@@ -311,7 +76,7 @@
             </div>
 
             <!-- Mobile navigation -->
-            <nav class="mobile-nav" id="mobileNav">
+            <nav class="mobile-nav" id="mobileNav" role="navigation" aria-label="Mobile">
                 @auth
                     <a href="{{ route('student.dashboard') }}" class="btn-profile" style="text-align: center; display: block; margin-bottom: 0.5rem;">
                         {{ Auth::user()->name }}
@@ -465,14 +230,17 @@
         </div>
     </footer>
 
-    <script src="{{ asset('js/main.js') }}"></script>
+    <script src="{{ asset('js/main.js') }}" defer></script>
     <script>
         // Mobile menu toggle for landing page
         function toggleMobileMenu() {
             const mobileNav = document.getElementById('mobileNav');
-            if (mobileNav) {
-                mobileNav.classList.toggle('show');
-            }
+            const toggleBtn = document.getElementById('mobileMenuButton');
+            if (!mobileNav || !toggleBtn) return;
+
+            const isOpen = mobileNav.classList.toggle('show');
+            toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            toggleBtn.classList.toggle('is-open', isOpen);
         }
 
         // Set current year
