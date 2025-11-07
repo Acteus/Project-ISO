@@ -557,6 +557,7 @@ class StudentController extends Controller
             'loginCount' => AuditLog::whereIn('action', ['student_login', 'admin_login'])->count(),
             'logoutCount' => AuditLog::whereIn('action', ['student_logout', 'admin_logout'])->count(),
             'submissionCount' => AuditLog::where('action', 'submit_survey_response')->count(),
+            'consentCount' => AuditLog::whereIn('action', ['consent_given', 'consent_denied', 'consent_revoked'])->count(),
         ];
 
         // Log viewing of audit logs

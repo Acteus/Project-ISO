@@ -250,6 +250,9 @@
         .action-access { background: linear-gradient(135deg, #ffc107, #ff9800); color: #333; }
         .action-error { background: linear-gradient(135deg, #dc3545, #e74c3c); color: white; }
         .action-export { background: linear-gradient(135deg, #6f42c1, #5a32a3); color: white; }
+        .action-consentgiven { background: linear-gradient(135deg, #28a745, #20c997); color: white; }
+        .action-consentdenied { background: linear-gradient(135deg, #dc3545, #e74c3c); color: white; }
+        .action-consentrevoked { background: linear-gradient(135deg, #ff9800, #f57c00); color: white; }
 
         .stats-bar {
             display: grid;
@@ -676,6 +679,10 @@
                     <div class="stat-value">{{ $stats['submissionCount'] ?? 0 }}</div>
                     <div class="stat-label">Survey Submissions</div>
                 </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ $stats['consentCount'] ?? 0 }}</div>
+                    <div class="stat-label">Consent Events</div>
+                </div>
             </div>
 
             <!-- Logs Table -->
@@ -724,6 +731,21 @@
                                     <td>
                                         <div style="color: #5a6c7d; font-size: 14px; line-height: 1.5;">
                                             {{ $log->description ?? 'No description available' }}
+                                            @if($log->new_values && is_array($log->new_values))
+                                                @php
+                                                    // Redact sensitive data for privacy (GDPR & ISO 27001)
+                                                    $redactedValues = $log->new_values;
+                                                    if (isset($redactedValues['student_id']) && $redactedValues['student_id'] !== '***REDACTED***') {
+                                                        $redactedValues['student_id'] = '***REDACTED***';
+                                                    }
+                                                @endphp
+                                                @if(!empty($redactedValues))
+                                                    <div style="margin-top: 8px; padding: 8px; background: rgba(66, 133, 244, 0.05); border-radius: 6px; font-size: 12px;">
+                                                        <strong style="color: #4285F4;">Details:</strong>
+                                                        <pre style="margin: 4px 0 0 0; font-size: 11px; color: #666; white-space: pre-wrap; word-break: break-word;">{{ json_encode($redactedValues, JSON_PRETTY_PRINT) }}</pre>
+                                                    </div>
+                                                @endif
+                                            @endif
                                         </div>
                                     </td>
                                     <td>
@@ -819,6 +841,56 @@
                     @else
                         <div style="text-align: center; padding: 20px; color: #6c757d; font-style: italic;">
                             No recent survey submissions
+                        </div>
+                    @endif
+                </div>
+
+                <div class="log-card">
+                    <h3 style="color: #2c3e50; font-size: 20px; font-weight: 700; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid transparent; border-image: linear-gradient(90deg, #28a745, #20c997) 1;">
+                        <svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 8px; fill: #28a745;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                        </svg>
+                        Recent Consent Activity (GDPR & ISO 27001)
+                    </h3>
+                    @php
+                        $recentConsent = \App\Models\AuditLog::whereIn('action', ['consent_given', 'consent_denied', 'consent_revoked'])->latest()->take(5)->get();
+                    @endphp
+
+                    @if($recentConsent->count() > 0)
+                        @foreach($recentConsent as $consent)
+                            <div class="log-item">
+                                <div class="log-header">
+                                    <div class="log-action" style="display: flex; align-items: center; gap: 6px;">
+                                        @if($consent->action === 'consent_given')
+                                            <svg style="width: 16px; height: 16px; fill: #28a745;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                            </svg>
+                                            Consent Given
+                                        @elseif($consent->action === 'consent_denied')
+                                            <svg style="width: 16px; height: 16px; fill: #dc3545;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                            </svg>
+                                            Consent Denied
+                                        @else
+                                            <svg style="width: 16px; height: 16px; fill: #ff9800;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                            </svg>
+                                            Consent Revoked
+                                        @endif
+                                    </div>
+                                    <div class="log-timestamp">{{ $consent->created_at->format('M j, g:i A') }}</div>
+                                </div>
+                                <div class="log-details">
+                                    {{ $consent->description ?? 'Consent action recorded' }}
+                                    @if($consent->ip_address)
+                                        <div class="log-ip">IP: {{ $consent->ip_address }}</div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div style="text-align: center; padding: 20px; color: #6c757d; font-style: italic;">
+                            No recent consent activity
                         </div>
                     @endif
                 </div>
