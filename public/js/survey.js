@@ -776,7 +776,43 @@ async function submitSurveyLaravel(event) {
             counseling_sessions: null
         };
 
-        console.log('Submitting survey data:', laravelData);
+        // Explicitly remove any fields that are not allowed (data minimization)
+        const allowedFields = [
+            'student_id', 'track', 'grade_level', 'academic_year', 'semester', 'gender',
+            'curriculum_relevance_rating', 'learning_pace_appropriateness', 'individual_support_availability',
+            'learning_style_accommodation', 'teaching_quality_rating', 'learning_environment_rating',
+            'peer_interaction_satisfaction', 'extracurricular_satisfaction', 'academic_progress_rating',
+            'skill_development_rating', 'critical_thinking_improvement', 'problem_solving_confidence',
+            'physical_safety_rating', 'psychological_safety_rating', 'bullying_prevention_effectiveness',
+            'emergency_preparedness_rating', 'mental_health_support_rating', 'stress_management_support',
+            'physical_health_support', 'overall_wellbeing_rating', 'overall_satisfaction',
+            'positive_aspects', 'improvement_suggestions', 'additional_comments',
+            'attendance_rate', 'grade_average', 'participation_score', 'extracurricular_hours',
+            'counseling_sessions', 'consent_given'
+        ];
+        
+        // Filter out any fields that are not in the allowed list
+        const filteredData = {};
+        Object.keys(laravelData).forEach(key => {
+            if (allowedFields.includes(key)) {
+                filteredData[key] = laravelData[key];
+            } else {
+                console.warn('Filtering out disallowed field:', key);
+            }
+        });
+        
+        // Remove the problematic fields explicitly (in case they somehow got in)
+        delete filteredData.feedback_taken_seriously;
+        delete filteredData.school_responsiveness;
+        delete filteredData.visible_improvements;
+        
+        // Also remove any q16, q17, q18 fields that might have been included from form data
+        delete filteredData.q16;
+        delete filteredData.q17;
+        delete filteredData.q18;
+
+        console.log('Submitting survey data (filtered):', filteredData);
+        console.log('Fields being sent:', Object.keys(filteredData));
 
         // Get CSRF token safely
         let csrfToken = '';
@@ -800,7 +836,7 @@ async function submitSurveyLaravel(event) {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify(laravelData)
+                body: JSON.stringify(filteredData)
             });
         } catch (fetchError) {
             // Network error (CORS, connection refused, etc.)
