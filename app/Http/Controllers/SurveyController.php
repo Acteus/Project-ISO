@@ -154,6 +154,10 @@ class SurveyController extends Controller
             'positive_aspects' => 'nullable|string|max:1000',
             'improvement_suggestions' => 'nullable|string|max:1000',
             'additional_comments' => 'nullable|string|max:1000',
+            // Additional Feedback Fields (ISO 21001 compliant)
+            'feedback_taken_seriously' => 'nullable|integer|min:1|max:5',
+            'school_responsiveness' => 'nullable|integer|min:1|max:5',
+            'visible_improvements' => 'nullable|integer|min:1|max:5',
             // Demographics
             'gender' => 'nullable|string|in:Male,Female,Non-binary,Prefer not to say',
             // Consent

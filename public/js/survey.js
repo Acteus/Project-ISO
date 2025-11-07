@@ -787,6 +787,7 @@ async function submitSurveyLaravel(event) {
             'emergency_preparedness_rating', 'mental_health_support_rating', 'stress_management_support',
             'physical_health_support', 'overall_wellbeing_rating', 'overall_satisfaction',
             'positive_aspects', 'improvement_suggestions', 'additional_comments',
+            'feedback_taken_seriously', 'school_responsiveness', 'visible_improvements',
             'attendance_rate', 'grade_average', 'participation_score', 'extracurricular_hours',
             'counseling_sessions', 'consent_given'
         ];
@@ -801,10 +802,14 @@ async function submitSurveyLaravel(event) {
             }
         });
         
-        // Remove the problematic fields explicitly (in case they somehow got in)
-        delete filteredData.feedback_taken_seriously;
-        delete filteredData.school_responsiveness;
-        delete filteredData.visible_improvements;
+        // Also check FormData for any additional allowed fields that might be in the form
+        if (formData) {
+            for (const [key, value] of formData.entries()) {
+                if (allowedFields.includes(key) && !filteredData.hasOwnProperty(key)) {
+                    filteredData[key] = value;
+                }
+            }
+        }
         
         // Also remove any q16, q17, q18 fields that might have been included from form data
         delete filteredData.q16;

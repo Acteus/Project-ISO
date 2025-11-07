@@ -117,6 +117,11 @@ return [
             'improvement_suggestions', // Encrypted
             'additional_comments', // Encrypted
 
+            // Additional Feedback Fields (ISO 21001 compliant)
+            'feedback_taken_seriously',
+            'school_responsiveness',
+            'visible_improvements',
+
             // Indirect Metrics (ISO 21001 compliant)
             'attendance_rate',
             'grade_average',

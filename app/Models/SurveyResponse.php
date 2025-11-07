@@ -59,6 +59,10 @@ class SurveyResponse extends Model
         'positive_aspects',
         'improvement_suggestions',
         'additional_comments',
+        // Additional Feedback Fields (ISO 21001 compliant)
+        'feedback_taken_seriously',
+        'school_responsiveness',
+        'visible_improvements',
         // Privacy and Consent
         'consent_given',
         'ip_address',
@@ -96,6 +100,9 @@ class SurveyResponse extends Model
         'physical_health_support' => 'integer',
         'overall_wellbeing_rating' => 'integer',
         'overall_satisfaction' => 'integer',
+        'feedback_taken_seriously' => 'integer',
+        'school_responsiveness' => 'integer',
+        'visible_improvements' => 'integer',
         // Indirect Metrics
         'attendance_rate' => 'decimal:2',
         'grade_average' => 'decimal:2',
