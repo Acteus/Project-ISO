@@ -43,6 +43,18 @@ class SurveyController extends Controller
             'admin' => $admin ? true : false,
         ]);
 
+        // Check consent for authenticated students (GDPR & ISO 27001 requirement)
+        if ($user && $user->role === 'student') {
+            $consentService = app(\App\Services\ConsentService::class);
+            $studentId = $user->student_id ?? null;
+            
+            if ($studentId && !$consentService->hasValidConsent($studentId, 'survey_response')) {
+                // User doesn't have valid consent, redirect to consent page
+                return redirect()->route('student.consent.required')
+                    ->with('info', 'Please provide consent before accessing the survey.');
+            }
+        }
+
         return view('survey.landing', [
             'user' => $user,
             'admin' => $admin,
@@ -70,6 +82,19 @@ class SurveyController extends Controller
      */
     public function showForm()
     {
+        // Check consent for authenticated students (GDPR & ISO 27001 requirement)
+        $user = Auth::user();
+        if ($user && $user->role === 'student') {
+            $consentService = app(\App\Services\ConsentService::class);
+            $studentId = $user->student_id ?? null;
+            
+            if ($studentId && !$consentService->hasValidConsent($studentId, 'survey_response')) {
+                // User doesn't have valid consent, redirect to consent page
+                return redirect()->route('student.consent.required')
+                    ->with('info', 'Please provide consent before taking the survey.');
+            }
+        }
+
         return view('survey.form');
     }
 

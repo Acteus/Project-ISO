@@ -34,6 +34,8 @@ Route::prefix('student')->name('student.')->group(function () {
     Route::get('/clear-sessions', [StudentController::class, 'clearAllSessions'])->name('clear-sessions');
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
     // Consent management (GDPR & ISO 27001)
+    Route::get('/consent/required', [StudentController::class, 'showConsentRequired'])->name('consent.required')->middleware('auth');
+    Route::post('/consent/accept', [StudentController::class, 'acceptConsent'])->name('consent.accept')->middleware('auth');
     Route::post('/consent/revoke', [StudentController::class, 'revokeConsent'])->name('consent.revoke')->middleware('auth');
 });
 

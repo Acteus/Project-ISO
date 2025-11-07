@@ -223,6 +223,24 @@ class StudentController extends Controller
                 ]);
             }
 
+            // Check if user has valid consent (GDPR & ISO 27001 requirement)
+            // Existing users who registered before consent feature need to provide consent
+            $consentService = app(\App\Services\ConsentService::class);
+            $studentId = $user->student_id ?? null;
+
+            if ($studentId && !$consentService->hasValidConsent($studentId, 'survey_response')) {
+                return response()->json([
+                    'message' => 'Please provide consent to continue using the survey system.',
+                    'redirect' => route('student.consent.required'),
+                    'user' => [
+                        'name' => $user->name,
+                        'student_id' => $user->student_id,
+                        'year_level' => $user->year_level,
+                        'section' => $user->section,
+                    ]
+                ]);
+            }
+
             return response()->json([
                 'message' => 'Login successful! Welcome back.',
                 'redirect' => route('survey.landing'),
@@ -324,12 +342,131 @@ class StudentController extends Controller
             return redirect()->route('student.login');
         }
 
+        // Check if user has valid consent (GDPR & ISO 27001 requirement)
+        // Existing users who registered before consent feature need to provide consent
+        $consentService = app(\App\Services\ConsentService::class);
+        $studentId = $user->student_id ?? null;
+
+        if ($studentId && !$consentService->hasValidConsent($studentId, 'survey_response')) {
+            // User doesn't have valid consent, redirect to consent page
+            return redirect()->route('student.consent.required')
+                ->with('info', 'Please provide consent to continue using the survey system.');
+        }
+
         return view('student.dashboard', compact('user'));
     }
 
     /**
+     * Show consent required page for existing users
+     *
+     * This page is shown to users who registered before the consent feature was added
+     * or users who haven't provided consent yet
+     */
+    public function showConsentRequired()
+    {
+        $user = Auth::user();
+
+        if (!$user || $user->role !== 'student') {
+            return redirect()->route('student.login');
+        }
+
+        $consentService = app(\App\Services\ConsentService::class);
+        $studentId = $user->student_id ?? null;
+
+        // If user already has valid consent, redirect to dashboard
+        if ($studentId && $consentService->hasValidConsent($studentId, 'survey_response')) {
+            return redirect()->route('student.dashboard')
+                ->with('success', 'You already have active consent.');
+        }
+
+        return view('student.consent-required', compact('user'));
+    }
+
+    /**
+     * Accept consent (GDPR & ISO 27001 compliant)
+     *
+     * Handles consent acceptance from existing users
+     */
+    public function acceptConsent(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user || $user->role !== 'student') {
+            return redirect()->route('student.login');
+        }
+
+        $validator = Validator::make($request->all(), [
+            'consent_given' => 'required|accepted',
+        ], [
+            'consent_given.required' => 'You must provide consent to continue.',
+            'consent_given.accepted' => 'You must check the consent box to continue.',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('student.consent.required')
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        if (!$user->student_id) {
+            return redirect()->route('student.consent.required')
+                ->with('error', 'Unable to record consent: Student ID not found. Please contact support.');
+        }
+
+        try {
+            $consentService = app(\App\Services\ConsentService::class);
+
+            // Record consent
+            $consentRecord = $consentService->validateAndRecordConsent(
+                $user->student_id,
+                'survey_response',
+                $request->ip(),
+                true, // consent given
+                [
+                    'source' => 'existing_user_consent_page',
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                ]
+            );
+
+            if ($consentRecord) {
+                // Log the consent acceptance for audit trail
+                AuditLog::create([
+                    'user_id' => $user->id,
+                    'action' => 'consent_given',
+                    'description' => 'Student provided consent for survey data processing (existing user)',
+                    'ip_address' => $request->ip(),
+                    'new_values' => [
+                        'student_id' => '***REDACTED***',
+                        'purpose' => 'survey_response',
+                        'consent_version' => $consentRecord->consent_version ?? '1.0',
+                        'timestamp' => now()->toIso8601String(),
+                    ],
+                ]);
+
+                // Determine redirect based on where user came from
+                $redirectTo = $request->input('redirect_to', route('student.dashboard'));
+
+                return redirect($redirectTo)
+                    ->with('success', 'Thank you for providing consent. You can now access all features of the survey system.');
+            } else {
+                return redirect()->route('student.consent.required')
+                    ->with('error', 'Failed to record consent. Please try again or contact support.');
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to record consent', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('student.consent.required')
+                ->with('error', 'An error occurred while recording consent. Please try again or contact support.');
+        }
+    }
+
+    /**
      * Revoke consent (GDPR & ISO 27001 compliant)
-     * 
+     *
      * Allows students to revoke their consent at any time as required by GDPR
      */
     public function revokeConsent(Request $request)
