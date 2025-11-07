@@ -387,10 +387,116 @@
         }
 
         .actions-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 25px;
+            position: relative;
             margin-bottom: 40px;
+            padding: 0 60px;
+        }
+
+        .actions-carousel {
+            display: flex;
+            overflow: hidden;
+            gap: 25px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .actions-carousel-wrapper {
+            display: flex;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .action-card {
+            flex: 0 0 calc(33.333% - 17px);
+            min-width: 0;
+        }
+
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(66, 133, 244, 0.3);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+            box-shadow: 0 8px 25px rgba(66, 133, 244, 0.2);
+        }
+
+        .carousel-nav:hover {
+            background: linear-gradient(135deg, #4285F4, #1e88e5);
+            border-color: #4285F4;
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 12px 35px rgba(66, 133, 244, 0.4);
+        }
+
+        .carousel-nav:hover svg {
+            fill: white;
+        }
+
+        .carousel-nav.prev {
+            left: 0;
+        }
+
+        .carousel-nav.next {
+            right: 0;
+        }
+
+        .carousel-nav svg {
+            width: 24px;
+            height: 24px;
+            fill: #4285F4;
+            transition: fill 0.3s ease;
+        }
+
+        .carousel-nav:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: translateY(-50%);
+        }
+
+        .carousel-nav:disabled:hover {
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            border-color: rgba(66, 133, 244, 0.3);
+        }
+
+        .carousel-nav:disabled:hover svg {
+            fill: #4285F4;
+        }
+
+        .carousel-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .carousel-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(66, 133, 244, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .carousel-indicator.active {
+            background: linear-gradient(135deg, #4285F4, #1e88e5);
+            transform: scale(1.3);
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
+        }
+
+        .carousel-indicator:hover {
+            background: rgba(66, 133, 244, 0.6);
+            transform: scale(1.2);
         }
 
         .action-card {
@@ -577,6 +683,12 @@
         }
 
         /* Responsive design */
+        @media (max-width: 1200px) {
+            .action-card {
+                flex: 0 0 calc(50% - 13px);
+            }
+        }
+
         @media (max-width: 768px) {
             .dashboard-container {
                 padding: 20px;
@@ -588,12 +700,28 @@
             }
 
             .actions-section {
-                grid-template-columns: 1fr;
-                gap: 20px;
+                padding: 0 50px;
             }
 
             .action-card {
+                flex: 0 0 100%;
                 padding: 25px 20px;
+            }
+
+            .carousel-nav {
+                width: 40px;
+                height: 40px;
+            }
+
+            .carousel-nav svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .actions-section {
+                padding: 0 40px;
             }
         }
 
@@ -1042,84 +1170,102 @@
                 </div>
             </div>
 
-            <!-- Action Cards -->
+            <!-- Action Cards Carousel -->
             <div class="actions-section">
-                <div class="action-card analytics">
-                    <div class="action-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
-                        </svg>
+                <button class="carousel-nav prev" id="carouselPrev" aria-label="Previous cards">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                    </svg>
+                </button>
+                
+                <div class="actions-carousel" id="actionsCarousel">
+                    <div class="actions-carousel-wrapper" id="carouselWrapper">
+                        <div class="action-card analytics">
+                            <div class="action-card-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+                                </svg>
+                            </div>
+                            <h3>View Detailed Analytics</h3>
+                            <p>Access comprehensive survey analytics, trends, and insights from the ISO 21001 quality education system.</p>
+                            <a href="{{ route('api.survey.analytics') }}" class="btn btn-primary" target="_blank">View Analytics</a>
+                        </div>
+
+                        <div class="action-card qr-codes">
+                            <div class="action-card-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2M8,17C8,15 10,15 10,13C10,11 8,11 8,9C8,7 10,7 10,5C10,3 8,3 6,3H4C2.9,3 2,3.9 2,5V9C2,11.09 3.09,12 4,12H8M13,15C13,17 11,17 11,19C11,21 13,21 13,23C13,25 11,25 9,25H5C3.9,25 3,24.1 3,23V19C3,16.91 4.09,16 5,16H9C10.09,16 11,16.91 11,18V19H13C15.09,19 16,17.09 16,15H13M13,7H9C7.9,7 7,7.9 7,9V11C7,12.09 8.09,13 9,13H11C12.09,13 13,12.09 13,11V9Z"/>
+                                </svg>
+                            </div>
+                            <h3>QR Code Management</h3>
+                            <p>Generate and manage QR codes for easy survey access via mobile devices. Create individual or batch QR codes for CSS sections.</p>
+                            <a href="{{ route('admin.qr-codes.index') }}" class="btn btn-primary">Manage QR Codes</a>
+                        </div>
+
+                        <div class="action-card reports">
+                            <div class="action-card-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
+                                </svg>
+                            </div>
+                            <h3>AI Insights Dashboard</h3>
+                            <p>Access advanced AI-powered analytics, compliance predictions, and machine learning insights.</p>
+                            <a href="{{ route('admin.ai.insights') }}" class="btn btn-primary">AI Insights</a>
+                        </div>
+
+                        <div class="action-card export">
+                            <div class="action-card-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                                </svg>
+                            </div>
+                            <h3>Export Data</h3>
+                            <p>Export survey responses and analytics reports in Excel, CSV, or PDF format for further analysis.</p>
+                            <button onclick="showExportModal()" class="btn btn-success">Export Data</button>
+                        </div>
+
+                        <div class="action-card audit">
+                            <div class="action-card-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                                </svg>
+                            </div>
+                            <h3>Audit Logs</h3>
+                            <p>Review system audit logs to ensure compliance with ISO 21001 traceability requirements.</p>
+                            <a href="{{ route('admin.audit.logs') }}" class="btn btn-warning">View Logs</a>
+                        </div>
+
+                        <div class="action-card reports">
+                            <div class="action-card-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                                </svg>
+                            </div>
+                            <h3>Send Reports</h3>
+                            <p>Send weekly progress reports and monthly compliance reports to administrators via email.</p>
+                            <a href="{{ route('admin.reports') }}" class="btn btn-primary">Manage Reports</a>
+                        </div>
+
+                        <div class="action-card metrics">
+                            <div class="action-card-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19M7,10H9V17H7V10M11,7H13V17H11V7M15,13H17V17H15V13Z"/>
+                                </svg>
+                            </div>
+                            <h3>Upload Indirect Metrics</h3>
+                            <p>Upload student performance metrics (grades, attendance, participation) for ISO 21001 direct vs indirect validation.</p>
+                            <a href="{{ route('admin.indirect-metrics.index') }}" class="btn btn-primary">Upload Metrics</a>
+                        </div>
                     </div>
-                    <h3>View Detailed Analytics</h3>
-                    <p>Access comprehensive survey analytics, trends, and insights from the ISO 21001 quality education system.</p>
-                    <a href="{{ route('api.survey.analytics') }}" class="btn btn-primary" target="_blank">View Analytics</a>
                 </div>
 
-                <div class="action-card qr-codes">
-                    <div class="action-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2M8,17C8,15 10,15 10,13C10,11 8,11 8,9C8,7 10,7 10,5C10,3 8,3 6,3H4C2.9,3 2,3.9 2,5V9C2,11.09 3.09,12 4,12H8M13,15C13,17 11,17 11,19C11,21 13,21 13,23C13,25 11,25 9,25H5C3.9,25 3,24.1 3,23V19C3,16.91 4.09,16 5,16H9C10.09,16 11,16.91 11,18V19H13C15.09,19 16,17.09 16,15H13M13,7H9C7.9,7 7,7.9 7,9V11C7,12.09 8.09,13 9,13H11C12.09,13 13,12.09 13,11V9Z"/>
-                        </svg>
-                    </div>
-                    <h3>QR Code Management</h3>
-                    <p>Generate and manage QR codes for easy survey access via mobile devices. Create individual or batch QR codes for CSS sections.</p>
-                    <a href="{{ route('admin.qr-codes.index') }}" class="btn btn-primary">Manage QR Codes</a>
-                </div>
+                <button class="carousel-nav next" id="carouselNext" aria-label="Next cards">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                    </svg>
+                </button>
 
-                <div class="action-card reports">
-                    <div class="action-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
-                        </svg>
-                    </div>
-                    <h3>AI Insights Dashboard</h3>
-                    <p>Access advanced AI-powered analytics, compliance predictions, and machine learning insights.</p>
-                    <a href="{{ route('admin.ai.insights') }}" class="btn btn-primary">AI Insights</a>
-                </div>
-
-                <div class="action-card export">
-                    <div class="action-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-                        </svg>
-                    </div>
-                    <h3>Export Data</h3>
-                    <p>Export survey responses and analytics reports in Excel, CSV, or PDF format for further analysis.</p>
-                    <button onclick="showExportModal()" class="btn btn-success">Export Data</button>
-                </div>
-
-                <div class="action-card audit">
-                    <div class="action-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                        </svg>
-                    </div>
-                    <h3>Audit Logs</h3>
-                    <p>Review system audit logs to ensure compliance with ISO 21001 traceability requirements.</p>
-                    <a href="{{ route('admin.audit.logs') }}" class="btn btn-warning">View Logs</a>
-                </div>
-
-                <div class="action-card reports">
-                    <div class="action-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-                        </svg>
-                    </div>
-                    <h3>Send Reports</h3>
-                    <p>Send weekly progress reports and monthly compliance reports to administrators via email.</p>
-                    <a href="{{ route('admin.reports') }}" class="btn btn-primary">Manage Reports</a>
-                </div>
-
-                <div class="action-card metrics">
-                    <div class="action-card-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19M7,10H9V17H7V10M11,7H13V17H11V7M15,13H17V17H15V13Z"/>
-                        </svg>
-                    </div>
-                    <h3>Upload Indirect Metrics</h3>
-                    <p>Upload student performance metrics (grades, attendance, participation) for ISO 21001 direct vs indirect validation.</p>
-                    <a href="{{ route('admin.indirect-metrics.index') }}" class="btn btn-primary">Upload Metrics</a>
-                </div>
+                <div class="carousel-indicators" id="carouselIndicators"></div>
             </div>
 
             <!-- Recent Responses -->
@@ -1391,9 +1537,131 @@
             container.innerHTML = alertsHtml;
         }
 
+        // Carousel functionality
+        function initCarousel() {
+            const carouselWrapper = document.getElementById('carouselWrapper');
+            const prevButton = document.getElementById('carouselPrev');
+            const nextButton = document.getElementById('carouselNext');
+            const indicatorsContainer = document.getElementById('carouselIndicators');
+            const actionCards = document.querySelectorAll('.action-card');
+            
+            if (!carouselWrapper || actionCards.length === 0) return;
+            
+            let currentIndex = 0;
+            let cardsPerView = 3;
+            
+            // Calculate cards per view based on screen size
+            function updateCardsPerView() {
+                const width = window.innerWidth;
+                if (width <= 768) {
+                    cardsPerView = 1;
+                } else if (width <= 1200) {
+                    cardsPerView = 2;
+                } else {
+                    cardsPerView = 3;
+                }
+            }
+            
+            // Calculate total pages
+            function getTotalPages() {
+                return Math.ceil(actionCards.length / cardsPerView);
+            }
+            
+            // Update carousel position
+            function updateCarousel() {
+                if (actionCards.length === 0) return;
+                
+                // Calculate card width including gap
+                const firstCard = actionCards[0];
+                const cardWidth = firstCard.offsetWidth || firstCard.getBoundingClientRect().width;
+                const gap = 25; // gap between cards
+                const cardWidthWithGap = cardWidth + gap;
+                
+                // Calculate translateX based on current index and cards per view
+                const translateX = -currentIndex * cardWidthWithGap * cardsPerView;
+                carouselWrapper.style.transform = `translateX(${translateX}px)`;
+                updateIndicators();
+                updateNavigationButtons();
+            }
+            
+            // Update indicators
+            function updateIndicators() {
+                const totalPages = getTotalPages();
+                indicatorsContainer.innerHTML = '';
+                
+                for (let i = 0; i < totalPages; i++) {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'carousel-indicator';
+                    if (i === currentIndex) {
+                        indicator.classList.add('active');
+                    }
+                    indicator.addEventListener('click', () => {
+                        currentIndex = i;
+                        updateCarousel();
+                    });
+                    indicatorsContainer.appendChild(indicator);
+                }
+            }
+            
+            // Update navigation buttons
+            function updateNavigationButtons() {
+                const totalPages = getTotalPages();
+                // For infinite loop, always enable buttons
+                prevButton.disabled = false;
+                nextButton.disabled = false;
+            }
+            
+            // Go to next page
+            function nextPage() {
+                const totalPages = getTotalPages();
+                currentIndex = (currentIndex + 1) % totalPages; // Loop back to 0
+                updateCarousel();
+            }
+            
+            // Go to previous page
+            function prevPage() {
+                const totalPages = getTotalPages();
+                currentIndex = (currentIndex - 1 + totalPages) % totalPages; // Loop back to last page
+                updateCarousel();
+            }
+            
+            // Event listeners
+            nextButton.addEventListener('click', nextPage);
+            prevButton.addEventListener('click', prevPage);
+            
+            // Handle window resize
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    updateCardsPerView();
+                    currentIndex = 0; // Reset to first page on resize
+                    updateCarousel();
+                }, 250);
+            });
+            
+            // Initialize
+            updateCardsPerView();
+            updateCarousel();
+            
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    prevPage();
+                } else if (e.key === 'ArrowRight') {
+                    nextPage();
+                }
+            });
+        }
+
         // Load progress alerts on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadProgressAlerts();
+            
+            // Initialize carousel after a small delay to ensure layout is complete
+            setTimeout(() => {
+                initCarousel();
+            }, 100);
 
             // Add smooth animations
             const cards = document.querySelectorAll('.metric-card, .action-card');
