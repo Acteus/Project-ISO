@@ -33,6 +33,8 @@ Route::prefix('student')->name('student.')->group(function () {
     Route::match(['get', 'post'], '/logout', [StudentController::class, 'logout'])->name('logout');
     Route::get('/clear-sessions', [StudentController::class, 'clearAllSessions'])->name('clear-sessions');
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
+    // Consent management (GDPR & ISO 27001)
+    Route::post('/consent/revoke', [StudentController::class, 'revokeConsent'])->name('consent.revoke')->middleware('auth');
 });
 
 // Email verification routes

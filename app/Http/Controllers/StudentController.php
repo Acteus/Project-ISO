@@ -328,6 +328,63 @@ class StudentController extends Controller
     }
 
     /**
+     * Revoke consent (GDPR & ISO 27001 compliant)
+     * 
+     * Allows students to revoke their consent at any time as required by GDPR
+     */
+    public function revokeConsent(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user || $user->role !== 'student') {
+            return redirect()->route('student.login');
+        }
+
+        if (!$user->student_id) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Unable to revoke consent: Student ID not found.');
+        }
+
+        try {
+            $consentService = app(\App\Services\ConsentService::class);
+            $revoked = $consentService->revokeConsent(
+                $user->student_id,
+                'survey_response',
+                $request->ip()
+            );
+
+            if ($revoked) {
+                // Log the revocation for audit trail
+                \App\Models\AuditLog::create([
+                    'user_id' => $user->id,
+                    'action' => 'consent_revoked_by_student',
+                    'description' => 'Student revoked consent for survey data processing',
+                    'ip_address' => $request->ip(),
+                    'new_values' => [
+                        'student_id' => '***REDACTED***',
+                        'purpose' => 'survey_response',
+                        'timestamp' => now()->toIso8601String(),
+                    ],
+                ]);
+
+                return redirect()->route('student.dashboard')
+                    ->with('success', 'Your consent has been successfully revoked. You will need to provide consent again to submit new surveys.');
+            } else {
+                return redirect()->route('student.dashboard')
+                    ->with('error', 'No active consent found to revoke.');
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to revoke consent', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('student.dashboard')
+                ->with('error', 'An error occurred while revoking consent. Please try again or contact support.');
+        }
+    }
+
+    /**
      * Show the email verification notice.
      */
     public function showVerificationNotice()
