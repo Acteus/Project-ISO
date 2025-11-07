@@ -431,9 +431,9 @@ class StudentController extends Controller
             return redirect()->route('student.login');
         }
 
-        // Cache dashboard data for 3 minutes
+        // Cache dashboard data using CacheService for consistent caching strategy
         $cacheKey = 'dashboard:admin:' . $admin->id;
-        $dashboardData = \Illuminate\Support\Facades\Cache::remember($cacheKey, 180, function () {
+        $dashboardData = \App\Services\CacheService::remember($cacheKey, function () {
             return [
                 'totalResponses' => \App\Models\SurveyResponse::count(),
                 'recentResponses' => \App\Models\SurveyResponse::latest()->take(5)->get(),
@@ -441,7 +441,7 @@ class StudentController extends Controller
                     ->groupBy('track')
                     ->get(),
             ];
-        });
+        }, 'dashboard');
 
         return view('admin.dashboard', array_merge(
             ['admin' => $admin],
@@ -510,8 +510,8 @@ class StudentController extends Controller
         $search = $request->get('search');
         $perPage = $request->get('per_page', 20);
 
-        // Build query
-        $query = AuditLog::with('user')->orderBy('created_at', 'desc');
+        // Build query with eager loading to prevent N+1 queries
+        $query = AuditLog::with(['user'])->orderBy('created_at', 'desc');
 
         // Apply filters
         if ($action && $action !== 'all') {

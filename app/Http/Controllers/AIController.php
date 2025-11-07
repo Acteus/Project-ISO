@@ -335,92 +335,126 @@ class AIController extends Controller
 
     public function getAIMetrics()
     {
-        // Get AI-related activity metrics from audit logs
-        $totalPredictions = \App\Models\AuditLog::where('action', 'LIKE', '%ai%')->count();
+        // Cache AI metrics using CacheService
+        $cacheKey = 'ai_metrics:summary';
 
-        // Calculate model accuracy based on recent survey responses
-        // Using high satisfaction scores (4-5) as proxy for accurate predictions
-        $responses = \App\Models\SurveyResponse::all();
-        $totalResponses = $responses->count();
+        return \App\Services\CacheService::remember($cacheKey, function () {
+            // Get AI-related activity metrics from audit logs
+            $totalPredictions = \App\Models\AuditLog::where('action', 'LIKE', '%ai%')->count();
 
-        if ($totalResponses > 0) {
-            // Count responses with high satisfaction (4-5 rating) across key metrics
-            $highSatisfactionCount = $responses->filter(function($response) {
-                return $response->overall_satisfaction >= 4 &&
-                       $response->teaching_quality_rating >= 4 &&
-                       $response->learning_environment_rating >= 4;
-            })->count();
+            // Use database aggregations instead of loading all responses into memory
+            $totalResponses = \App\Models\SurveyResponse::count();
 
-            $accuracyRate = round(($highSatisfactionCount / $totalResponses) * 100);
-        } else {
-            $accuracyRate = 0;
-        }
+            if ($totalResponses > 0) {
+                // Count responses with high satisfaction using database query
+                $highSatisfactionCount = \App\Models\SurveyResponse::where('overall_satisfaction', '>=', 4)
+                    ->where('teaching_quality_rating', '>=', 4)
+                    ->where('learning_environment_rating', '>=', 4)
+                    ->count();
 
-        // Calculate average response time based on recent AI operations
-        // Using a more realistic calculation based on model complexity
-        $avgResponseTime = 250; // Average for TensorFlow models with preprocessing
+                $accuracyRate = round(($highSatisfactionCount / $totalResponses) * 100);
 
-        // Calculate ISO 21001 Compliance Score
-        if ($totalResponses > 0) {
-            $learnerNeedsIndex = ($responses->avg('curriculum_relevance_rating') +
-                                 $responses->avg('learning_pace_appropriateness') +
-                                 $responses->avg('individual_support_availability') +
-                                 $responses->avg('learning_style_accommodation')) / 4;
+                // Calculate ISO 21001 Compliance Score using database aggregations
+                $averages = \App\Models\SurveyResponse::selectRaw('
+                AVG(curriculum_relevance_rating) as avg_curriculum_relevance,
+                AVG(learning_pace_appropriateness) as avg_learning_pace,
+                AVG(individual_support_availability) as avg_support,
+                AVG(learning_style_accommodation) as avg_accommodation,
+                AVG(teaching_quality_rating) as avg_teaching_quality,
+                AVG(learning_environment_rating) as avg_environment,
+                AVG(peer_interaction_satisfaction) as avg_peer_interaction,
+                AVG(extracurricular_satisfaction) as avg_extracurricular,
+                AVG(academic_progress_rating) as avg_progress,
+                AVG(skill_development_rating) as avg_skill_dev,
+                AVG(critical_thinking_improvement) as avg_critical_thinking,
+                AVG(problem_solving_confidence) as avg_problem_solving,
+                AVG(physical_safety_rating) as avg_physical_safety,
+                AVG(psychological_safety_rating) as avg_psychological_safety,
+                AVG(bullying_prevention_effectiveness) as avg_bullying_prevention,
+                AVG(emergency_preparedness_rating) as avg_emergency_preparedness,
+                AVG(mental_health_support_rating) as avg_mental_health,
+                AVG(stress_management_support) as avg_stress_management,
+                AVG(physical_health_support) as avg_physical_health,
+                AVG(overall_wellbeing_rating) as avg_wellbeing,
+                AVG(overall_satisfaction) as avg_overall_satisfaction
+                ')->first();
 
-            $satisfactionIndex = ($responses->avg('teaching_quality_rating') +
-                                 $responses->avg('learning_environment_rating') +
-                                 $responses->avg('peer_interaction_satisfaction') +
-                                 $responses->avg('extracurricular_satisfaction')) / 4;
+                // Calculate ISO 21001 indices from database averages
+                $learnerNeedsIndex = (
+                    $averages->avg_curriculum_relevance +
+                    $averages->avg_learning_pace +
+                    $averages->avg_support +
+                    $averages->avg_accommodation
+                ) / 4;
 
-            $successIndex = ($responses->avg('academic_progress_rating') +
-                            $responses->avg('skill_development_rating') +
-                            $responses->avg('critical_thinking_improvement') +
-                            $responses->avg('problem_solving_confidence')) / 4;
+                $satisfactionIndex = (
+                    $averages->avg_teaching_quality +
+                    $averages->avg_environment +
+                    $averages->avg_peer_interaction +
+                    $averages->avg_extracurricular
+                ) / 4;
 
-            $safetyIndex = ($responses->avg('physical_safety_rating') +
-                           $responses->avg('psychological_safety_rating') +
-                           $responses->avg('bullying_prevention_effectiveness') +
-                           $responses->avg('emergency_preparedness_rating')) / 4;
+                $successIndex = (
+                    $averages->avg_progress +
+                    $averages->avg_skill_dev +
+                    $averages->avg_critical_thinking +
+                    $averages->avg_problem_solving
+                ) / 4;
 
-            $wellbeingIndex = ($responses->avg('mental_health_support_rating') +
-                              $responses->avg('stress_management_support') +
-                              $responses->avg('physical_health_support') +
-                              $responses->avg('overall_wellbeing_rating')) / 4;
+                $safetyIndex = (
+                    $averages->avg_physical_safety +
+                    $averages->avg_psychological_safety +
+                    $averages->avg_bullying_prevention +
+                    $averages->avg_emergency_preparedness
+                ) / 4;
 
-            $overallSatisfaction = $responses->avg('overall_satisfaction');
+                $wellbeingIndex = (
+                    $averages->avg_mental_health +
+                    $averages->avg_stress_management +
+                    $averages->avg_physical_health +
+                    $averages->avg_wellbeing
+                ) / 4;
 
-            // Weighted ISO 21001 Compliance Score
-            $weightedScore = (
-                $learnerNeedsIndex * 0.15 +
-                $satisfactionIndex * 0.25 +
-                $successIndex * 0.20 +
-                $safetyIndex * 0.20 +
-                $wellbeingIndex * 0.15 +
-                $overallSatisfaction * 0.05
-            );
+                $overallSatisfaction = $averages->avg_overall_satisfaction;
 
-            // Convert to percentage (assuming 5.0 is perfect score)
-            $isoComplianceScore = round(($weightedScore / 5.0) * 100);
+                // Weighted ISO 21001 Compliance Score
+                $weightedScore = (
+                    $learnerNeedsIndex * 0.15 +
+                    $satisfactionIndex * 0.25 +
+                    $successIndex * 0.20 +
+                    $safetyIndex * 0.20 +
+                    $wellbeingIndex * 0.15 +
+                    $overallSatisfaction * 0.05
+                );
 
-            // Calculate Overall Risk Score (inverse of compliance)
-            // Lower compliance = higher risk
-            $overallRiskScore = 100 - $isoComplianceScore;
-        } else {
-            $isoComplianceScore = 0;
-            $overallRiskScore = 100; // Maximum risk if no data
-        }
+                // Convert to percentage (assuming 5.0 is perfect score)
+                $isoComplianceScore = round(($weightedScore / 5.0) * 100);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'total_predictions' => $totalPredictions,
-                'accuracy_rate' => $accuracyRate,
-                'avg_response_time' => $avgResponseTime,
-                'iso_compliance_score' => $isoComplianceScore,
-                'overall_risk_score' => $overallRiskScore,
-                'total_responses_analyzed' => $totalResponses
-            ]
-        ]);
+                // Calculate Overall Risk Score (inverse of compliance)
+                // Lower compliance = higher risk
+                $overallRiskScore = 100 - $isoComplianceScore;
+            } else {
+                $accuracyRate = 0;
+                $isoComplianceScore = 0;
+                $overallRiskScore = 100; // Maximum risk if no data
+            }
+
+            // Calculate average response time based on recent AI operations
+            // Using a more realistic calculation based on model complexity
+            $avgResponseTime = 250; // Average for TensorFlow models with preprocessing
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'total_predictions' => $totalPredictions,
+                    'accuracy_rate' => $accuracyRate,
+                    'avg_response_time' => $avgResponseTime,
+                    'iso_compliance_score' => $isoComplianceScore,
+                    'overall_risk_score' => $overallRiskScore,
+                    'total_responses_analyzed' => $totalResponses
+                ]
+            ]);
+        }, 'ai_metrics');
     }
 
     public function runAnalysis(Request $request, $type)

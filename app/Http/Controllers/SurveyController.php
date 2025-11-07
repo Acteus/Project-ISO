@@ -225,10 +225,10 @@ class SurveyController extends Controller
             'date_to' => $dateTo,
         ]));
 
-        // Cache analytics data for 5 minutes (300 seconds)
-        $analytics = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($track, $gradeLevel, $academicYear, $semester, $dateFrom, $dateTo) {
+        // Cache analytics data using CacheService for consistent caching strategy
+        $analytics = \App\Services\CacheService::remember($cacheKey, function () use ($track, $gradeLevel, $academicYear, $semester, $dateFrom, $dateTo) {
             return $this->calculateAnalytics($track, $gradeLevel, $academicYear, $semester, $dateFrom, $dateTo);
-        });
+        }, 'analytics');
 
         // Determine response format based on request type (after caching)
         if ($request->header('Accept') === 'application/json' || $request->wantsJson()) {

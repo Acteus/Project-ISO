@@ -49,7 +49,13 @@ class AnalyticsController extends Controller
                 'date_to' => $request->query('date_to'),
             ];
 
-            $data = $this->analyticsService->getAnalyticsSummary($filters);
+            // Generate cache key from filters
+            $cacheKey = 'analytics:summary:' . md5(serialize($filters));
+            
+            // Use CacheService for consistent caching
+            $data = \App\Services\CacheService::remember($cacheKey, function () use ($filters) {
+                return $this->analyticsService->getAnalyticsSummary($filters);
+            }, 'analytics');
 
             return response()->json([
                 'success' => true,
@@ -91,7 +97,13 @@ class AnalyticsController extends Controller
                 'date_to' => $request->query('date_to'),
             ];
 
-            $data = $this->analyticsService->getTimeSeriesData($metric, $groupBy, $filters);
+            // Generate cache key from filters and parameters
+            $cacheKey = 'analytics:timeseries:' . md5(serialize([$metric, $groupBy, $filters]));
+            
+            // Use CacheService for consistent caching
+            $data = \App\Services\CacheService::remember($cacheKey, function () use ($metric, $groupBy, $filters) {
+                return $this->analyticsService->getTimeSeriesData($metric, $groupBy, $filters);
+            }, 'analytics');
 
             return response()->json([
                 'success' => true,
@@ -132,7 +144,13 @@ class AnalyticsController extends Controller
                 'date_to' => $request->query('date_to'),
             ];
 
-            $summary = $this->analyticsService->getAnalyticsSummary($filters);
+            // Generate cache key from filters
+            $cacheKey = 'analytics:compliance:' . md5(serialize($filters));
+            
+            // Use CacheService for consistent caching
+            $summary = \App\Services\CacheService::remember($cacheKey, function () use ($filters) {
+                return $this->analyticsService->getAnalyticsSummary($filters);
+            }, 'analytics');
 
             if (!$summary['has_data']) {
                 return response()->json([

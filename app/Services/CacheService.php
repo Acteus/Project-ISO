@@ -34,6 +34,9 @@ class CacheService
         $ttl = self::CACHE_DURATIONS[$type] ?? 300;
 
         try {
+            // Track cache key for invalidation
+            self::trackKey($key);
+            
             return Cache::remember($key, $ttl, function () use ($callback, $key) {
                 Log::info("Cache miss for key: {$key}");
                 return $callback();
@@ -75,6 +78,10 @@ class CacheService
         self::clearByPattern('analytics:*');
         self::clearByPattern('dashboard:*');
         self::clearByPattern('visualizations:*');
+        self::clearByPattern('ai_metrics:*');
+        self::clearByPattern('statistics:*');
+        
+        Log::info('Analytics cache cleared');
     }
 
     /**
@@ -86,6 +93,10 @@ class CacheService
     {
         self::clearByPattern('responses:*');
         self::clearByPattern('survey:*');
+        // Also clear analytics since they depend on responses
+        self::clearAnalyticsCache();
+        
+        Log::info('Survey response cache cleared');
     }
 
     /**
