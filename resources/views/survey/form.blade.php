@@ -154,10 +154,58 @@
                         <input type="hidden" name="year_level" value="{{ Auth::user()->year_level === 11 ? 'Grade 11' : 'Grade 12' }}">
                     @endauth
 
+                    <!-- Consent Section (GDPR & ISO 27001 Compliant) - MUST BE FIRST -->
+                    <div id="consentSection" class="survey-step" data-step="0">
+                        <div class="consent-card" style="background: #f8f9fa; border: 2px solid #4338ca; border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0;">
+                            <h2 class="section-title" style="color: #312e81; margin-bottom: 1rem; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                                <svg style="width: 28px; height: 28px; fill: #4338ca;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                                </svg>
+                                Data Privacy & Consent (GDPR & ISO 27001)
+                            </h2>
+                            <div style="margin-bottom: 1.5rem; line-height: 1.6; color: #374151;">
+                                <p style="margin-bottom: 1rem; font-size: 1.05rem;">
+                                    <strong>Your privacy is important to us.</strong> This survey collects data in compliance with GDPR and ISO 27001 standards.
+                                </p>
+                                <ul style="margin-left: 1.5rem; margin-bottom: 1rem; line-height: 1.8;">
+                                    <li>Your <strong>student ID and comments</strong> are encrypted using AES-256 encryption</li>
+                                    <li>Only <strong>essential ISO 21001 metrics</strong> are collected (data minimization)</li>
+                                    <li>Your data is used <strong>only for educational quality improvement</strong></li>
+                                    <li>Data is retained for <strong>7 years</strong> as per ISO 21001 requirements</li>
+                                    <li>You can <strong>request data deletion</strong> at any time</li>
+                                    <li>You can <strong>revoke consent</strong> anytime from your dashboard</li>
+                                </ul>
+                                <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-bottom: 1rem; border-radius: 4px;">
+                                    <p style="margin: 0; color: #856404; font-size: 0.95rem; line-height: 1.6;">
+                                        <strong>Important:</strong> You must provide consent to proceed with this survey. 
+                                        Without consent, you cannot submit your responses.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="consent-checkbox-wrapper" style="display: flex; align-items: flex-start; gap: 0.75rem; background: white; padding: 1rem; border-radius: 8px; border: 2px solid #4338ca;">
+                                <input 
+                                    type="checkbox" 
+                                    id="consentGiven" 
+                                    name="consent_given" 
+                                    value="1"
+                                    required
+                                    style="width: 22px; height: 22px; margin-top: 2px; cursor: pointer; flex-shrink: 0;"
+                                >
+                                <label for="consentGiven" style="cursor: pointer; flex: 1; line-height: 1.6; color: #374151; font-size: 1rem;">
+                                    <strong style="color: #312e81;">I consent to the collection and processing of my data</strong> as described above for the purpose of educational quality assessment and improvement. 
+                                    <span style="color: #dc3545; font-weight: 700;">*</span>
+                                </label>
+                            </div>
+                            <p style="margin-top: 1rem; font-size: 0.9rem; color: #6b7280; text-align: center;">
+                                Please check the box above to proceed with the survey
+                            </p>
+                        </div>
+                    </div>
+
                     <!-- Survey sections will be dynamically loaded here -->
                     <div id="surveySection">
                         <!-- Section 1: Learner Needs & Expectations -->
-                        <div class="survey-step" data-step="1">
+                        <div class="survey-step" data-step="1" style="display: none;">
                             <h2 class="section-title">Learner Needs & Expectations</h2>
 
                             <div class="question-group">
@@ -744,47 +792,6 @@
                             <div class="question-group">
                                 <label class="question-label">Do you have any additional feedback or suggestions for improving the CSS strand program? <span class="required">*</span></label>
                                 <textarea name="additional_feedback" class="form-textarea" rows="6" placeholder="Please share your thoughts and suggestions here..." required></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Consent Section (GDPR & ISO 27001 Compliant) -->
-                    <div id="consentSection" class="consent-section" style="display: none;">
-                        <div class="consent-card" style="background: #f8f9fa; border: 2px solid #4338ca; border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0;">
-                            <h3 style="color: #312e81; margin-bottom: 1rem; font-size: 1.25rem; font-weight: 700;">
-                                <svg style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px; fill: #4338ca;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
-                                </svg>
-                                Data Privacy & Consent (GDPR & ISO 27001)
-                            </h3>
-                            <div style="margin-bottom: 1rem; line-height: 1.6; color: #374151;">
-                                <p style="margin-bottom: 0.75rem;">
-                                    <strong>Your privacy is important to us.</strong> This survey collects data in compliance with GDPR and ISO 27001 standards.
-                                </p>
-                                <ul style="margin-left: 1.5rem; margin-bottom: 0.75rem;">
-                                    <li>Your <strong>student ID and comments</strong> are encrypted using AES-256 encryption</li>
-                                    <li>Only <strong>essential ISO 21001 metrics</strong> are collected (data minimization)</li>
-                                    <li>Your data is used <strong>only for educational quality improvement</strong></li>
-                                    <li>Data is retained for <strong>7 years</strong> as per ISO 21001 requirements</li>
-                                    <li>You can <strong>request data deletion</strong> at any time</li>
-                                </ul>
-                                <p style="font-size: 0.9rem; color: #6b7280;">
-                                    By submitting this survey, you consent to the collection and processing of your data as described above. 
-                                    This consent is required to proceed with the survey submission.
-                                </p>
-                            </div>
-                            <div class="consent-checkbox-wrapper" style="display: flex; align-items: flex-start; gap: 0.75rem;">
-                                <input 
-                                    type="checkbox" 
-                                    id="consentGiven" 
-                                    name="consent_given" 
-                                    required
-                                    style="width: 20px; height: 20px; margin-top: 2px; cursor: pointer;"
-                                >
-                                <label for="consentGiven" style="cursor: pointer; flex: 1; line-height: 1.5; color: #374151;">
-                                    <strong>I consent to the collection and processing of my data</strong> as described above for the purpose of educational quality assessment and improvement. 
-                                    <span style="color: #dc3545;">*</span>
-                                </label>
                             </div>
                         </div>
                     </div>
