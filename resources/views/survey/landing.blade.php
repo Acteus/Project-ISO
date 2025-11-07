@@ -6,6 +6,103 @@
     <title>ISO Quality Education Survey</title>
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}?v={{ \Illuminate\Support\Facades\File::lastModified(public_path('css/styles.css')) }}">
     <link rel="preload" as="image" href="{{ asset('images/HomeBG.jpg') }}" fetchpriority="high">
+    <style>
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            /* Disable heavy effects on mobile */
+            .landing-header {
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+                background: rgba(255, 255, 255, 1);
+            }
+            
+            /* Optimize hero section for mobile */
+            .hero-section {
+                height: auto;
+                min-height: 400px;
+                padding: 3rem 0;
+            }
+            
+            .hero-overlay {
+                background-color: rgba(49, 46, 129, 0.75);
+            }
+            
+            /* Reduce animation complexity */
+            .hero-content * {
+                animation-duration: 0.3s !important;
+            }
+            
+            /* Optimize info cards */
+            .info-card {
+                transform: none !important;
+                transition: none !important;
+            }
+            
+            /* Improve touch targets */
+            .btn, .btn-login, .btn-register, .btn-profile, .logout-btn {
+                min-height: 44px;
+                min-width: 44px;
+                padding: 0.75rem 1.25rem;
+                touch-action: manipulation;
+            }
+            
+            /* Optimize footer */
+            .footer {
+                padding: 2rem 1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hero-section {
+                min-height: 350px;
+                padding: 2rem 0;
+            }
+            
+            .hero-title {
+                font-size: 1.75rem !important;
+                line-height: 1.2;
+            }
+            
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+            
+            .hero-description {
+                font-size: 0.9rem;
+                padding: 0 1rem;
+            }
+            
+            .info-section {
+                padding: 2rem 0;
+            }
+            
+            .section-title {
+                font-size: 1.5rem;
+            }
+            
+            .info-card {
+                padding: 1.25rem;
+            }
+        }
+        
+        /* Disable animations for reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* Performance: Use will-change sparingly */
+        @media (max-width: 768px) {
+            .hero-section,
+            .hero-overlay,
+            .info-card {
+                will-change: auto;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Landing Page Header -->

@@ -1117,6 +1117,92 @@ body {
     margin-top: 2rem;
 }
 
+/* Pagination - Mobile Friendly */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+}
+
+.page-item {
+    display: inline-flex;
+}
+
+.page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #374151;
+    background: #ffffff;
+    font-size: 0.9375rem;
+    line-height: 1;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.page-link:hover {
+    background: #f9fafb;
+}
+
+.page-item.active .page-link {
+    background: #4338ca;
+    color: #ffffff;
+    border-color: #4338ca;
+    font-weight: 600;
+}
+
+.page-item.disabled .page-link {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Prefer long Prev/Next labels when present */
+.page-item:first-child .page-link,
+.page-item:last-child .page-link {
+    padding: 10px 14px;
+    font-weight: 600;
+}
+
+@media (max-width: 640px) {
+    .pagination {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+        gap: 0.375rem;
+        padding: 0.25rem;
+        justify-content: flex-start;
+    }
+
+    .page-item {
+        flex: 0 0 auto;
+    }
+
+    .page-link {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 10px 12px;
+        font-size: 1rem; /* Avoid iOS zoom */
+        border-radius: 10px;
+    }
+
+    /* Optionally tone down middle page numbers, keep current & prev/next prominent */
+    .page-item:not(.active):not(:first-child):not(:last-child) .page-link {
+        background: #ffffff;
+        color: #4b5563;
+    }
+}
+
 /* Thank You Page */
 .thank-you-main {
     background-color: white;
@@ -1598,8 +1684,7 @@ body {
         line-height: 2.75rem !important;
     }
 
-    .likert-option:hover .likert-label::before {
-    }
+
 
     .likert-label small {
         font-size: 0.625rem !important;
@@ -2090,8 +2175,8 @@ body {
     }
 
     .survey-navigation {
-        flex-direction: column;
-        gap: 1rem;
+        flex-direction: row;
+        gap: 0.75rem;
         padding: 1rem 0;
         position: sticky;
         bottom: 0;
@@ -2106,7 +2191,8 @@ body {
         min-height: 48px;
         font-size: 16px;
         padding: 12px 20px;
-        width: 100%;
+        width: auto;
+        flex: 1 1 50%;
         -webkit-tap-highlight-color: rgba(67, 56, 202, 0.1);
     }
 
@@ -2240,4 +2326,123 @@ body {
 
 .question-group {
     will-change: transform;
+}
+
+/* Mobile Performance Optimizations */
+@media (max-width: 768px) {
+    /* Disable expensive effects on mobile */
+    * {
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+    }
+
+    /* Optimize backdrop-filter usage */
+    .landing-header,
+    .header,
+    .dashboard-header,
+    .student-info-card,
+    .survey-history {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    /* Reduce animation complexity */
+    @keyframes backgroundPulse {
+        0%, 100% { opacity: 0.3; }
+    }
+
+    /* Simplify transforms */
+    .btn:hover,
+    .info-item:hover,
+    .nav-link:hover {
+        transform: none !important;
+    }
+
+    /* Optimize touch targets */
+    .btn,
+    .btn-primary,
+    .btn-secondary,
+    .btn-success,
+    .btn-login,
+    .btn-register,
+    .btn-profile,
+    .logout-btn,
+    button,
+    a[role="button"] {
+        min-height: 44px;
+        min-width: 44px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Prevent text size adjustment on iOS */
+    input,
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+
+    /* Optimize will-change property */
+    .hero-section,
+    .hero-overlay,
+    .info-card,
+    .dashboard-header,
+    .student-info-card,
+    .survey-history {
+        will-change: auto;
+    }
+
+    /* Reduce shadow complexity */
+    .card,
+    .info-card,
+    .survey-card,
+    .student-info-card,
+    .survey-history {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Simplify gradients */
+    .hero-section,
+    .dashboard-header {
+        background-attachment: scroll !important;
+    }
+}
+
+/* Additional Mobile Optimizations for Small Screens */
+@media (max-width: 480px) {
+    /* Further reduce animations */
+    .hero-content *,
+    .dashboard-header * {
+        animation: none !important;
+    }
+
+    /* Optimize spacing */
+    .container {
+        padding: 0 1rem;
+    }
+
+    /* Reduce font sizes for better fit */
+    h1 { font-size: 1.75rem !important; }
+    h2 { font-size: 1.5rem !important; }
+    h3 { font-size: 1.25rem !important; }
+
+    /* Optimize images */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+/* GPU Acceleration for Mobile Interactions */
+@media (max-width: 768px) {
+    .btn:active,
+    button:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+    }
+
+    /* Optimize scrolling */
+    body {
+        -webkit-overflow-scrolling: touch;
+    }
 }

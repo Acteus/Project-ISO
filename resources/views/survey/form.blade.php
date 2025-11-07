@@ -43,6 +43,9 @@
 
             .likert-scale {
                 gap: 0.5rem;
+                display: grid;
+                grid-template-columns: repeat(5, minmax(48px, 1fr));
+                justify-items: center;
             }
 
             .likert-option .likert-label::before {
@@ -51,15 +54,37 @@
                 font-size: 1rem !important;
             }
 
-            .survey-navigation {
+            .likert-option {
+                display: flex;
                 flex-direction: column;
-                gap: 1rem;
+                align-items: center;
+                justify-content: flex-start;
+                text-align: center;
+            }
+
+            .likert-option input[type="radio"] {
+                margin: 0 auto 6px;
+            }
+
+            .likert-label {
+                line-height: 1.2;
+            }
+
+            .likert-label small {
+                display: block;
+                margin-top: 4px;
+            }
+
+            .survey-navigation {
+            	flex-direction: row;
+                gap: 0.75rem;
             }
 
             .survey-navigation button {
                 min-height: 48px;
                 font-size: 16px;
                 padding: 12px 20px;
+                flex: 1 1 50%;
             }
         }
 
@@ -69,13 +94,13 @@
             }
 
             .likert-scale {
-                flex-wrap: wrap;
-                justify-content: center;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 0.5rem;
             }
 
             .likert-option {
                 flex: 0 0 auto;
-                min-width: 50px;
+                min-width: 46px;
             }
         }
     </style>

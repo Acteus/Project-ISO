@@ -18,10 +18,570 @@
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* Base header styles to prevent overflow */
+        .landing-header {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        .landing-header .container {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        .nav-wrapper {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        .logo {
+            min-width: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .logo a {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Base styles for main and dashboard-container */
+        main.survey-main {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        /* Override inline styles for dashboard-header children */
+        .dashboard-header > div[style] {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+        }
+
+        .dashboard-header > div > div[style] {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+        }
+
+        .dashboard-header .btn[style] {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            /* Header mobile optimizations - Force prevent overflow */
+            .landing-header {
+                overflow: hidden !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                position: relative;
+            }
+
+            .landing-header .container {
+                padding: 0 15px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                overflow: hidden !important;
+            }
+
+            .nav-wrapper {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                gap: 10px !important;
+                overflow: hidden !important;
+                padding: 1rem 0 !important;
+            }
+
+            .logo {
+                flex: 1 1 auto !important;
+                min-width: 0 !important;
+                max-width: calc(100% - 60px) !important;
+                overflow: hidden !important;
+                flex-shrink: 1 !important;
+            }
+
+            .logo a {
+                font-size: 1rem !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                display: block !important;
+                max-width: 100% !important;
+            }
+
+            /* Hide desktop nav on mobile - Force override */
+            .header .desktop-nav {
+                display: none !important;
+                visibility: hidden !important;
+                width: 0 !important;
+                height: 0 !important;
+                overflow: hidden !important;
+            }
+
+            .mobile-menu-btn {
+                display: block !important;
+                flex-shrink: 0 !important;
+                flex-grow: 0 !important;
+                width: auto !important;
+                min-width: 44px !important;
+                max-width: 44px !important;
+            }
+
+            .menu-toggle {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 0.25rem !important;
+                padding: 0.5rem !important;
+                background: none !important;
+                border: none !important;
+                cursor: pointer !important;
+            }
+
+            /* Disable backdrop-filter on mobile for better performance */
+            .dashboard-header,
+            .student-info-card,
+            .survey-history {
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+                background: rgba(255, 255, 255, 0.98) !important;
+            }
+
+            /* Simplify animations */
+            .dashboard-header::before,
+            .dashboard-header::after {
+                animation: none;
+            }
+
+            /* Reduce card shadows on mobile */
+            .student-info-card,
+            .survey-history,
+            .info-item {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            }
+
+            /* Disable hover transforms on mobile */
+            .info-item:hover,
+            .btn:hover {
+                transform: none;
+            }
+
+            /* Optimize dashboard header */
+            .dashboard-header {
+                padding: 30px 15px !important;
+                background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+                background-color: rgba(255, 255, 255, 0.95);
+                overflow: hidden !important; /* Prevent overflow */
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+
+            /* Force all dashboard-header children to respect width */
+            .dashboard-header > div {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                box-sizing: border-box !important;
+                overflow: hidden !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .dashboard-header > div > div {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                box-sizing: border-box !important;
+                overflow: hidden !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            /* Ensure buttons don't overflow */
+            .dashboard-header .btn {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                min-width: 0 !important;
+                padding: 12px 16px !important;
+                margin: 0 !important;
+            }
+
+            .dashboard-header .btn span {
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+            }
+
+            .dashboard-header .btn svg {
+                flex-shrink: 0 !important;
+            }
+
+            /* Ensure header content is visible and doesn't overflow */
+            .dashboard-header > div {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 15px !important;
+            }
+
+            /* Text container - prevent overflow */
+            .dashboard-header > div > div:first-child {
+                position: relative;
+                z-index: 2;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                margin-bottom: 0 !important;
+                box-sizing: border-box !important;
+                overflow-wrap: break-word !important;
+                word-wrap: break-word !important;
+                padding: 0 !important;
+            }
+
+            /* Title - prevent overflow */
+            .dashboard-header h1 {
+                font-size: 24px !important;
+                margin: 0 0 8px 0 !important;
+                padding: 0 !important;
+                word-break: break-word !important;
+                overflow-wrap: break-word !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                line-height: 1.2 !important;
+            }
+
+            /* Paragraph - prevent overflow */
+            .dashboard-header p {
+                font-size: 14px !important;
+                color: #374151 !important;
+                opacity: 1 !important;
+                display: block !important;
+                visibility: visible !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                word-break: break-word !important;
+                overflow-wrap: break-word !important;
+                hyphens: auto !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                line-height: 1.4 !important;
+            }
+
+            /* Buttons container - prevent overflow */
+            .dashboard-header > div > div:last-child {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-sizing: border-box !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+
+            /* Buttons - full width on mobile */
+            .dashboard-header > div > div:last-child > a,
+            .dashboard-header .btn {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                box-sizing: border-box !important;
+                justify-content: center !important;
+                margin: 0 !important;
+            }
+
+            /* Improve touch targets */
+            .btn {
+                min-height: 48px;
+                min-width: 48px;
+                padding: 14px 20px;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: rgba(102, 126, 234, 0.2);
+            }
+
+            /* Optimize form inputs */
+            .form-input {
+                font-size: 16px; /* Prevents zoom on iOS */
+                padding: 14px 16px;
+            }
+
+            /* Simplify grid layouts */
+            .student-info-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .consent-grid {
+                grid-template-columns: 1fr;
+            }
+
+            /* Reduce padding */
+            .student-info-card,
+            .survey-history {
+                padding: 25px 20px;
+            }
+
+            /* Optimize alert messages */
+            .alert {
+                padding: 16px 20px;
+                font-size: 14px;
+            }
+
+            /* Simplify privacy section */
+            .privacy-section::before {
+                display: none;
+            }
+
+            /* Remove complex gradients on mobile */
+            .rights-section {
+                background: #fff3cd;
+            }
+        }
+
+        @media (max-width: 480px) {
+            /* Header optimizations for small screens */
+            .header {
+                overflow: hidden !important;
+                width: 100% !important;
+            }
+
+            .header .container {
+                padding: 0 10px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow: hidden !important;
+            }
+
+            .nav-wrapper {
+                padding: 0.75rem 0 !important;
+                gap: 8px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow: hidden !important;
+            }
+
+            .logo {
+                max-width: calc(100% - 50px) !important;
+                min-width: 0 !important;
+                flex: 1 1 auto !important;
+                overflow: hidden !important;
+            }
+
+            .logo a {
+                font-size: 0.85rem !important;
+                max-width: 100% !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+
+            .mobile-menu-btn {
+                padding: 0.25rem !important;
+                flex-shrink: 0 !important;
+                flex-grow: 0 !important;
+                width: 44px !important;
+                min-width: 44px !important;
+                max-width: 44px !important;
+            }
+
+            /* Ensure desktop nav is completely hidden */
+            .header .desktop-nav {
+                display: none !important;
+                visibility: hidden !important;
+                width: 0 !important;
+                height: 0 !important;
+                overflow: hidden !important;
+                position: absolute !important;
+                opacity: 0 !important;
+            }
+
+            .dashboard-header {
+                padding: 20px 10px !important;
+                overflow: hidden !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            .dashboard-header > div {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                box-sizing: border-box !important;
+                overflow: hidden !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .dashboard-header > div > div {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                box-sizing: border-box !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .dashboard-header .btn {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                padding: 12px 12px !important;
+                font-size: 14px !important;
+                margin: 0 !important;
+            }
+
+            .dashboard-header > div {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 12px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            .dashboard-header h1 {
+                font-size: 20px !important;
+                word-break: break-word !important;
+                overflow-wrap: break-word !important;
+                max-width: 100% !important;
+                line-height: 1.2 !important;
+                margin: 0 0 6px 0 !important;
+                padding: 0 !important;
+            }
+
+            .dashboard-header p {
+                font-size: 13px !important;
+                color: #374151 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                word-break: break-word !important;
+                overflow-wrap: break-word !important;
+                max-width: 100% !important;
+                line-height: 1.4 !important;
+            }
+
+            .dashboard-header > div > div:first-child {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .dashboard-header > div > div:last-child {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                flex-direction: column !important;
+                gap: 8px !important;
+            }
+
+            .dashboard-header > div > div:last-child > a {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                justify-content: center !important;
+                margin: 0 !important;
+            }
+
+            .student-info-card h3,
+            .survey-history h3 {
+                font-size: 20px;
+            }
+
+            .info-value {
+                font-size: 18px;
+            }
+
+            .form-label {
+                font-size: 13px;
+            }
+        }
+
+        /* Disable animations for reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+
+            .dashboard-header::before,
+            .dashboard-header::after {
+                display: none;
+            }
+        }
+
+        /* Performance optimizations for mobile */
+        @media (max-width: 768px) {
+            .dashboard-header,
+            .student-info-card,
+            .survey-history,
+            .info-item {
+                will-change: auto;
+            }
+
+            /* Use transform3d for better GPU acceleration */
+            .btn:active {
+                transform: scale(0.98);
+            }
+        }
+
         .dashboard-container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden; /* Prevent horizontal overflow */
+        }
+
+        /* Mobile: reduce padding to prevent overflow */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 15px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .dashboard-container {
+                padding: 10px !important;
+            }
         }
 
         /* Modern Glassmorphism Dashboard Header */
@@ -38,6 +598,26 @@
             position: relative;
             overflow: hidden;
             animation: fadeInDown 0.6s ease-out;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Ensure dashboard-header children respect container */
+        .dashboard-header > div {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .dashboard-header > div > div {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         .dashboard-header::before {
@@ -88,6 +668,33 @@
         .dashboard-header > div {
             position: relative;
             z-index: 1;
+            min-width: 0; /* Prevents flex overflow */
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .dashboard-header > div > div:first-child {
+            min-width: 0; /* Allows text to wrap properly */
+            max-width: 100%;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .dashboard-header > div > div:last-child {
+            min-width: 0;
+            max-width: 100%;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .dashboard-header p {
+            word-break: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
         }
 
         .dashboard-header h1 {
@@ -466,19 +1073,38 @@
             box-shadow: var(--card-shadow);
         }
 
-        /* Mobile Responsive */
+        /* Mobile Responsive - Enhanced */
         @media (max-width: 768px) {
-            .dashboard-container {
-                padding: 15px;
+            /* Prevent body and html overflow */
+            html, body {
+                overflow-x: hidden !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
             }
 
-            .dashboard-header {
-                padding: 30px 20px;
-                margin-bottom: 25px;
+            * {
+                box-sizing: border-box !important;
             }
 
-            .dashboard-header h1 {
-                font-size: 28px;
+            main.survey-main {
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow-x: hidden !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Ensure mobile nav is properly styled */
+            .mobile-nav {
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+
+            .mobile-nav .logout-btn {
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
             }
 
             .dashboard-header > div {
@@ -494,21 +1120,10 @@
             .dashboard-header > div > div:last-child > a {
                 flex: 1;
                 min-width: 0;
-            }
-
-            .student-info-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-
-            .student-info-card,
-            .survey-history {
-                padding: 25px 20px;
+                width: 100%;
             }
 
             .btn {
-                padding: 14px 20px;
-                font-size: 16px;
                 width: 100%;
                 margin-bottom: 10px;
             }
@@ -522,26 +1137,23 @@
                 min-width: 44px;
             }
 
-            .desktop-nav {
-                flex-wrap: wrap;
+            /* Optimize footer */
+            .footer {
+                padding: 30px 20px;
             }
         }
 
         @media (max-width: 480px) {
-            .dashboard-header h1 {
-                font-size: 24px;
-            }
-
-            .dashboard-header p {
-                font-size: 16px;
-            }
-
             .desktop-nav {
                 gap: 8px;
             }
 
             .desktop-nav > div {
                 flex-wrap: wrap;
+            }
+
+            .footer {
+                padding: 25px 15px;
             }
         }
 
@@ -615,7 +1227,7 @@
 </head>
 <body>
     <!-- Header -->
-    <header class="header">
+    <header class="landing-header">
         <div class="container">
             <div class="nav-wrapper">
                 <div class="logo">
@@ -623,12 +1235,12 @@
                 </div>
 
                 <!-- Simple student navigation -->
-                <nav class="desktop-nav" style="display: flex !important; align-items: center; gap: 12px; flex-wrap: wrap;">
-                    <span class="nav-link" style="font-weight: 600; cursor: default; color: #ffffff; font-size: 16px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">{{ Auth::user()->name }}</span>
+                <nav class="desktop-nav">
+                    <span class="nav-link" style="font-weight: 600; cursor: default; color: #ffffff; font-size: 16px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); white-space: nowrap;">{{ Auth::user()->name }}</span>
                     <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                         @csrf
-                        <button type="submit" class="logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 6px;">
-                            <svg style="width: 16px; height: 16px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <button type="submit" class="logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+                            <svg style="width: 16px; height: 16px; fill: currentColor; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                 <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
                             </svg>
                             <span class="desktop-text">Logout</span>
@@ -668,23 +1280,23 @@
         <div class="dashboard-container">
             <!-- Profile Header -->
             <div class="dashboard-header">
-                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
-                    <div>
-                        <h1>Profile Settings</h1>
-                        <p>Manage your account information and preferences</p>
+                <div style="display: flex; align-items: flex-start; justify-content: flex-start; flex-direction: column; gap: 15px; width: 100%; max-width: 100%; box-sizing: border-box; overflow: hidden;">
+                    <div style="width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; overflow-wrap: break-word; word-wrap: break-word;">
+                        <h1 style="word-break: break-word; overflow-wrap: break-word; max-width: 100%; box-sizing: border-box; margin: 0 0 10px 0; line-height: 1.2;">Profile Settings</h1>
+                        <p style="word-break: break-word; overflow-wrap: break-word; max-width: 100%; box-sizing: border-box; margin: 0; line-height: 1.5;">Manage your account information and preferences</p>
                     </div>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <a href="{{ route('survey.form') }}" class="btn btn-success" style="display: inline-flex; align-items: center; gap: 8px;">
-                            <svg style="width: 18px; height: 18px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <div style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 100%; box-sizing: border-box;">
+                        <a href="{{ route('survey.form') }}" class="btn btn-success" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; max-width: 100%; box-sizing: border-box;">
+                            <svg style="width: 18px; height: 18px; fill: currentColor; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                 <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
                             </svg>
-                            Take Survey
+                            <span>Take Survey</span>
                         </a>
-                        <a href="{{ route('survey.landing') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
-                            <svg style="width: 18px; height: 18px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <a href="{{ route('survey.landing') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; max-width: 100%; box-sizing: border-box;">
+                            <svg style="width: 18px; height: 18px; fill: currentColor; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                 <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
                             </svg>
-                            Back to Home
+                            <span>Back to Home</span>
                         </a>
                     </div>
                 </div>
