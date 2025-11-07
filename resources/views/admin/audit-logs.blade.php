@@ -751,7 +751,9 @@
                                                 <small style="color: #666;">ID: {{ $log->resource_id }}</small>
                                             @endif
                                         @else
-                                            <span style="color: #999; font-style: italic;">N/A</span>
+                                            <span style="color: #999; font-style: italic;" title="This action is not associated with a specific resource (system-level event)">
+                                                System Event
+                                            </span>
                                         @endif
                                     </td>
                                     <td>

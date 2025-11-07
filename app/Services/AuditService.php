@@ -152,11 +152,16 @@ class AuditService
         $status = $success ? 'successful' : 'failed';
         $description = sprintf('Authentication: %s %s', $action, $status);
 
+        // Get user ID from additional data or current user for resource_id
+        $resourceId = $additionalData['user_id'] ?? $additionalData['admin_id'] ?? $this->getUserId();
+
         return $this->log(
             'authentication',
             $description,
             $request,
             [
+                'resource_type' => 'session', // Authentication events relate to user sessions
+                'resource_id' => $resourceId,
                 'new_values' => array_merge([
                     'auth_action' => $action,
                     'success' => $success,
