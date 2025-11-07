@@ -244,6 +244,10 @@
             letter-spacing: 0.5px;
         }
 
+        .action-authentication { background: linear-gradient(135deg, #28a745, #20c997); color: white; }
+        .action-dataaccess { background: linear-gradient(135deg, #ffc107, #ff9800); color: #333; }
+        .action-datamodification { background: linear-gradient(135deg, #17a2b8, #138496); color: white; }
+        .action-compliance { background: linear-gradient(135deg, #6f42c1, #5a32a3); color: white; }
         .action-login { background: linear-gradient(135deg, #28a745, #20c997); color: white; }
         .action-logout { background: linear-gradient(135deg, #6c757d, #5a6268); color: white; }
         .action-submit { background: linear-gradient(135deg, #17a2b8, #138496); color: white; }
@@ -541,7 +545,7 @@
             <div class="logs-header">
                 <h1>System Audit Logs</h1>
                 <p>Comprehensive audit trail for ISO 21001 compliance and system security monitoring</p>
-                @if(request()->has('action') || request()->has('user_type') || request()->has('date_from') || request()->has('date_to') || request()->has('search'))
+                        @if(request()->has('action') || request()->has('user_type') || request()->has('resource_type') || request()->has('date_from') || request()->has('date_to') || request()->has('search'))
                     <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(255, 140, 0, 0.1)); border-radius: 12px; border-left: 4px solid #4285F4;">
                         <strong style="color: #4285F4;">
                             <svg style="width: 18px; height: 18px; vertical-align: middle; margin-right: 6px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -554,8 +558,12 @@
                                 Action: <em>{{ ucfirst(str_replace('_', ' ', request('action'))) }}</em>
                             @endif
                             @if(request()->has('user_type') && request('user_type') !== 'all')
-                                {{ request()->has('action') && request('action') !== 'all' ? ' | ' : '' }}
+                                {{ (request()->has('action') && request('action') !== 'all') ? ' | ' : '' }}
                                 User Type: <em>{{ ucfirst(request('user_type')) }}</em>
+                            @endif
+                            @if(request()->has('resource_type') && request('resource_type') !== 'all')
+                                {{ (request()->has('action') && request('action') !== 'all') || (request()->has('user_type') && request('user_type') !== 'all') ? ' | ' : '' }}
+                                Resource: <em>{{ ucfirst(str_replace('_', ' ', request('resource_type'))) }}</em>
                             @endif
                             @if(request()->has('date_from'))
                                 {{ (request()->has('action') && request('action') !== 'all') || (request()->has('user_type') && request('user_type') !== 'all') ? ' | ' : '' }}
@@ -603,6 +611,19 @@
                                 @foreach($userTypes as $type)
                                     <option value="{{ $type }}" {{ request('user_type') == $type ? 'selected' : '' }}>
                                         {{ ucfirst($type) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Resource Type Filter -->
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Resource Type</label>
+                            <select name="resource_type" class="filter-select" style="width: 100%; padding: 12px; border: 2px solid rgba(66, 133, 244, 0.2); border-radius: 10px; font-size: 14px; background: white; transition: all 0.3s ease;">
+                                <option value="all">All Resources</option>
+                                @foreach($resourceTypes ?? [] as $resourceType)
+                                    <option value="{{ $resourceType }}" {{ request('resource_type') == $resourceType ? 'selected' : '' }}>
+                                        {{ ucfirst(str_replace('_', ' ', $resourceType)) }}
                                     </option>
                                 @endforeach
                             </select>
@@ -683,6 +704,14 @@
                     <div class="stat-value">{{ $stats['consentCount'] ?? 0 }}</div>
                     <div class="stat-label">Consent Events</div>
                 </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ $stats['dataAccessCount'] ?? 0 }}</div>
+                    <div class="stat-label">Data Access</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ $stats['dataModificationCount'] ?? 0 }}</div>
+                    <div class="stat-label">Data Modifications</div>
+                </div>
             </div>
 
             <!-- Logs Table -->
@@ -693,6 +722,7 @@
                             <tr>
                                 <th>Timestamp</th>
                                 <th>Action</th>
+                                <th>Resource</th>
                                 <th>User</th>
                                 <th>Details</th>
                                 <th>IP Address</th>
@@ -713,19 +743,42 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <div style="font-weight: 600; color: #2c3e50;">
-                                            @if($log->user_id)
-                                                Student
-                                            @elseif($log->admin_id)
-                                                Admin
-                                            @else
-                                                System
+                                        @if($log->resource_type)
+                                            <div style="font-weight: 600; color: #4285F4;">
+                                                {{ ucfirst(str_replace('_', ' ', $log->resource_type)) }}
+                                            </div>
+                                            @if($log->resource_id)
+                                                <small style="color: #666;">ID: {{ $log->resource_id }}</small>
                                             @endif
+                                        @else
+                                            <span style="color: #999; font-style: italic;">N/A</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 600; color: #2c3e50;">
+                                            @php
+                                                $userType = 'System';
+                                                if ($log->user_id) {
+                                                    // Check metadata for user_type
+                                                    if ($log->metadata && isset($log->metadata['user_type'])) {
+                                                        $userType = ucfirst($log->metadata['user_type']);
+                                                    } else {
+                                                        // Check new_values for user_type (backward compatibility)
+                                                        if ($log->new_values && isset($log->new_values['user_type'])) {
+                                                            $userType = ucfirst($log->new_values['user_type']);
+                                                        } else {
+                                                            $userType = 'Student';
+                                                        }
+                                                    }
+                                                }
+                                            @endphp
+                                            {{ $userType }}
                                         </div>
                                         @if($log->user_id)
-                                            <small style="color: #666;">Student ID: {{ $log->user_id }}</small>
-                                        @elseif($log->admin_id)
-                                            <small style="color: #666;">Admin ID: {{ $log->admin_id }}</small>
+                                            <small style="color: #666;">User ID: {{ $log->user_id }}</small>
+                                        @endif
+                                        @if($log->user)
+                                            <small style="color: #666; display: block;">{{ $log->user->name ?? 'N/A' }}</small>
                                         @endif
                                     </td>
                                     <td>
@@ -741,10 +794,31 @@
                                                 @endphp
                                                 @if(!empty($redactedValues))
                                                     <div style="margin-top: 8px; padding: 8px; background: rgba(66, 133, 244, 0.05); border-radius: 6px; font-size: 12px;">
-                                                        <strong style="color: #4285F4;">Details:</strong>
-                                                        <pre style="margin: 4px 0 0 0; font-size: 11px; color: #666; white-space: pre-wrap; word-break: break-word;">{{ json_encode($redactedValues, JSON_PRETTY_PRINT) }}</pre>
+                                                        <strong style="color: #4285F4;">New Values:</strong>
+                                                        <pre style="margin: 4px 0 0 0; font-size: 11px; color: #666; white-space: pre-wrap; word-break: break-word;">{{ json_encode($redactedValues, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
                                                     </div>
                                                 @endif
+                                            @endif
+                                            @if($log->old_values && is_array($log->old_values))
+                                                @php
+                                                    // Redact sensitive data
+                                                    $redactedOldValues = $log->old_values;
+                                                    if (isset($redactedOldValues['student_id']) && $redactedOldValues['student_id'] !== '***REDACTED***') {
+                                                        $redactedOldValues['student_id'] = '***REDACTED***';
+                                                    }
+                                                @endphp
+                                                @if(!empty($redactedOldValues))
+                                                    <div style="margin-top: 8px; padding: 8px; background: rgba(255, 140, 0, 0.05); border-radius: 6px; font-size: 12px;">
+                                                        <strong style="color: #FF8C00;">Old Values:</strong>
+                                                        <pre style="margin: 4px 0 0 0; font-size: 11px; color: #666; white-space: pre-wrap; word-break: break-word;">{{ json_encode($redactedOldValues, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                                    </div>
+                                                @endif
+                                            @endif
+                                            @if($log->metadata && is_array($log->metadata))
+                                                <div style="margin-top: 8px; padding: 8px; background: rgba(108, 117, 125, 0.05); border-radius: 6px; font-size: 12px;">
+                                                    <strong style="color: #6c757d;">Metadata:</strong>
+                                                    <pre style="margin: 4px 0 0 0; font-size: 11px; color: #666; white-space: pre-wrap; word-break: break-word;">{{ json_encode($log->metadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                                </div>
                                             @endif
                                         </div>
                                     </td>
@@ -792,7 +866,14 @@
                 <div class="log-card">
                     <h3 style="color: #2c3e50; font-size: 20px; font-weight: 700; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid transparent; border-image: linear-gradient(90deg, #4285F4, #FF8C00) 1;">Recent Login Activity</h3>
                     @php
-                        $recentLogins = \App\Models\AuditLog::whereIn('action', ['student_login', 'admin_login'])->latest()->take(5)->get();
+                        $recentLogins = \App\Models\AuditLog::where(function($q) {
+                            $q->where('action', 'authentication')
+                              ->where('description', 'LIKE', '%login%')
+                              ->orWhereIn('action', ['student_login', 'admin_login']); // Backward compatibility
+                        })
+                        ->latest()
+                        ->take(5)
+                        ->get();
                     @endphp
 
                     @if($recentLogins->count() > 0)
@@ -820,7 +901,17 @@
                 <div class="log-card">
                     <h3 style="color: #2c3e50; font-size: 20px; font-weight: 700; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid transparent; border-image: linear-gradient(90deg, #FF8C00, #FFD700) 1;">Recent Survey Submissions</h3>
                     @php
-                        $recentSubmissions = \App\Models\AuditLog::where('action', 'submit_survey_response')->latest()->take(5)->get();
+                        $recentSubmissions = \App\Models\AuditLog::where(function($q) {
+                            $q->where(function($q2) {
+                                $q2->where('action', 'data_modification')
+                                  ->where('resource_type', 'survey_response')
+                                  ->where('description', 'LIKE', '%survey%');
+                            })
+                            ->orWhere('action', 'submit_survey_response'); // Backward compatibility
+                        })
+                        ->latest()
+                        ->take(5)
+                        ->get();
                     @endphp
 
                     @if($recentSubmissions->count() > 0)
@@ -853,7 +944,17 @@
                         Recent Consent Activity (GDPR & ISO 27001)
                     </h3>
                     @php
-                        $recentConsent = \App\Models\AuditLog::whereIn('action', ['consent_given', 'consent_denied', 'consent_revoked'])->latest()->take(5)->get();
+                        $recentConsent = \App\Models\AuditLog::where(function($q) {
+                            $q->where('action', 'compliance')
+                              ->where(function($q2) {
+                                  $q2->where('description', 'LIKE', '%consent%')
+                                    ->orWhere('description', 'LIKE', '%Consent%');
+                              })
+                              ->orWhereIn('action', ['consent_given', 'consent_denied', 'consent_revoked']); // Backward compatibility
+                        })
+                        ->latest()
+                        ->take(5)
+                        ->get();
                     @endphp
 
                     @if($recentConsent->count() > 0)

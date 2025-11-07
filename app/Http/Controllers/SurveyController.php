@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SurveyResponse;
-use App\Models\AuditLog;
+use App\Services\AuditService;
 use App\Services\ConsentService;
 use App\Services\AnonymizationService;
 use App\Services\DataMinimizationService;
@@ -16,6 +16,12 @@ use Illuminate\Support\Facades\Crypt;
 
 class SurveyController extends Controller
 {
+    protected $auditService;
+
+    public function __construct(AuditService $auditService)
+    {
+        $this->auditService = $auditService;
+    }
     /**
      * Show the survey landing page
      */
@@ -243,26 +249,23 @@ class SurveyController extends Controller
         $response = SurveyResponse::create($data);
 
         // Log successful submission for audit trail (ISO 21001:8.2.4)
-        if (Auth::check()) {
-            AuditLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'submit_survey_response',
-                'description' => Auth::user()->role === 'admin'
-                    ? 'Admin processed ISO 21001 survey response submission'
-                    : 'Student submitted ISO 21001 survey response',
-                'ip_address' => $request->ip(),
-                'new_values' => ['response_id' => $response->id, 'student_id' => $data['student_id'] ?? 'anonymous'],
-            ]);
-        } else {
-            // Log anonymous submission
-            AuditLog::create([
-                'user_id' => null,
-                'action' => 'submit_survey_response',
-                'description' => 'Submitted ISO 21001 survey response (anonymous)',
-                'ip_address' => $request->ip(),
-                'new_values' => ['response_id' => $response->id],
-            ]);
-        }
+        $description = Auth::check() && Auth::user()->role === 'admin'
+            ? 'Admin processed ISO 21001 survey response submission'
+            : (Auth::check() ? 'Student submitted ISO 21001 survey response' : 'Submitted ISO 21001 survey response (anonymous)');
+
+        $this->auditService->logDataModification(
+            'survey_response',
+            $response->id,
+            'create',
+            null,
+            [
+                'response_id' => $response->id,
+                'student_id' => $data['student_id'] ?? 'anonymous',
+                'track' => $response->track,
+                'grade_level' => $response->grade_level,
+            ],
+            $request
+        );
 
         return response()->json([
             'message' => 'Survey response submitted successfully',
@@ -280,14 +283,17 @@ class SurveyController extends Controller
         $dateTo = $request->query('date_to');
 
         // Log analytics access for audit (ISO 21001:8.2.4 - Data access traceability)
+        // Note: AuditMiddleware will also log this, but this provides more context
         if (Auth::check() && Auth::user()->role === 'admin') {
-            AuditLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'view_analytics',
-                'description' => 'Accessed ISO 21001 analytics dashboard',
-                'ip_address' => $request->ip(),
-                'new_values' => ['query_params' => $request->query()],
-            ]);
+            $this->auditService->logDataAccess(
+                'analytics',
+                null,
+                'view_dashboard',
+                $request,
+                [
+                    'query_params' => $request->query(),
+                ]
+            );
         }
 
         // Generate cache key based on query parameters
@@ -482,6 +488,17 @@ class SurveyController extends Controller
 
     public function getAllResponses(Request $request)
     {
+        // Log data access for ISO 21001:8.2.4 compliance
+        $this->auditService->logDataAccess(
+            'survey_response',
+            null,
+            'list',
+            $request,
+            [
+                'filters' => $request->query(),
+            ]
+        );
+
         $perPage = $request->query('per_page', 15);
         $track = $request->query('track');
         $gradeLevel = $request->query('grade_level');
@@ -524,9 +541,17 @@ class SurveyController extends Controller
         ]);
     }
 
-    public function getResponse($id)
+    public function getResponse($id, Request $request)
     {
         $response = SurveyResponse::findOrFail($id);
+
+        // Log data access for ISO 21001:8.2.4 compliance
+        $this->auditService->logDataAccess(
+            'survey_response',
+            $id,
+            'view',
+            $request
+        );
 
         // Ensure sensitive fields are hidden and add anonymous_id
         $sanitizedResponse = $response->makeHidden(['student_id', 'positive_aspects', 'improvement_suggestions', 'additional_comments', 'ip_address']);
@@ -541,14 +566,17 @@ class SurveyController extends Controller
     public function deleteResponse($id, Request $request)
     {
         $response = SurveyResponse::findOrFail($id);
+        $oldValues = $response->toArray();
 
-        // Log the deletion
-        $request->user()->auditLogs()->create([
-            'action' => 'delete_response',
-            'description' => "Deleted survey response for student {$response->student_id}",
-            'ip_address' => $request->ip(),
-            'old_values' => $response->toArray(),
-        ]);
+        // Log the deletion with full traceability
+        $this->auditService->logDataModification(
+            'survey_response',
+            $id,
+            'delete',
+            $oldValues,
+            null,
+            $request
+        );
 
         $response->delete();
 

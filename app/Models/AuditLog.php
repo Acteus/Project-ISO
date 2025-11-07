@@ -27,11 +27,17 @@ class AuditLog extends Model
         'ip_address',
         'old_values',
         'new_values',
+        'resource_type',
+        'resource_id',
+        'metadata',
     ];
 
     protected $casts = [
         'old_values' => 'array',
         'new_values' => 'array',
+        'metadata' => 'array',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

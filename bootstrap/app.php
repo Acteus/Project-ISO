@@ -27,7 +27,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'cache.response' => \App\Http\Middleware\CacheResponse::class,
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'audit' => \App\Http\Middleware\AuditMiddleware::class,
         ]);
+
+        // Apply audit middleware to API routes for automatic access logging
+        $middleware->appendToGroup('api', \App\Http\Middleware\AuditMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

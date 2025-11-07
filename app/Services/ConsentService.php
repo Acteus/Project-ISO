@@ -138,17 +138,19 @@ class ConsentService
         }
 
         try {
-            AuditLog::create([
-                'user_id' => Auth::id(),
-                'action' => $action,
-                'description' => "Consent action: {$action}",
-                'ip_address' => $ipAddress,
-                'new_values' => [
+            // Log consent using AuditService for consistency
+            $auditService = app(\App\Services\AuditService::class);
+            $auditService->logCompliance(
+                $action,
+                "Consent action: {$action}",
+                request(),
+                [
                     'student_id' => $studentId ? '***REDACTED***' : null,
                     'context' => $context,
                     'timestamp' => now()->toIso8601String(),
-                ],
-            ]);
+                    'iso_clause' => '8.2.4',
+                ]
+            );
         } catch (\Exception $e) {
             Log::error('Failed to audit consent action', [
                 'action' => $action,

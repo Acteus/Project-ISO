@@ -24,14 +24,11 @@ class AdminAuthController extends Controller
             ]);
         }
 
-        // Log the login activity
-        // Note: user_id references users table, so we set it to null for admin actions
-        // or create a User record if needed for audit trail
-        \App\Models\AuditLog::create([
-            'user_id' => null, // Admin actions don't have a user_id since foreign key references users table
-            'action' => 'login',
-            'description' => 'Admin logged in',
-            'ip_address' => $request->ip(),
+        // Log the login activity using AuditService
+        $auditService = app(\App\Services\AuditService::class);
+        $auditService->logAuthentication('login', true, $request, [
+            'user_type' => 'admin',
+            'admin_id' => $admin->id,
         ]);
 
         return response()->json([
@@ -43,13 +40,12 @@ class AdminAuthController extends Controller
 
     public function logout(Request $request)
     {
-        // Log the logout activity
-        // Note: user_id references users table, so we set it to null for admin actions
-        \App\Models\AuditLog::create([
-            'user_id' => null, // Admin actions don't have a user_id since foreign key references users table
-            'action' => 'logout',
-            'description' => 'Admin logged out',
-            'ip_address' => $request->ip(),
+        // Log the logout activity using AuditService
+        $auditService = app(\App\Services\AuditService::class);
+        $admin = $request->user();
+        $auditService->logAuthentication('logout', true, $request, [
+            'user_type' => 'admin',
+            'admin_id' => $admin ? $admin->id : null,
         ]);
 
         $request->user()->currentAccessToken()->delete();

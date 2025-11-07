@@ -56,19 +56,22 @@ class StudentController extends Controller
             'section' => $request->section,
         ]);
 
-        // Log registration for audit trail
-        AuditLog::create([
-            'user_id' => $user->id,
-            'action' => 'student_registration',
-            'description' => 'Student registered for ISO 21001 survey system',
-            'ip_address' => $request->ip(),
-            'new_values' => [
+        // Log registration for audit trail using AuditService
+        $auditService = app(\App\Services\AuditService::class);
+        $auditService->logDataModification(
+            'user',
+            $user->id,
+            'create',
+            null,
+            [
+                'user_type' => 'student',
                 'student_id' => $user->student_id,
                 'name' => $user->name,
                 'year_level' => $user->year_level,
                 'section' => $user->section,
             ],
-        ]);
+            $request
+        );
 
         // Log the student in
         Auth::login($user);
@@ -149,12 +152,11 @@ class StudentController extends Controller
             // Mark that we should regenerate on next request
             $request->session()->put('_should_regenerate', true);
 
-            // Log admin login for audit trail
-            AuditLog::create([
+            // Log admin login for audit trail using AuditService
+            $auditService = app(\App\Services\AuditService::class);
+            $auditService->logAuthentication('login', true, $request, [
+                'user_type' => 'admin',
                 'admin_id' => $admin->id,
-                'action' => 'admin_login',
-                'description' => 'Admin logged into ISO 21001 survey system',
-                'ip_address' => $request->ip(),
             ]);
 
             return response()->json([
@@ -202,12 +204,11 @@ class StudentController extends Controller
                 'session_data' => $request->session()->all(),
             ]);
 
-            // Log login for audit trail
-            AuditLog::create([
+            // Log login for audit trail using AuditService
+            $auditService = app(\App\Services\AuditService::class);
+            $auditService->logAuthentication('login', true, $request, [
+                'user_type' => 'student',
                 'user_id' => $user->id,
-                'action' => 'student_login',
-                'description' => 'Student logged into ISO 21001 survey system',
-                'ip_address' => $request->ip(),
             ]);
 
             // Check if email is verified
@@ -264,23 +265,18 @@ class StudentController extends Controller
         $user = Auth::user();
         $admin = session('admin');
 
-        // Log logout for audit trail for students
+        // Log logout for audit trail using AuditService
+        $auditService = app(\App\Services\AuditService::class);
         if ($user) {
-            AuditLog::create([
+            $auditService->logAuthentication('logout', true, $request, [
+                'user_type' => 'student',
                 'user_id' => $user->id,
-                'action' => 'student_logout',
-                'description' => 'Student logged out of ISO 21001 survey system',
-                'ip_address' => $request->ip(),
             ]);
         }
-
-        // Log logout for audit trail for admins
         if ($admin) {
-            AuditLog::create([
-                'admin_id' => $admin->id,
-                'action' => 'admin_logout',
-                'description' => 'Admin logged out of ISO 21001 survey system',
-                'ip_address' => $request->ip(),
+            $auditService->logAuthentication('logout', true, $request, [
+                'user_type' => 'admin',
+                'user_id' => $admin->id,
             ]);
         }
 
@@ -699,11 +695,34 @@ class StudentController extends Controller
             $query->where('action', $action);
         }
 
+        // Filter by resource type if needed (new feature)
+        if ($request->has('resource_type') && $request->get('resource_type') !== 'all') {
+            $query->where('resource_type', $request->get('resource_type'));
+        }
+
         if ($userType && $userType !== 'all') {
+            // Filter by user type - check metadata or description for user type
             if ($userType === 'student') {
-                $query->whereNotNull('user_id');
+                // Students typically have user_id and description mentions "student" or metadata has user_type=student
+                $query->where(function($q) {
+                    $q->where('description', 'LIKE', '%Student%')
+                      ->orWhere('description', 'LIKE', '%student%')
+                      ->orWhere(function($q2) {
+                          // Check if it's not an admin action
+                          $q2->whereNotNull('user_id')
+                            ->where(function($q3) {
+                                $q3->whereNull('metadata')
+                                  ->orWhere('metadata', 'NOT LIKE', '%"user_type":"admin"%');
+                            });
+                      });
+                });
             } elseif ($userType === 'admin') {
-                $query->whereNotNull('admin_id');
+                // Admins have descriptions mentioning "Admin" or metadata with user_type=admin
+                $query->where(function($q) {
+                    $q->where('description', 'LIKE', '%Admin%')
+                      ->orWhere('description', 'LIKE', '%admin%')
+                      ->orWhere('metadata', 'LIKE', '%"user_type":"admin"%');
+                });
             }
         }
 
@@ -719,7 +738,9 @@ class StudentController extends Controller
             $query->where(function($q) use ($search) {
                 $q->where('description', 'LIKE', "%{$search}%")
                   ->orWhere('ip_address', 'LIKE', "%{$search}%")
-                  ->orWhere('user_id', 'LIKE', "%{$search}%");
+                  ->orWhere('user_id', 'LIKE', "%{$search}%")
+                  ->orWhere('resource_type', 'LIKE', "%{$search}%")
+                  ->orWhere('resource_id', 'LIKE', "%{$search}%");
             });
         }
 
@@ -729,27 +750,71 @@ class StudentController extends Controller
         // Get unique actions for filter dropdown
         $actions = AuditLog::select('action')->distinct()->orderBy('action')->pluck('action');
 
-        // Create user types manually since we derive them from user_id/admin_id
+        // Get unique resource types for filter
+        $resourceTypes = AuditLog::select('resource_type')
+            ->distinct()
+            ->whereNotNull('resource_type')
+            ->orderBy('resource_type')
+            ->pluck('resource_type');
+
+        // Create user types manually
         $userTypes = collect(['student', 'admin']);
 
-        // Get statistics for filtered results
+        // Get statistics for filtered results - updated for new action structure
+        $baseQuery = AuditLog::query();
+        if ($action && $action !== 'all') {
+            $baseQuery->where('action', $action);
+        }
+        if ($dateFrom) {
+            $baseQuery->whereDate('created_at', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $baseQuery->whereDate('created_at', '<=', $dateTo);
+        }
+
+        // Calculate stats with backward compatibility
         $stats = [
-            'total' => $query->count(),
-            'loginCount' => AuditLog::whereIn('action', ['student_login', 'admin_login'])->count(),
-            'logoutCount' => AuditLog::whereIn('action', ['student_logout', 'admin_logout'])->count(),
-            'submissionCount' => AuditLog::where('action', 'submit_survey_response')->count(),
-            'consentCount' => AuditLog::whereIn('action', ['consent_given', 'consent_denied', 'consent_revoked'])->count(),
+            'total' => $baseQuery->count(),
+            'loginCount' => (clone $baseQuery)->where(function($q) {
+                $q->where('action', 'authentication')
+                  ->where('description', 'LIKE', '%login%')
+                  ->orWhereIn('action', ['student_login', 'admin_login']); // Backward compatibility
+            })->count(),
+            'logoutCount' => (clone $baseQuery)->where(function($q) {
+                $q->where('action', 'authentication')
+                  ->where('description', 'LIKE', '%logout%')
+                  ->orWhereIn('action', ['student_logout', 'admin_logout']); // Backward compatibility
+            })->count(),
+            'submissionCount' => (clone $baseQuery)->where(function($q) {
+                $q->where(function($q2) {
+                    $q2->where('action', 'data_modification')
+                      ->where('resource_type', 'survey_response')
+                      ->where('description', 'LIKE', '%survey%');
+                })
+                ->orWhere('action', 'submit_survey_response'); // Backward compatibility
+            })->count(),
+            'consentCount' => (clone $baseQuery)->where(function($q) {
+                $q->where('action', 'compliance')
+                  ->where('description', 'LIKE', '%consent%')
+                  ->orWhereIn('action', ['consent_given', 'consent_denied', 'consent_revoked']); // Backward compatibility
+            })->count(),
+            'dataAccessCount' => (clone $baseQuery)->where('action', 'data_access')->count(),
+            'dataModificationCount' => (clone $baseQuery)->where('action', 'data_modification')->count(),
         ];
 
-        // Log viewing of audit logs
-        AuditLog::create([
-            'admin_id' => $admin->id,
-            'action' => 'view_audit_logs',
-            'description' => 'Admin viewed system audit logs',
-            'ip_address' => request()->ip(),
-        ]);
+        // Log viewing of audit logs using AuditService
+        $auditService = app(\App\Services\AuditService::class);
+        $auditService->logDataAccess(
+            'audit_log',
+            null,
+            'view_audit_logs',
+            $request,
+            [
+                'filters' => $request->except('page'),
+            ]
+        );
 
-        return view('admin.audit-logs', compact('admin', 'auditLogs', 'actions', 'userTypes', 'action', 'userType', 'dateFrom', 'dateTo', 'search', 'perPage', 'stats'));
+        return view('admin.audit-logs', compact('admin', 'auditLogs', 'actions', 'userTypes', 'resourceTypes', 'action', 'userType', 'dateFrom', 'dateTo', 'search', 'perPage', 'stats'));
     }
 
     public function aiInsights()
@@ -760,13 +825,14 @@ class StudentController extends Controller
             return redirect()->route('student.login');
         }
 
-        // Log viewing of AI insights for audit trail
-        AuditLog::create([
-            'admin_id' => $admin->id,
-            'action' => 'view_ai_insights',
-            'description' => 'Admin accessed AI insights dashboard',
-            'ip_address' => request()->ip(),
-        ]);
+        // Log viewing of AI insights for audit trail using AuditService
+        $auditService = app(\App\Services\AuditService::class);
+        $auditService->logDataAccess(
+            'ai_insights',
+            null,
+            'view_dashboard',
+            request()
+        );
 
         return view('admin.ai-insights', compact('admin'));
     }

@@ -775,14 +775,18 @@ class AIController extends Controller
             }
 
             if ($result) {
-                // Log the AI analysis for audit trail
-                \App\Models\AuditLog::create([
-                    'admin_id' => session('admin')->id ?? null,
-                    'action' => 'ai_analysis_' . $type,
-                    'description' => 'AI analysis performed: ' . $type,
-                    'ip_address' => $request->ip(),
-                    'new_values' => ['analysis_type' => $type]
-                ]);
+                // Log the AI analysis for audit trail using AuditService
+                $auditService = app(\App\Services\AuditService::class);
+                $auditService->logDataAccess(
+                    'ai_service',
+                    null,
+                    'ai_analysis_' . $type,
+                    $request,
+                    [
+                        'analysis_type' => $type,
+                        'result_success' => true,
+                    ]
+                );
 
                 // Normalize the result into a consistent JSON shape for the frontend
                 $normalized = $this->normalizeAnalysisResult($type, $result);
