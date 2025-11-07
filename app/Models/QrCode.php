@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class QrCode extends Model
 {
@@ -156,22 +158,41 @@ class QrCode extends Model
      */
     public function recordScan($analyticsData = [])
     {
-        $this->increment('scan_count');
+        try {
+            // Use a database transaction to ensure atomicity
+            DB::transaction(function () use ($analyticsData) {
+                // Atomically increment scan_count at the database level
+                // This uses SQL's UPDATE table SET scan_count = scan_count + 1 which is thread-safe
+                $this->increment('scan_count');
+                
+                // Prepare analytics data if provided
+                if (!empty($analyticsData)) {
+                    $currentAnalytics = $this->scan_analytics ?? [];
+                    $currentAnalytics[] = array_merge([
+                        'timestamp' => now()->toIso8601String(),
+                        'user_agent' => request()->userAgent(),
+                        'ip_address' => request()->ip(),
+                    ], $analyticsData);
 
-        if (!empty($analyticsData)) {
-            $currentAnalytics = $this->scan_analytics ?? [];
-            $currentAnalytics[] = array_merge([
-                'timestamp' => now(),
-                'user_agent' => request()->userAgent(),
-                'ip_address' => request()->ip(),
-            ], $analyticsData);
+                    // Keep only last 100 scan records to prevent database bloat
+                    if (count($currentAnalytics) > 100) {
+                        $currentAnalytics = array_slice($currentAnalytics, -100);
+                    }
 
-            // Keep only last 100 scan records to prevent database bloat
-            if (count($currentAnalytics) > 100) {
-                $currentAnalytics = array_slice($currentAnalytics, -100);
-            }
-
-            $this->update(['scan_analytics' => $currentAnalytics]);
+                    // Update analytics in the same transaction
+                    $this->update(['scan_analytics' => $currentAnalytics]);
+                }
+            });
+            
+            // Refresh the model to ensure scan_count attribute is current
+            $this->refresh();
+        } catch (\Exception $e) {
+            // Log the error but don't throw - we don't want to break the redirect
+            Log::error('Failed to record QR code scan', [
+                'qr_code_id' => $this->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
         }
     }
 
