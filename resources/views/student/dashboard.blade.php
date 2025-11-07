@@ -134,7 +134,7 @@
             }
 
             /* Hide desktop nav on mobile - Force override */
-            .header .desktop-nav {
+            .landing-header .desktop-nav {
                 display: none !important;
                 visibility: hidden !important;
                 width: 0 !important;
@@ -367,12 +367,12 @@
 
         @media (max-width: 480px) {
             /* Header optimizations for small screens */
-            .header {
+            .landing-header {
                 overflow: hidden !important;
                 width: 100% !important;
             }
 
-            .header .container {
+            .landing-header .container {
                 padding: 0 10px !important;
                 width: 100% !important;
                 max-width: 100% !important;
