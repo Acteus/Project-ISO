@@ -101,7 +101,24 @@ class SurveyController extends Controller
             }
         }
 
-        return view('survey.form');
+        // Check if the authenticated user already has a previous response
+        $hasPreviousResponse = false;
+        if ($user && $user->student_id) {
+            try {
+                $encryptionService = app(\App\Services\EncryptionService::class);
+                $encryptedStudentId = $encryptionService->encrypt($user->student_id);
+                $hasPreviousResponse = SurveyResponse::where('student_id', $encryptedStudentId)->exists();
+            } catch (\Exception $e) {
+                Log::warning('Unable to check previous survey response', [
+                    'error' => $e->getMessage(),
+                    'user_id' => $user->id ?? null,
+                ]);
+            }
+        }
+
+        return view('survey.form', [
+            'hasPreviousResponse' => $hasPreviousResponse,
+        ]);
     }
 
     public function submitResponse(Request $request)
@@ -117,6 +134,36 @@ class SurveyController extends Controller
             'has_student_id_in_request' => $request->has('student_id'),
             'student_id_value' => $request->input('student_id', 'NOT_PROVIDED'),
         ]);
+
+        // Check if authenticated user already has valid consent
+        // If they do, automatically set consent_given to true (consent was given during registration)
+        $consentService = app(ConsentService::class);
+        $hasValidConsent = false;
+        $studentId = $request->input('student_id');
+        
+        // Try to get student_id from authenticated user if not in request
+        if (!$studentId) {
+            if (Auth::check() && Auth::user()->student_id) {
+                $studentId = Auth::user()->student_id;
+            } elseif (Auth::guard('sanctum')->check() && Auth::guard('sanctum')->user()->student_id) {
+                $studentId = Auth::guard('sanctum')->user()->student_id;
+            } elseif (session()->has('admin') && session('admin')->student_id) {
+                $studentId = session('admin')->student_id;
+            }
+        }
+        
+        // Check if user has valid consent
+        if ($studentId) {
+            $hasValidConsent = $consentService->hasValidConsent($studentId, 'survey_response');
+            
+            // If user has valid consent, automatically set consent_given to true
+            if ($hasValidConsent) {
+                $request->merge(['consent_given' => true]);
+                Log::info('User has valid consent from registration, auto-setting consent_given', [
+                    'student_id' => $studentId ? '***REDACTED***' : null,
+                ]);
+            }
+        }
 
         $validator = Validator::make($request->all(), [
             'student_id' => 'nullable|string', // Always nullable, we'll handle authentication below
