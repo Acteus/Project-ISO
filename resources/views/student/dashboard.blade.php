@@ -247,7 +247,7 @@
             .dashboard-header > div {
                 flex-direction: column !important;
                 align-items: stretch !important;
-                gap: 15px !important;
+                gap: 20px !important;
             }
 
             /* Text container - prevent overflow */
@@ -274,12 +274,13 @@
                 max-width: 100% !important;
                 box-sizing: border-box !important;
                 line-height: 1.2 !important;
+                color: #1e293b !important;
             }
 
             /* Paragraph - prevent overflow */
             .dashboard-header p {
                 font-size: 14px !important;
-                color: #374151 !important;
+                color: #64748b !important;
                 opacity: 1 !important;
                 display: block !important;
                 visibility: visible !important;
@@ -294,7 +295,7 @@
             }
 
             /* Buttons container - prevent overflow */
-            .dashboard-header > div > div:last-child {
+            .dashboard-actions {
                 width: 100% !important;
                 max-width: 100% !important;
                 min-width: 0 !important;
@@ -304,17 +305,18 @@
                 display: flex !important;
                 flex-direction: column !important;
                 gap: 10px !important;
+                flex-shrink: 1 !important;
             }
 
             /* Buttons - full width on mobile */
-            .dashboard-header > div > div:last-child > a,
-            .dashboard-header .btn {
+            .dashboard-actions .btn {
                 width: 100% !important;
                 max-width: 100% !important;
                 min-width: 0 !important;
                 box-sizing: border-box !important;
                 justify-content: center !important;
                 margin: 0 !important;
+                white-space: normal !important;
             }
 
             /* Improve touch targets */
@@ -324,6 +326,26 @@
                 padding: 14px 20px;
                 touch-action: manipulation;
                 -webkit-tap-highlight-color: rgba(102, 126, 234, 0.2);
+            }
+
+            /* Dashboard header layout changes for mobile */
+            .dashboard-header > div {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+            }
+
+            .dashboard-header > div > div:last-child {
+                width: 100% !important;
+                margin-top: 20px;
+            }
+
+            .dashboard-actions {
+                width: 100% !important;
+                flex-direction: column !important;
+            }
+
+            .dashboard-actions .btn {
+                width: 100% !important;
             }
 
             /* Optimize form inputs */
@@ -473,11 +495,12 @@
                 line-height: 1.2 !important;
                 margin: 0 0 6px 0 !important;
                 padding: 0 !important;
+                color: #1e293b !important;
             }
 
             .dashboard-header p {
                 font-size: 13px !important;
-                color: #374151 !important;
+                color: #64748b !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 word-break: break-word !important;
@@ -603,23 +626,6 @@
             box-sizing: border-box;
         }
 
-        /* Ensure dashboard-header children respect container */
-        .dashboard-header > div {
-            width: 100%;
-            max-width: 100%;
-            min-width: 0;
-            box-sizing: border-box;
-            overflow: hidden;
-        }
-
-        .dashboard-header > div > div {
-            width: 100%;
-            max-width: 100%;
-            min-width: 0;
-            box-sizing: border-box;
-            overflow: hidden;
-        }
-
         .dashboard-header::before {
             content: '';
             position: absolute;
@@ -668,33 +674,33 @@
         .dashboard-header > div {
             position: relative;
             z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 30px;
             min-width: 0; /* Prevents flex overflow */
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
-            overflow: hidden;
         }
 
         .dashboard-header > div > div:first-child {
             min-width: 0; /* Allows text to wrap properly */
             max-width: 100%;
-            width: 100%;
+            flex: 1;
             box-sizing: border-box;
-            overflow: hidden;
         }
 
         .dashboard-header > div > div:last-child {
             min-width: 0;
-            max-width: 100%;
-            width: 100%;
+            flex-shrink: 0;
+            display: flex;
+            gap: 12px;
             box-sizing: border-box;
-            overflow: hidden;
         }
 
-        .dashboard-header p {
-            word-break: break-word;
-            overflow-wrap: break-word;
-            max-width: 100%;
+        .dashboard-header > div > div:last-child > a {
+            white-space: nowrap;
         }
 
         .dashboard-header h1 {
@@ -702,11 +708,10 @@
             font-size: 42px;
             font-weight: 800;
             line-height: 1.2;
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #1e293b;
             letter-spacing: -1px;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         .dashboard-header p {
@@ -715,6 +720,19 @@
             line-height: 1.7;
             color: #64748b;
             font-weight: 500;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .dashboard-actions .btn {
+            white-space: nowrap;
+            width: auto;
         }
 
         /* Beautiful Student Info Card */
@@ -1107,27 +1125,6 @@
                 box-sizing: border-box;
             }
 
-            .dashboard-header > div {
-                flex-direction: column;
-                align-items: flex-start !important;
-            }
-
-            .dashboard-header > div > div:last-child {
-                width: 100%;
-                margin-top: 20px;
-            }
-
-            .dashboard-header > div > div:last-child > a {
-                flex: 1;
-                min-width: 0;
-                width: 100%;
-            }
-
-            .btn {
-                width: 100%;
-                margin-bottom: 10px;
-            }
-
             .desktop-nav .desktop-text {
                 display: none;
             }
@@ -1236,7 +1233,7 @@
 
                 <!-- Simple student navigation -->
                 <nav class="desktop-nav">
-                    <span class="nav-link" style="font-weight: 600; cursor: default; color: #ffffff; font-size: 16px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); white-space: nowrap;">{{ Auth::user()->name }}</span>
+                    <span class="nav-link" style="font-weight: 600; cursor: default; color: #312e81; font-size: 16px; white-space: nowrap;">{{ Auth::user()->name }}</span>
                     <form method="POST" action="{{ route('student.logout') }}" style="display: inline;">
                         @csrf
                         <button type="submit" class="logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
@@ -1261,7 +1258,7 @@
             <!-- Mobile navigation -->
             <nav class="mobile-nav" id="mobileNav">
                 <div style="margin-bottom: 15px;">
-                    <span class="mobile-nav-link" style="font-weight: 600; display: block; margin-bottom: 15px; font-size: 18px; color: #ffffff; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);">{{ Auth::user()->name }}</span>
+                    <span class="mobile-nav-link" style="font-weight: 600; display: block; margin-bottom: 15px; font-size: 18px; color: #312e81;">{{ Auth::user()->name }}</span>
                 </div>
                 <form method="POST" action="{{ route('student.logout') }}" style="margin-top: 10px;">
                     @csrf
@@ -1280,19 +1277,19 @@
         <div class="dashboard-container">
             <!-- Profile Header -->
             <div class="dashboard-header">
-                <div style="display: flex; align-items: flex-start; justify-content: flex-start; flex-direction: column; gap: 15px; width: 100%; max-width: 100%; box-sizing: border-box; overflow: hidden;">
-                    <div style="width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; overflow-wrap: break-word; word-wrap: break-word;">
-                        <h1 style="word-break: break-word; overflow-wrap: break-word; max-width: 100%; box-sizing: border-box; margin: 0 0 10px 0; line-height: 1.2;">Profile Settings</h1>
-                        <p style="word-break: break-word; overflow-wrap: break-word; max-width: 100%; box-sizing: border-box; margin: 0; line-height: 1.5;">Manage your account information and preferences</p>
+                <div>
+                    <div>
+                        <h1>Profile Settings</h1>
+                        <p>Manage your account information and preferences</p>
                     </div>
-                    <div style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 100%; box-sizing: border-box;">
-                        <a href="{{ route('survey.form') }}" class="btn btn-success" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; max-width: 100%; box-sizing: border-box;">
+                    <div class="dashboard-actions">
+                        <a href="{{ route('survey.form') }}" class="btn btn-success">
                             <svg style="width: 18px; height: 18px; fill: currentColor; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                 <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
                             </svg>
                             <span>Take Survey</span>
                         </a>
-                        <a href="{{ route('survey.landing') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; max-width: 100%; box-sizing: border-box;">
+                        <a href="{{ route('survey.landing') }}" class="btn btn-primary">
                             <svg style="width: 18px; height: 18px; fill: currentColor; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                 <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
                             </svg>
