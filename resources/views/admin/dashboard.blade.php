@@ -462,6 +462,11 @@
             box-shadow: 0 10px 30px rgba(255, 87, 34, 0.4);
         }
 
+        .action-card.metrics .action-card-icon {
+            background: linear-gradient(135deg, #9C27B0, #673AB7);
+            box-shadow: 0 10px 30px rgba(156, 39, 176, 0.4);
+        }
+
         .action-card-icon svg {
             width: 45px;
             height: 45px;
@@ -1103,6 +1108,17 @@
                     <h3>Send Reports</h3>
                     <p>Send weekly progress reports and monthly compliance reports to administrators via email.</p>
                     <a href="{{ route('admin.reports') }}" class="btn btn-primary">Manage Reports</a>
+                </div>
+
+                <div class="action-card metrics">
+                    <div class="action-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19M7,10H9V17H7V10M11,7H13V17H11V7M15,13H17V17H15V13Z"/>
+                        </svg>
+                    </div>
+                    <h3>Upload Indirect Metrics</h3>
+                    <p>Upload student performance metrics (grades, attendance, participation) for ISO 21001 direct vs indirect validation.</p>
+                    <a href="{{ route('admin.indirect-metrics.index') }}" class="btn btn-primary">Upload Metrics</a>
                 </div>
             </div>
 

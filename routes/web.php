@@ -84,6 +84,12 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::post('qr-codes/batch-generate', [QrCodeController::class, 'batchGenerate'])->name('qr-codes.batch-generate');
     Route::get('qr-codes/{id}/download', [QrCodeController::class, 'download'])->name('qr-codes.download');
     Route::resource('qr-codes', QrCodeController::class);
+
+    // Indirect Metrics Management Routes
+    Route::get('indirect-metrics', [App\Http\Controllers\Admin\IndirectMetricsController::class, 'index'])->name('indirect-metrics.index');
+    Route::post('indirect-metrics/upload-csv', [App\Http\Controllers\Admin\IndirectMetricsController::class, 'uploadCsv'])->name('indirect-metrics.upload-csv');
+    Route::post('indirect-metrics/update-manual', [App\Http\Controllers\Admin\IndirectMetricsController::class, 'updateManual'])->name('indirect-metrics.update-manual');
+    Route::get('indirect-metrics/template', [App\Http\Controllers\Admin\IndirectMetricsController::class, 'downloadTemplate'])->name('indirect-metrics.template');
 });
 
 // Survey routes (protected by email verification)
