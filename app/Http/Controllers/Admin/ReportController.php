@@ -45,7 +45,7 @@ class ReportController extends Controller
             // Send test email using the styled template
             Mail::mailer('smtp')
                 ->to($request->test_email)
-                ->send(new TestEmail($mailConfig));
+                ->queue(new TestEmail($mailConfig));
 
             Log::info('Test email sent successfully', [
                 'recipient' => $request->test_email,
@@ -54,7 +54,7 @@ class ReportController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Test email sent successfully! Please check your inbox.',
+                'message' => 'Test email queued successfully! Please check your inbox shortly.',
                 'config' => $mailConfig
             ]);
 
@@ -142,7 +142,7 @@ class ReportController extends Controller
             // Explicitly use SMTP mailer (configured with Google SMTP in .env)
             Mail::mailer('smtp')
                 ->to($request->recipient_email)
-                ->send(new WeeklyProgressReport($weeklyMetric, $previousMetric));
+                ->queue(new WeeklyProgressReport($weeklyMetric, $previousMetric));
 
             Log::info('Weekly progress report sent via Google SMTP', [
                 'recipient' => $request->recipient_email,
@@ -154,7 +154,7 @@ class ReportController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Weekly progress report sent successfully via email!'
+                'message' => 'Weekly progress report email queued for delivery!'
             ]);
 
         } catch (\Exception $e) {
@@ -193,7 +193,7 @@ class ReportController extends Controller
             // Send the email using Google SMTP
             Mail::mailer('smtp')
                 ->to($request->recipient_email)
-                ->send(new MonthlyComplianceReport($monthlyData));
+                ->queue(new MonthlyComplianceReport($monthlyData));
 
             Log::info('Monthly compliance report sent via Google SMTP', [
                 'recipient' => $request->recipient_email,
@@ -204,7 +204,7 @@ class ReportController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Monthly compliance report sent successfully via email!'
+                'message' => 'Monthly compliance report email queued for delivery!'
             ]);
 
         } catch (\Exception $e) {

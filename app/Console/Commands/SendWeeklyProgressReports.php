@@ -67,21 +67,21 @@ class SendWeeklyProgressReports extends Command
         $this->info("Sending reports to {$admins->count()} administrator(s)...");
         $this->info("Report for: {$weeklyMetric->date_range_label}");
 
-        $sentCount = 0;
+        $queuedCount = 0;
         $failedCount = 0;
 
         foreach ($admins as $admin) {
             try {
-                Mail::to($admin->email)->send(new WeeklyProgressReport($weeklyMetric, $previousMetric));
-                $this->info("✓ Sent to: {$admin->email}");
-                $sentCount++;
+                Mail::to($admin->email)->queue(new WeeklyProgressReport($weeklyMetric, $previousMetric));
+                $this->info("✓ Queued for: {$admin->email}");
+                $queuedCount++;
             } catch (\Exception $e) {
                 $this->error("✗ Failed to send to {$admin->email}: {$e->getMessage()}");
                 $failedCount++;
             }
         }
 
-        $this->info("Report sending completed. Sent: {$sentCount}, Failed: {$failedCount}");
+        $this->info("Report queueing completed. Queued: {$queuedCount}, Failed: {$failedCount}");
 
         return 0;
     }

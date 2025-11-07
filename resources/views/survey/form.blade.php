@@ -142,6 +142,55 @@
                     <div class="progress-bar">
                         <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                     </div>
+                    <!-- Auto-save indicator -->
+                    <div class="auto-save-indicator" id="autoSaveIndicator" style="display: none;">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                        </svg>
+                        <span>Saved</span>
+                    </div>
+                </div>
+
+                <!-- Step Indicator (Mobile-optimized) -->
+                <div class="step-indicator-wrapper">
+                    <div class="step-indicator" id="stepIndicator">
+                        <div class="step-item" data-step="0">
+                            <span class="step-number">1</span>
+                            <span class="step-label">Consent</span>
+                        </div>
+                        <div class="step-item" data-step="1">
+                            <span class="step-number">2</span>
+                            <span class="step-label">Needs</span>
+                        </div>
+                        <div class="step-item" data-step="2">
+                            <span class="step-number">3</span>
+                            <span class="step-label">Teaching</span>
+                        </div>
+                        <div class="step-item" data-step="3">
+                            <span class="step-number">4</span>
+                            <span class="step-label">Assessments</span>
+                        </div>
+                        <div class="step-item" data-step="4">
+                            <span class="step-number">5</span>
+                            <span class="step-label">Support</span>
+                        </div>
+                        <div class="step-item" data-step="5">
+                            <span class="step-number">6</span>
+                            <span class="step-label">Environment</span>
+                        </div>
+                        <div class="step-item" data-step="6">
+                            <span class="step-number">7</span>
+                            <span class="step-label">Feedback</span>
+                        </div>
+                        <div class="step-item" data-step="7">
+                            <span class="step-number">8</span>
+                            <span class="step-label">Satisfaction</span>
+                        </div>
+                        <div class="step-item" data-step="8">
+                            <span class="step-number">9</span>
+                            <span class="step-label">Comments</span>
+                        </div>
+                    </div>
                 </div>
 
                 <form id="surveyForm" onsubmit="submitSurvey(event)">
@@ -225,16 +274,16 @@
                     </div>
 
                     <!-- Survey sections will be dynamically loaded here -->
-                    <div id="surveySection">
+                    <div id="surveySection" class="survey-sections-container">
                         <!-- Section 1: Learner Needs & Expectations -->
-                        <div class="survey-step" data-step="1" style="display: none;">
+                        <div class="survey-step" data-step="1" data-lazy="true" style="display: none;">
                             <h2 class="section-title">Learner Needs & Expectations</h2>
 
                             <div class="question-group">
                                 <label class="question-label">1. The CSS program curriculum meets my educational goals and expectations.</label>
-                                <div class="likert-scale">
+                                <div class="likert-scale" role="radiogroup" aria-labelledby="q1-label">
                                     <label class="likert-option">
-                                        <input type="radio" name="q1" value="1" required>
+                                        <input type="radio" name="q1" value="1" required aria-label="Strongly Disagree">
                                         <span class="likert-label">1<br><small>Strongly Disagree</small></span>
                                     </label>
                                     <label class="likert-option">
@@ -310,7 +359,7 @@
                         </div>
 
                         <!-- Section 2: Teaching & Learning Quality -->
-                        <div class="survey-step" data-step="2" style="display: none;">
+                        <div class="survey-step" data-step="2" data-lazy="true" style="display: none;">
                             <h2 class="section-title">Teaching & Learning Quality</h2>
 
                             <div class="question-group">
@@ -393,7 +442,7 @@
                         </div>
 
                         <!-- Section 3: Assessments & Outcomes -->
-                        <div class="survey-step" data-step="3" style="display: none;">
+                        <div class="survey-step" data-step="3" data-lazy="true" style="display: none;">
                             <h2 class="section-title">Assessments & Outcomes</h2>
 
                             <div class="question-group">
@@ -476,7 +525,7 @@
                         </div>
 
                         <!-- Section 4: Support & Resources -->
-                        <div class="survey-step" data-step="4" style="display: none;">
+                        <div class="survey-step" data-step="4" data-lazy="true" style="display: none;">
                             <h2 class="section-title">Support & Resources</h2>
 
                             <div class="question-group">
@@ -559,7 +608,7 @@
                         </div>
 
                         <!-- Section 5: Environment & Inclusivity -->
-                        <div class="survey-step" data-step="5" style="display: none;">
+                        <div class="survey-step" data-step="5" data-lazy="true" style="display: none;">
                             <h2 class="section-title">Environment & Inclusivity</h2>
 
                             <div class="question-group">
@@ -642,7 +691,7 @@
                         </div>
 
                         <!-- Section 6: Feedback & Responsiveness -->
-                        <div class="survey-step" data-step="6" style="display: none;">
+                        <div class="survey-step" data-step="6" data-lazy="true" style="display: none;">
                             <h2 class="section-title">Feedback & Responsiveness</h2>
 
                             <div class="question-group">
@@ -725,7 +774,7 @@
                         </div>
 
                         <!-- Section 7: Overall Satisfaction -->
-                        <div class="survey-step" data-step="7" style="display: none;">
+                        <div class="survey-step" data-step="7" data-lazy="true" style="display: none;">
                             <h2 class="section-title">Overall Satisfaction</h2>
 
                             <div class="question-group">
@@ -808,7 +857,7 @@
                         </div>
 
                         <!-- Section 8: Additional Feedback -->
-                        <div class="survey-step" data-step="8" style="display: none;">
+                        <div class="survey-step" data-step="8" data-lazy="true" style="display: none;">
                             <h2 class="section-title">Additional Feedback</h2>
 
                             <div class="question-group">
@@ -824,21 +873,30 @@
                             <svg class="btn-icon btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                             </svg>
-                            Previous
+                            <span class="btn-text">Previous</span>
                         </button>
                         <button type="button" id="nextBtn" onclick="nextStep()" class="btn btn-secondary">
-                            Next
+                            <span class="btn-text">Next</span>
                             <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
                         </button>
                         <button type="submit" id="submitBtn" class="btn btn-success" style="display: none;">
-                            Submit
-                            <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <span class="btn-text">Submit</span>
+                            <span class="btn-loader" style="display: none;">
+                                <svg class="spinner" width="20" height="20" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"/>
+                                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                                </svg>
+                            </span>
+                            <svg class="btn-icon btn-icon-check" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: none;">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                             </svg>
                         </button>
                     </div>
+                    
+                    <!-- Validation message container -->
+                    <div class="validation-message" id="validationMessage" style="display: none;"></div>
                 </form>
             </div>
         </div>

@@ -2,6 +2,10 @@
 let currentStep = 0; // Start with consent (step 0)
 let totalSteps = 8; // 8 survey sections (steps 1-8), plus consent (step 0)
 let surveyData = {};
+let loadedSteps = new Set([0]); // Track which steps have been loaded
+let touchStartX = 0;
+let touchEndX = 0;
+let autoSaveTimeout = null;
 
 // Laravel-specific functions
 
@@ -675,7 +679,13 @@ async function submitSurveyLaravel(event) {
     // Show loading state
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>Submitting...</span>';
+        submitBtn.classList.add('loading');
+        const btnText = submitBtn.querySelector('.btn-text');
+        const btnLoader = submitBtn.querySelector('.btn-loader');
+        const btnIcon = submitBtn.querySelector('.btn-icon-check');
+        if (btnText) btnText.style.display = 'none';
+        if (btnLoader) btnLoader.style.display = 'inline-block';
+        if (btnIcon) btnIcon.style.display = 'none';
     }
 
     try {
@@ -872,9 +882,28 @@ async function submitSurveyLaravel(event) {
 
         if (response.ok && data.message) {
             console.log('Survey submitted successfully!');
-            // Show success message and redirect
-            alert(data.message);
-            window.location.href = '/thank-you';
+            
+            // Clear saved progress
+            removeFromLocalStorage('surveyProgress');
+            
+            // Show success message
+            showValidationMessage('Survey submitted successfully! Redirecting...', 'success');
+            
+            // Update button to show success
+            if (submitBtn) {
+                submitBtn.classList.remove('loading');
+                const btnText = submitBtn.querySelector('.btn-text');
+                const btnLoader = submitBtn.querySelector('.btn-loader');
+                const btnIcon = submitBtn.querySelector('.btn-icon-check');
+                if (btnText) btnText.textContent = 'Submitted!';
+                if (btnLoader) btnLoader.style.display = 'none';
+                if (btnIcon) btnIcon.style.display = 'inline-block';
+            }
+            
+            // Redirect after short delay
+            setTimeout(() => {
+                window.location.href = '/thank-you';
+            }, 1500);
         } else {
             console.error('Survey submission failed. Response:', data);
             let errorMsg = data.message || 'Submission failed';
@@ -892,7 +921,13 @@ async function submitSurveyLaravel(event) {
         // Restore button state
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = 'Submit <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+            submitBtn.classList.remove('loading');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const btnLoader = submitBtn.querySelector('.btn-loader');
+            const btnIcon = submitBtn.querySelector('.btn-icon-check');
+            if (btnText) btnText.style.display = 'inline-block';
+            if (btnLoader) btnLoader.style.display = 'none';
+            if (btnIcon) btnIcon.style.display = 'inline-block';
         }
     }
 }
@@ -917,6 +952,9 @@ function initializeStaticSurvey() {
     showStep(0);
     updateProgressBar();
     updateNavigationButtons();
+    updateStepIndicators();
+    initializeEventListeners();
+    loadSavedProgress();
 
     // Set current year in footer
     const yearElement = document.getElementById('currentYear');
@@ -925,22 +963,165 @@ function initializeStaticSurvey() {
     }
 }
 
+// Initialize event listeners for enhanced functionality
+function initializeEventListeners() {
+    // Form input listeners with debounced auto-save
+    const form = document.getElementById('surveyForm');
+    if (form) {
+        form.addEventListener('input', handleFormInput);
+        form.addEventListener('change', handleFormInput);
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', handleKeyboardNavigation);
+
+    // Mobile swipe gestures
+    const surveyCard = document.querySelector('.survey-card');
+    if (surveyCard) {
+        surveyCard.addEventListener('touchstart', handleTouchStart, { passive: true });
+        surveyCard.addEventListener('touchend', handleTouchEnd, { passive: true });
+    }
+
+    // Step indicator click handlers
+    const stepItems = document.querySelectorAll('.step-item');
+    stepItems.forEach((item, index) => {
+        item.addEventListener('click', () => {
+            if (index <= currentStep || checkSectionCompletion(index - 1)) {
+                goToStep(index);
+            }
+        });
+    });
+
+    // Prevent accidental navigation away
+    window.addEventListener('beforeunload', handleBeforeUnload);
+}
+
+// Debounce utility
+function debounce(func, wait) {
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(autoSaveTimeout);
+            func(...args);
+        };
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(later, wait);
+    };
+}
+
+// Handle form input with debounced auto-save
+const handleFormInput = debounce(function(event) {
+    const input = event.target;
+    
+    // Save the value to surveyData immediately
+    if (input.type === 'radio' && input.checked) {
+        surveyData[input.name] = input.value;
+    } else if (input.type === 'checkbox') {
+        surveyData[input.name] = input.checked ? input.value : '';
+    } else {
+        surveyData[input.name] = input.value;
+    }
+    
+    // Validate field immediately
+    validateField(input);
+    
+    // Save progress
+    saveProgress();
+    
+    // Show auto-save indicator
+    showAutoSaveIndicator();
+    
+    // Update section completion
+    updateStepIndicators();
+}, 1000);
+
+// Show auto-save indicator
+function showAutoSaveIndicator() {
+    const indicator = document.getElementById('autoSaveIndicator');
+    if (indicator) {
+        indicator.style.display = 'flex';
+        indicator.classList.add('show');
+        
+        setTimeout(() => {
+            indicator.classList.remove('show');
+            setTimeout(() => {
+                if (!indicator.classList.contains('show')) {
+                    indicator.style.display = 'none';
+                }
+            }, 300);
+        }, 2000);
+    }
+}
+
+// Load saved progress
+function loadSavedProgress() {
+    try {
+        const saved = loadFromLocalStorage('surveyProgress');
+        if (saved && saved.data) {
+            surveyData = saved.data || {};
+            currentStep = saved.step || 0;
+            
+            // Restore form values
+            Object.keys(surveyData).forEach(key => {
+                const input = document.querySelector(`[name="${key}"]`);
+                if (input) {
+                    if (input.type === 'radio') {
+                        const radio = document.querySelector(`[name="${key}"][value="${surveyData[key]}"]`);
+                        if (radio) radio.checked = true;
+                    } else {
+                        input.value = surveyData[key];
+                    }
+                }
+            });
+            
+            // Show appropriate step
+            showStep(currentStep);
+            updateProgressBar();
+            updateNavigationButtons();
+            updateStepIndicators();
+        }
+    } catch (e) {
+        console.error('Error loading saved progress:', e);
+    }
+}
+
 function showStep(step) {
-    // Hide all steps
+    // Hide all steps with animation
     document.querySelectorAll('.survey-step').forEach(stepElement => {
+        stepElement.classList.remove('active');
         stepElement.style.display = 'none';
     });
 
-    // Show current step
+    // Load step content if lazy loaded
     const currentStepElement = document.querySelector(`.survey-step[data-step="${step}"]`);
     if (currentStepElement) {
+        // Mark as loaded
+        loadedSteps.add(step);
+        currentStepElement.setAttribute('data-loaded', 'true');
+        
+        // Show step with animation
         currentStepElement.style.display = 'block';
+        // Force reflow for animation
+        currentStepElement.offsetHeight;
+        currentStepElement.classList.add('active');
     }
 
     currentStep = step;
 
-    // Scroll to top
+    // Scroll to top smoothly
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Update UI
+    updateProgressBar();
+    updateNavigationButtons();
+    updateStepIndicators();
+    
+    // Focus first input in step
+    setTimeout(() => {
+        const firstInput = currentStepElement?.querySelector('input, textarea, select');
+        if (firstInput && firstInput.type !== 'hidden') {
+            firstInput.focus();
+        }
+    }, 300);
 }
 
 function nextStep() {
@@ -966,65 +1147,155 @@ function previousStep() {
     }
 }
 
+// Enhanced validation with visual feedback
 function validateCurrentStep() {
     const currentStepElement = document.querySelector(`.survey-step[data-step="${currentStep}"]`);
     if (!currentStepElement) return true;
 
+    // Clear previous validation messages
+    hideValidationMessage();
+    clearValidationErrors();
+
     // Get all required inputs in current step
     const requiredInputs = currentStepElement.querySelectorAll('[required]');
     let isValid = true;
+    const errors = [];
 
     requiredInputs.forEach(input => {
         if (input.type === 'checkbox') {
-            // For checkboxes (like consent), check if checked
             if (!input.checked) {
                 isValid = false;
-                // Highlight the checkbox wrapper
+                showFieldError(input, 'This field is required');
                 const checkboxWrapper = input.closest('.consent-checkbox-wrapper');
                 if (checkboxWrapper) {
-                    checkboxWrapper.style.border = '2px solid #dc2626';
-                    checkboxWrapper.style.backgroundColor = '#fee2e2';
+                    checkboxWrapper.classList.add('validation-error');
                     setTimeout(() => {
-                        checkboxWrapper.style.border = '';
-                        checkboxWrapper.style.backgroundColor = '';
-                    }, 2000);
+                        checkboxWrapper.classList.remove('validation-error');
+                    }, 3000);
                 }
-                // Scroll to checkbox
-                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                errors.push('Consent is required');
             }
         } else if (input.type === 'radio') {
-            // Check if at least one radio button with this name is checked
             const radioName = input.getAttribute('name');
             const checkedRadio = currentStepElement.querySelector(`input[name="${radioName}"]:checked`);
             if (!checkedRadio) {
                 isValid = false;
-                // Highlight the question group
                 const questionGroup = input.closest('.question-group');
-                if (questionGroup) {
-                    questionGroup.style.border = '2px solid #dc2626';
+                if (questionGroup && !questionGroup.classList.contains('validation-error')) {
+                    questionGroup.classList.add('validation-error');
+                    errors.push(`Please answer: ${questionGroup.querySelector('.question-label')?.textContent?.trim() || 'this question'}`);
                     setTimeout(() => {
-                        questionGroup.style.border = '';
-                    }, 2000);
+                        questionGroup.classList.remove('validation-error');
+                    }, 3000);
                 }
             }
         } else if (input.value.trim() === '') {
             isValid = false;
-            input.style.borderColor = '#dc2626';
-            setTimeout(() => {
-                input.style.borderColor = '';
-            }, 2000);
+            showFieldError(input, 'This field is required');
+            errors.push('Please fill in all required fields');
+        } else {
+            showFieldSuccess(input);
         }
     });
 
     if (!isValid) {
-        if (currentStep === 0) {
-            alert('Please provide consent by checking the consent box before proceeding.');
-        } else {
-            alert('Please answer all required questions before proceeding.');
+        showValidationMessage(errors.join('. '), 'error');
+        // Scroll to first error
+        const firstError = currentStepElement.querySelector('.validation-error, [style*="border-color: rgb(220, 38, 38)"]');
+        if (firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }
 
     return isValid;
+}
+
+// Validate individual field
+function validateField(input) {
+    if (input.hasAttribute('required')) {
+        if (input.type === 'checkbox' && !input.checked) {
+            showFieldError(input, '');
+            return false;
+        } else if (input.type === 'radio') {
+            const radioName = input.getAttribute('name');
+            const checkedRadio = document.querySelector(`input[name="${radioName}"]:checked`);
+            if (!checkedRadio) {
+                return false;
+            }
+        } else if (input.value.trim() === '') {
+            showFieldError(input, '');
+            return false;
+        }
+        showFieldSuccess(input);
+        return true;
+    }
+    return true;
+}
+
+// Show field error
+function showFieldError(input, message) {
+    input.classList.add('validation-error');
+    input.classList.remove('validation-success');
+    
+    const questionGroup = input.closest('.question-group');
+    if (questionGroup) {
+        questionGroup.classList.add('validation-error');
+        questionGroup.classList.remove('validation-success');
+    }
+}
+
+// Show field success
+function showFieldSuccess(input) {
+    input.classList.remove('validation-error');
+    input.classList.add('validation-success');
+    
+    const questionGroup = input.closest('.question-group');
+    if (questionGroup) {
+        questionGroup.classList.remove('validation-error');
+        questionGroup.classList.add('validation-success');
+        
+        setTimeout(() => {
+            questionGroup.classList.remove('validation-success');
+        }, 2000);
+    }
+}
+
+// Clear validation errors
+function clearValidationErrors() {
+    document.querySelectorAll('.validation-error').forEach(el => {
+        el.classList.remove('validation-error');
+    });
+}
+
+// Show validation message
+function showValidationMessage(message, type = 'error') {
+    const container = document.getElementById('validationMessage');
+    if (container) {
+        container.className = `validation-message ${type}`;
+        container.innerHTML = `
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                ${type === 'error' 
+                    ? '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>'
+                    : '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>'}
+            </svg>
+            <span>${message}</span>
+        `;
+        container.style.display = 'flex';
+        
+        if (type === 'success') {
+            setTimeout(() => {
+                hideValidationMessage();
+            }, 3000);
+        }
+    }
+}
+
+// Hide validation message
+function hideValidationMessage() {
+    const container = document.getElementById('validationMessage');
+    if (container) {
+        container.style.display = 'none';
+    }
 }
 
 function updateProgressBar() {
@@ -1061,5 +1332,195 @@ function updateNavigationButtons() {
     } else {
         if (nextBtn) nextBtn.style.display = 'inline-flex';
         if (submitBtn) submitBtn.style.display = 'none';
+    }
+}
+
+// Update step indicators
+function updateStepIndicators() {
+    const stepItems = document.querySelectorAll('.step-item');
+    stepItems.forEach((item, index) => {
+        item.classList.remove('active', 'completed');
+        
+        if (index === currentStep) {
+            item.classList.add('active');
+        } else if (index < currentStep || checkSectionCompletion(index)) {
+            item.classList.add('completed');
+        }
+    });
+}
+
+// Check if section is completed
+function checkSectionCompletion(step) {
+    // If step is before current step, consider it completed
+    if (step < currentStep) return true;
+    
+    const stepElement = document.querySelector(`.survey-step[data-step="${step}"]`);
+    if (!stepElement) return false;
+    
+    // Get unique required field names (radio groups count as one)
+    const requiredFields = new Set();
+    const radioGroups = new Set();
+    
+    stepElement.querySelectorAll('[required]').forEach(input => {
+        if (input.type === 'radio') {
+            radioGroups.add(input.name);
+        } else {
+            requiredFields.add(input.name || input.id);
+        }
+    });
+    
+    // Check if all radio groups have a selected value
+    let allRadioGroupsCompleted = true;
+    radioGroups.forEach(name => {
+        if (!stepElement.querySelector(`input[name="${name}"]:checked`)) {
+            allRadioGroupsCompleted = false;
+        }
+    });
+    
+    // Check if all other required fields are filled
+    let allFieldsCompleted = true;
+    requiredFields.forEach(name => {
+        const input = stepElement.querySelector(`[name="${name}"], #${name}`);
+        if (input) {
+            if (input.type === 'checkbox' && !input.checked) {
+                allFieldsCompleted = false;
+            } else if (input.value.trim() === '') {
+                allFieldsCompleted = false;
+            }
+        }
+    });
+    
+    return allRadioGroupsCompleted && allFieldsCompleted;
+}
+
+// Go to specific step
+function goToStep(step) {
+    if (step >= 0 && step <= totalSteps) {
+        // Validate current step before moving
+        if (step > currentStep && !validateCurrentStep()) {
+            return;
+        }
+        showStep(step);
+    }
+}
+
+// Keyboard navigation handler
+function handleKeyboardNavigation(e) {
+    // Don't interfere with typing in inputs
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        // Arrow key navigation for radio buttons
+        if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+            if (e.target.type === 'radio') {
+                e.preventDefault();
+                const radios = Array.from(
+                    document.querySelectorAll(`input[name="${e.target.name}"]`)
+                );
+                const currentIndex = radios.indexOf(e.target);
+                const nextIndex = e.key === 'ArrowRight' 
+                    ? (currentIndex + 1) % radios.length
+                    : (currentIndex - 1 + radios.length) % radios.length;
+                radios[nextIndex].focus();
+                radios[nextIndex].click();
+            }
+        }
+        // Enter to submit if on last step and in textarea
+        if (e.key === 'Enter' && e.target.tagName === 'TEXTAREA' && e.ctrlKey && currentStep === totalSteps) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                document.getElementById('surveyForm').requestSubmit();
+            }
+        }
+        return;
+    }
+    
+    // Global keyboard shortcuts
+    if (e.key === 'ArrowLeft' && currentStep > 0) {
+        e.preventDefault();
+        previousStep();
+    } else if (e.key === 'ArrowRight' && currentStep < totalSteps) {
+        e.preventDefault();
+        if (validateCurrentStep()) {
+            nextStep();
+        }
+    } else if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+        if (currentStep < totalSteps) {
+            e.preventDefault();
+            if (validateCurrentStep()) {
+                nextStep();
+            }
+        } else if (currentStep === totalSteps) {
+            e.preventDefault();
+            document.getElementById('surveyForm').requestSubmit();
+        }
+    }
+}
+
+// Touch gesture handlers for mobile swipe
+function handleTouchStart(e) {
+    touchStartX = e.changedTouches[0].screenX;
+}
+
+function handleTouchEnd(e) {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+}
+
+function handleSwipe() {
+    const swipeThreshold = 50;
+    const diff = touchStartX - touchEndX;
+    
+    // Swipe right (go to previous step)
+    if (diff < -swipeThreshold && currentStep > 0) {
+        previousStep();
+    }
+    // Swipe left (go to next step)
+    else if (diff > swipeThreshold && currentStep < totalSteps) {
+        if (validateCurrentStep()) {
+            nextStep();
+        }
+    }
+}
+
+// Handle before unload
+function handleBeforeUnload(e) {
+    // Only show warning if there's unsaved data
+    if (Object.keys(surveyData).length > 0) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+    }
+}
+
+// Save progress to localStorage
+function saveProgress() {
+    // Collect all form data
+    const form = document.getElementById('surveyForm');
+    if (!form) return;
+    
+    const formData = new FormData(form);
+    const data = {};
+    
+    // Collect all form values
+    for (const [key, value] of formData.entries()) {
+        data[key] = value;
+    }
+    
+    // Also collect radio button values
+    form.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
+        data[radio.name] = radio.value;
+    });
+    
+    surveyData = data;
+    
+    // Save to localStorage
+    try {
+        saveToLocalStorage('surveyProgress', {
+            step: currentStep,
+            data: surveyData,
+            timestamp: Date.now()
+        });
+    } catch (e) {
+        console.error('Error saving progress:', e);
     }
 }
