@@ -104,7 +104,52 @@ MAIL_FROM_ADDRESS="your-verified-email@domain.com"
 MAIL_FROM_NAME="Your Name"
 ```
 
+## Testing Your Email Setup
 **Limits:** 100 emails/day (free tier)
+
+---
+
+## ✅ Option 5: Zoho Mail (Custom Domain)
+
+**Pros:**
+- ✅ Works with custom domains (kwadrateam.dev)
+- ✅ Reliable SMTP delivery and good deliverability when DNS (SPF/DKIM) configured
+
+**Requirements / Notes:**
+1. Zoho Mail account with your domain (kwadrateam.dev) already added and verified in Zoho Admin.
+2. If your Zoho account has 2-Factor Authentication enabled (recommended), create an App Password for SMTP usage.
+3. Set up SPF and DKIM records in your DNS for kwadrateam.dev to improve deliverability (example below).
+
+**Setup (example `.env`):**
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.zoho.com
+MAIL_PORT=587
+MAIL_USERNAME=no-reply@kwadrateam.dev
+MAIL_PASSWORD=your-zoho-smtp-app-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="no-reply@kwadrateam.dev"
+MAIL_FROM_NAME="Kwadrateam"
+```
+
+**SMTP details:**
+- Host: `smtp.zoho.com`
+- Port: `587` (TLS) or `465` (SSL)
+- Encryption: `tls` (recommended)
+- Username: full Zoho email address (e.g. `no-reply@kwadrateam.dev`)
+- Password: Zoho account password or preferably an App Password when 2FA is enabled
+
+**DNS (recommended):**
+- SPF TXT (example):
+    - `v=spf1 include:zoho.com ~all`
+- DKIM: generate DKIM keys in Zoho Mail admin and add the provided TXT record to your DNS.
+
+After adding DNS records, allow propagation time (up to 48 hours) and verify in Zoho Admin.
+
+**Common issues & tips:**
+- If emails land in spam, ensure SPF and DKIM are configured for `kwadrateam.dev`.
+- Use an App Password if Zoho blocks SMTP with regular account password.
+- Test sending to several providers (Gmail, Outlook) to confirm deliverability.
 
 ---
 

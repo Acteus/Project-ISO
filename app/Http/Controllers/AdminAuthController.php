@@ -24,11 +24,11 @@ class AdminAuthController extends Controller
             ]);
         }
 
-        // Log the login activity
-        $admin->auditLogs()->create([
-            'action' => 'login',
-            'description' => 'Admin logged in',
-            'ip_address' => $request->ip(),
+        // Log the login activity using AuditService
+        $auditService = app(\App\Services\AuditService::class);
+        $auditService->logAuthentication('login', true, $request, [
+            'user_type' => 'admin',
+            'admin_id' => $admin->id,
         ]);
 
         return response()->json([
@@ -40,11 +40,12 @@ class AdminAuthController extends Controller
 
     public function logout(Request $request)
     {
-        // Log the logout activity
-        $request->user()->auditLogs()->create([
-            'action' => 'logout',
-            'description' => 'Admin logged out',
-            'ip_address' => $request->ip(),
+        // Log the logout activity using AuditService
+        $auditService = app(\App\Services\AuditService::class);
+        $admin = $request->user();
+        $auditService->logAuthentication('logout', true, $request, [
+            'user_type' => 'admin',
+            'admin_id' => $admin ? $admin->id : null,
         ]);
 
         $request->user()->currentAccessToken()->delete();
@@ -64,8 +65,43 @@ class AdminAuthController extends Controller
 
     public function me(Request $request)
     {
+        // Sanctum authenticates based on the token's tokenable_type
+        // If the token was created by an Admin, $request->user() should return the Admin
+        $user = $request->user();
+        
+        // Check if the authenticated user is an Admin
+        if ($user instanceof Admin) {
+            return response()->json([
+                'admin' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ]
+            ]);
+        }
+        
+        // If user is null, the token is invalid or not authenticated
+        if (!$user) {
+            return response()->json([
+                'message' => 'Unauthenticated'
+            ], 401);
+        }
+        
+        // If it's a User model, try to find the corresponding Admin by email
+        $admin = Admin::where('email', $user->email)->first();
+        if ($admin) {
+            return response()->json([
+                'admin' => [
+                    'id' => $admin->id,
+                    'name' => $admin->name,
+                    'email' => $admin->email,
+                ]
+            ]);
+        }
+        
+        // Not an admin
         return response()->json([
-            'admin' => $request->user()
-        ]);
+            'message' => 'Unauthenticated'
+        ], 401);
     }
 }

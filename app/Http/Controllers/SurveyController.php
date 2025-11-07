@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\SurveyResponse;
-use App\Models\AuditLog;
+use App\Services\AuditService;
+use App\Services\ConsentService;
+use App\Services\AnonymizationService;
+use App\Services\DataMinimizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -13,6 +16,12 @@ use Illuminate\Support\Facades\Crypt;
 
 class SurveyController extends Controller
 {
+    protected $auditService;
+
+    public function __construct(AuditService $auditService)
+    {
+        $this->auditService = $auditService;
+    }
     /**
      * Show the survey landing page
      */
@@ -39,6 +48,18 @@ class SurveyController extends Controller
             'user_id' => $user ? $user->id : null,
             'admin' => $admin ? true : false,
         ]);
+
+        // Check consent for authenticated students (GDPR & ISO 27001 requirement)
+        if ($user && $user->role === 'student') {
+            $consentService = app(\App\Services\ConsentService::class);
+            $studentId = $user->student_id ?? null;
+            
+            if ($studentId && !$consentService->hasValidConsent($studentId, 'survey_response')) {
+                // User doesn't have valid consent, redirect to consent page
+                return redirect()->route('student.consent.required')
+                    ->with('info', 'Please provide consent before accessing the survey.');
+            }
+        }
 
         return view('survey.landing', [
             'user' => $user,
@@ -67,6 +88,19 @@ class SurveyController extends Controller
      */
     public function showForm()
     {
+        // Check consent for authenticated students (GDPR & ISO 27001 requirement)
+        $user = Auth::user();
+        if ($user && $user->role === 'student') {
+            $consentService = app(\App\Services\ConsentService::class);
+            $studentId = $user->student_id ?? null;
+            
+            if ($studentId && !$consentService->hasValidConsent($studentId, 'survey_response')) {
+                // User doesn't have valid consent, redirect to consent page
+                return redirect()->route('student.consent.required')
+                    ->with('info', 'Please provide consent before taking the survey.');
+            }
+        }
+
         return view('survey.form');
     }
 
@@ -147,8 +181,55 @@ class SurveyController extends Controller
 
         $data = $request->all();
 
+        // Enforce data minimization - only essential ISO 21001 metrics (GDPR & ISO 27001 compliant)
+        $minimizationService = app(DataMinimizationService::class);
+        $minimizationCheck = $minimizationService->validateDataMinimization($data);
+        
+        if (!$minimizationCheck['valid']) {
+            Log::warning('Data minimization violation detected', [
+                'rejected_fields' => $minimizationCheck['rejected_fields'],
+                'ip' => $request->ip(),
+            ]);
+            
+            return response()->json([
+                'message' => 'Invalid data fields detected',
+                'errors' => [
+                    'data_minimization' => 'Only essential ISO 21001 metrics are allowed. Rejected fields: ' . implode(', ', $minimizationCheck['rejected_fields'])
+                ]
+            ], 422);
+        }
+
+        // Filter to only allowed fields
+        $data = $minimizationService->filterAllowedFields($data);
+
+        // Validate and record explicit consent (GDPR & ISO 27001 compliant)
+        $consentService = app(ConsentService::class);
+        try {
+            $consentService->validateAndRecordConsent(
+                (bool) ($data['consent_given'] ?? false),
+                $data['student_id'] ?? null,
+                $request->ip(),
+                [
+                    'purpose' => 'survey_response',
+                    'consent_version' => '1.0',
+                    'survey_track' => $data['track'] ?? null,
+                ]
+            );
+        } catch (\Exception $e) {
+            Log::warning('Survey submission rejected due to consent', [
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Consent is required to submit this survey',
+                'error' => $e->getMessage()
+            ], 403);
+        }
+
         // Determine student_id from multiple sources
-        if (!isset($data['student_id']) || empty($data['student_id'])) {
+        // Only generate anonymous ID if student_id is truly not provided (null or empty string after trim)
+        if (!isset($data['student_id']) || (is_string($data['student_id']) && trim($data['student_id']) === '')) {
             // Try to get from authenticated user
             if (Auth::check() && Auth::user()->student_id) {
                 $data['student_id'] = Auth::user()->student_id;
@@ -168,26 +249,23 @@ class SurveyController extends Controller
         $response = SurveyResponse::create($data);
 
         // Log successful submission for audit trail (ISO 21001:8.2.4)
-        if (Auth::check()) {
-            AuditLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'submit_survey_response',
-                'description' => Auth::user()->role === 'admin'
-                    ? 'Admin processed ISO 21001 survey response submission'
-                    : 'Student submitted ISO 21001 survey response',
-                'ip_address' => $request->ip(),
-                'new_values' => ['response_id' => $response->id, 'student_id' => $data['student_id'] ?? 'anonymous'],
-            ]);
-        } else {
-            // Log anonymous submission
-            AuditLog::create([
-                'user_id' => null,
-                'action' => 'submit_survey_response',
-                'description' => 'Submitted ISO 21001 survey response (anonymous)',
-                'ip_address' => $request->ip(),
-                'new_values' => ['response_id' => $response->id],
-            ]);
-        }
+        $description = Auth::check() && Auth::user()->role === 'admin'
+            ? 'Admin processed ISO 21001 survey response submission'
+            : (Auth::check() ? 'Student submitted ISO 21001 survey response' : 'Submitted ISO 21001 survey response (anonymous)');
+
+        $this->auditService->logDataModification(
+            'survey_response',
+            $response->id,
+            'create',
+            null,
+            [
+                'response_id' => $response->id,
+                'student_id' => $data['student_id'] ?? 'anonymous',
+                'track' => $response->track,
+                'grade_level' => $response->grade_level,
+            ],
+            $request
+        );
 
         return response()->json([
             'message' => 'Survey response submitted successfully',
@@ -205,14 +283,17 @@ class SurveyController extends Controller
         $dateTo = $request->query('date_to');
 
         // Log analytics access for audit (ISO 21001:8.2.4 - Data access traceability)
+        // Note: AuditMiddleware will also log this, but this provides more context
         if (Auth::check() && Auth::user()->role === 'admin') {
-            AuditLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'view_analytics',
-                'description' => 'Accessed ISO 21001 analytics dashboard',
-                'ip_address' => $request->ip(),
-                'new_values' => ['query_params' => $request->query()],
-            ]);
+            $this->auditService->logDataAccess(
+                'analytics',
+                null,
+                'view_dashboard',
+                $request,
+                [
+                    'query_params' => $request->query(),
+                ]
+            );
         }
 
         // Generate cache key based on query parameters
@@ -225,10 +306,10 @@ class SurveyController extends Controller
             'date_to' => $dateTo,
         ]));
 
-        // Cache analytics data for 5 minutes (300 seconds)
-        $analytics = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($track, $gradeLevel, $academicYear, $semester, $dateFrom, $dateTo) {
+        // Cache analytics data using CacheService for consistent caching strategy
+        $analytics = \App\Services\CacheService::remember($cacheKey, function () use ($track, $gradeLevel, $academicYear, $semester, $dateFrom, $dateTo) {
             return $this->calculateAnalytics($track, $gradeLevel, $academicYear, $semester, $dateFrom, $dateTo);
-        });
+        }, 'analytics');
 
         // Determine response format based on request type (after caching)
         if ($request->header('Accept') === 'application/json' || $request->wantsJson()) {
@@ -407,6 +488,17 @@ class SurveyController extends Controller
 
     public function getAllResponses(Request $request)
     {
+        // Log data access for ISO 21001:8.2.4 compliance
+        $this->auditService->logDataAccess(
+            'survey_response',
+            null,
+            'list',
+            $request,
+            [
+                'filters' => $request->query(),
+            ]
+        );
+
         $perPage = $request->query('per_page', 15);
         $track = $request->query('track');
         $gradeLevel = $request->query('grade_level');
@@ -433,9 +525,13 @@ class SurveyController extends Controller
 
         $responses = $query->paginate($perPage);
 
-        // Add anonymous IDs for privacy
-        $responses->getCollection()->transform(function ($response) {
-            $response->anonymous_id = $response->anonymous_id;
+        // Add anonymous IDs for privacy (GDPR & ISO 27001 compliant)
+        $anonymizationService = app(AnonymizationService::class);
+        $responses->getCollection()->transform(function ($response) use ($anonymizationService) {
+            // Use anonymization service for analytics
+            if ($anonymizationService->useForAnalytics()) {
+                $response->anonymous_id = $response->anonymous_id;
+            }
             return $response->makeHidden(['student_id', 'positive_aspects', 'improvement_suggestions', 'additional_comments', 'ip_address']);
         });
 
@@ -445,9 +541,17 @@ class SurveyController extends Controller
         ]);
     }
 
-    public function getResponse($id)
+    public function getResponse($id, Request $request)
     {
         $response = SurveyResponse::findOrFail($id);
+
+        // Log data access for ISO 21001:8.2.4 compliance
+        $this->auditService->logDataAccess(
+            'survey_response',
+            $id,
+            'view',
+            $request
+        );
 
         // Ensure sensitive fields are hidden and add anonymous_id
         $sanitizedResponse = $response->makeHidden(['student_id', 'positive_aspects', 'improvement_suggestions', 'additional_comments', 'ip_address']);
@@ -462,14 +566,17 @@ class SurveyController extends Controller
     public function deleteResponse($id, Request $request)
     {
         $response = SurveyResponse::findOrFail($id);
+        $oldValues = $response->toArray();
 
-        // Log the deletion
-        $request->user()->auditLogs()->create([
-            'action' => 'delete_response',
-            'description' => "Deleted survey response for student {$response->student_id}",
-            'ip_address' => $request->ip(),
-            'old_values' => $response->toArray(),
-        ]);
+        // Log the deletion with full traceability
+        $this->auditService->logDataModification(
+            'survey_response',
+            $id,
+            'delete',
+            $oldValues,
+            null,
+            $request
+        );
 
         $response->delete();
 

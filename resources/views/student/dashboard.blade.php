@@ -334,6 +334,25 @@
                 <p>Manage your account information and preferences</p>
             </div>
 
+            <!-- Success/Error Messages -->
+            @if(session('success'))
+                <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <svg style="width: 20px; height: 20px; fill: #28a745;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <svg style="width: 20px; height: 20px; fill: #dc3545;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                    </svg>
+                    {{ session('error') }}
+                </div>
+            @endif
+
             <!-- Student Information Card (Read-only) -->
             <div class="student-info-card">
                 <h3>Student Information</h3>
@@ -387,6 +406,129 @@
                         Save Changes
                     </button>
                 </form>
+            </div>
+
+            <!-- Data Privacy & Consent Management (GDPR & ISO 27001) -->
+            <div class="survey-history" style="margin-bottom: 30px; border-left: 4px solid #4338ca;">
+                <h3 style="display: flex; align-items: center; gap: 10px; color: #312e81;">
+                    <svg style="width: 24px; height: 24px; fill: #4338ca;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                    </svg>
+                    Data Privacy & Consent Management
+                </h3>
+                <p style="color: #666; margin-bottom: 20px; line-height: 1.6;">
+                    Manage your data privacy settings and consent preferences in compliance with GDPR and ISO 27001 standards.
+                </p>
+
+                @php
+                    $consentService = app(\App\Services\ConsentService::class);
+                    $studentId = Auth::user()->student_id ?? null;
+                    $hasValidConsent = $studentId ? $consentService->hasValidConsent($studentId, 'survey_response') : false;
+                    $consentHistory = $studentId ? $consentService->getConsentHistory($studentId, 'survey_response') : collect([]);
+                    $latestConsent = $consentHistory->first();
+                @endphp
+
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div>
+                            <h4 style="margin: 0 0 5px 0; color: #333; font-size: 18px;">Current Consent Status</h4>
+                            <p style="margin: 0; color: #666; font-size: 14px;">
+                                @if($hasValidConsent)
+                                    <span style="color: #28a745; font-weight: 600;">
+                                        <svg style="width: 16px; height: 16px; vertical-align: middle; fill: #28a745;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                        </svg>
+                                        Active Consent
+                                    </span>
+                                @else
+                                    <span style="color: #dc3545; font-weight: 600;">
+                                        <svg style="width: 16px; height: 16px; vertical-align: middle; fill: #dc3545;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                        </svg>
+                                        No Active Consent
+                                    </span>
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+
+                    @if($latestConsent)
+                        <div style="background: white; padding: 15px; border-radius: 6px; margin-top: 15px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; font-size: 14px;">
+                                <div>
+                                    <strong style="color: #666;">Consent Given:</strong>
+                                    <div style="color: #333; margin-top: 4px;">
+                                        {{ $latestConsent->created_at->format('M j, Y g:i A') }}
+                                    </div>
+                                </div>
+                                @if($latestConsent->expires_at)
+                                    <div>
+                                        <strong style="color: #666;">Expires:</strong>
+                                        <div style="color: #333; margin-top: 4px;">
+                                            {{ $latestConsent->expires_at->format('M j, Y') }}
+                                        </div>
+                                    </div>
+                                @endif
+                                @if($latestConsent->revoked_at)
+                                    <div>
+                                        <strong style="color: #666;">Revoked:</strong>
+                                        <div style="color: #dc3545; margin-top: 4px;">
+                                            {{ $latestConsent->revoked_at->format('M j, Y g:i A') }}
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; color: #856404; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                        <svg style="width: 20px; height: 20px; fill: #856404;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                        </svg>
+                        Your Rights
+                    </h4>
+                    <ul style="margin: 0; padding-left: 20px; color: #856404; line-height: 1.8;">
+                        <li>You can <strong>revoke your consent</strong> at any time</li>
+                        <li>Revoking consent will prevent future data processing</li>
+                        <li>Existing data will be handled according to retention policies</li>
+                        <li>You can <strong>request data deletion</strong> by contacting the administrator</li>
+                    </ul>
+                </div>
+
+                @if($studentId)
+                    @if($hasValidConsent)
+                        <form method="POST" action="{{ route('student.consent.revoke') }}" id="revokeConsentForm" style="max-width: 600px;">
+                            @csrf
+                            <div style="background: #f8d7da; border: 1px solid #dc3545; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                                <p style="margin: 0; color: #721c24; font-size: 14px; line-height: 1.6;">
+                                    <strong>Warning:</strong> Revoking consent will prevent you from submitting new surveys.
+                                    This action will be logged for audit purposes.
+                                </p>
+                            </div>
+                            <button type="submit" class="btn" style="background: linear-gradient(135deg, #dc3545, #c82333); color: white;" onclick="return confirmRevokeConsent(event)">
+                                <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                                Revoke Consent
+                            </button>
+                        </form>
+                    @else
+                        <div style="background: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 8px;">
+                            <p style="margin: 0; color: #0c5460; font-size: 14px;">
+                                You currently do not have active consent. You will need to provide consent when submitting a survey.
+                            </p>
+                        </div>
+                    @endif
+                @else
+                    <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 8px;">
+                        <p style="margin: 0; color: #856404; font-size: 14px;">
+                            <strong>Note:</strong> Student ID not found. Consent management requires a valid student ID.
+                            Please contact support if you need assistance.
+                        </p>
+                    </div>
+                @endif
             </div>
 
             <!-- Change Password Section -->
@@ -469,6 +611,35 @@
         }
 
         console.log('Student dashboard loaded');
+
+        // Confirm consent revocation
+        function confirmRevokeConsent(event) {
+            event.preventDefault();
+
+            if (confirm('Are you sure you want to revoke your consent?\n\nThis will:\n- Prevent you from submitting new surveys\n- Be logged for audit purposes\n- Not delete existing data immediately\n\nYou can contact the administrator to request data deletion.')) {
+                // Show loading state
+                const form = document.getElementById('revokeConsentForm');
+                const button = form.querySelector('button[type="submit"]');
+                const originalText = button.innerHTML;
+                button.disabled = true;
+                button.innerHTML = '<svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; animation: spin 1s linear infinite;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg> Revoking...';
+
+                // Submit form
+                form.submit();
+            }
+
+            return false;
+        }
+
+        // Add spin animation for loading
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>

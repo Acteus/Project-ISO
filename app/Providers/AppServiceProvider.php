@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schedule;
 use App\Models\SurveyResponse;
 use App\Observers\SurveyResponseObserver;
 
@@ -45,5 +46,19 @@ class AppServiceProvider extends ServiceProvider
         View::composer('*', function ($view) {
             // Add any global view data here
         });
+
+        // Schedule automated compliance reporting (ISO 21001 Clause 8.2.4)
+        Schedule::command('compliance:generate-report --period=monthly --send-email')
+            ->monthlyOn(1, '08:00')
+            ->timezone('Asia/Manila')
+            ->description('Generate monthly ISO 21001 compliance report');
+
+        // Also run weekly compliance reports for monitoring
+        Schedule::command('compliance:generate-report --period=weekly')
+            ->weekly()
+            ->mondays()
+            ->at('08:00')
+            ->timezone('Asia/Manila')
+            ->description('Generate weekly ISO 21001 compliance report');
     }
 }

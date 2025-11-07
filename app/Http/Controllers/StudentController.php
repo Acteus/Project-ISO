@@ -56,19 +56,22 @@ class StudentController extends Controller
             'section' => $request->section,
         ]);
 
-        // Log registration for audit trail
-        AuditLog::create([
-            'user_id' => $user->id,
-            'action' => 'student_registration',
-            'description' => 'Student registered for ISO 21001 survey system',
-            'ip_address' => $request->ip(),
-            'new_values' => [
+        // Log registration for audit trail using AuditService
+        $auditService = app(\App\Services\AuditService::class);
+        $auditService->logDataModification(
+            'user',
+            $user->id,
+            'create',
+            null,
+            [
+                'user_type' => 'student',
                 'student_id' => $user->student_id,
                 'name' => $user->name,
                 'year_level' => $user->year_level,
                 'section' => $user->section,
             ],
-        ]);
+            $request
+        );
 
         // Log the student in
         Auth::login($user);
@@ -135,38 +138,43 @@ class StudentController extends Controller
             ], 422);
         }
 
-        // Check if this is an admin login (student_id = 'admin')
-        if ($request->student_id === 'admin') {
-            $admin = \App\Models\Admin::where('username', $request->student_id)->first();
+        // Check if this is an admin login attempt
+        // Admins can login with either username or email
+        $admin = \App\Models\Admin::where(function($query) use ($request) {
+            $query->where('username', $request->student_id)
+                  ->orWhere('email', $request->student_id);
+        })->first();
 
-            if ($admin && \Illuminate\Support\Facades\Hash::check($request->password, $admin->password)) {
-                // Store admin in session for web authentication
-                session(['admin' => $admin]);
+        if ($admin && \Illuminate\Support\Facades\Hash::check($request->password, $admin->password)) {
+            // Store admin in session for web authentication
+            session(['admin' => $admin]);
 
-                // Mark that we should regenerate on next request
-                $request->session()->put('_should_regenerate', true);
+            // Mark that we should regenerate on next request
+            $request->session()->put('_should_regenerate', true);
 
-                // Log admin login for audit trail
-                AuditLog::create([
-                    'admin_id' => $admin->id,
-                    'action' => 'admin_login',
-                    'description' => 'Admin logged into ISO 21001 survey system',
-                    'ip_address' => $request->ip(),
-                ]);
-
-                return response()->json([
-                    'message' => 'Admin login successful! Welcome back.',
-                    'redirect' => route('admin.dashboard'),
-                    'user' => [
-                        'name' => $admin->name,
-                        'username' => $admin->username,
-                        'role' => 'admin',
-                    ]
-                ]);
-            }
+            // Log admin login for audit trail using AuditService
+            $auditService = app(\App\Services\AuditService::class);
+            $auditService->logAuthentication('login', true, $request, [
+                'user_type' => 'admin',
+                'admin_id' => $admin->id,
+            ]);
 
             return response()->json([
-                'message' => 'Invalid admin credentials. Please check your username and password.'
+                'message' => 'Admin login successful! Welcome back.',
+                'redirect' => route('admin.dashboard'),
+                'user' => [
+                    'name' => $admin->name,
+                    'username' => $admin->username,
+                    'role' => 'admin',
+                ]
+            ]);
+        }
+
+        // If admin lookup found a user but password was wrong, return error
+        // Don't reveal whether it's an admin account for security
+        if ($admin) {
+            return response()->json([
+                'message' => 'Invalid credentials. Please check your username and password.'
             ], 401);
         }
 
@@ -196,12 +204,11 @@ class StudentController extends Controller
                 'session_data' => $request->session()->all(),
             ]);
 
-            // Log login for audit trail
-            AuditLog::create([
+            // Log login for audit trail using AuditService
+            $auditService = app(\App\Services\AuditService::class);
+            $auditService->logAuthentication('login', true, $request, [
+                'user_type' => 'student',
                 'user_id' => $user->id,
-                'action' => 'student_login',
-                'description' => 'Student logged into ISO 21001 survey system',
-                'ip_address' => $request->ip(),
             ]);
 
             // Check if email is verified
@@ -213,6 +220,24 @@ class StudentController extends Controller
                         'name' => $user->name,
                         'student_id' => $user->student_id,
                         'email_verified' => false,
+                    ]
+                ]);
+            }
+
+            // Check if user has valid consent (GDPR & ISO 27001 requirement)
+            // Existing users who registered before consent feature need to provide consent
+            $consentService = app(\App\Services\ConsentService::class);
+            $studentId = $user->student_id ?? null;
+
+            if ($studentId && !$consentService->hasValidConsent($studentId, 'survey_response')) {
+                return response()->json([
+                    'message' => 'Please provide consent to continue using the survey system.',
+                    'redirect' => route('student.consent.required'),
+                    'user' => [
+                        'name' => $user->name,
+                        'student_id' => $user->student_id,
+                        'year_level' => $user->year_level,
+                        'section' => $user->section,
                     ]
                 ]);
             }
@@ -229,8 +254,9 @@ class StudentController extends Controller
             ]);
         }
 
+        // Generic error message for security (don't reveal if username exists)
         return response()->json([
-            'message' => 'Invalid credentials. Please check your Student ID and password.'
+            'message' => 'Invalid credentials. Please check your username and password.'
         ], 401);
     }
 
@@ -239,23 +265,18 @@ class StudentController extends Controller
         $user = Auth::user();
         $admin = session('admin');
 
-        // Log logout for audit trail for students
+        // Log logout for audit trail using AuditService
+        $auditService = app(\App\Services\AuditService::class);
         if ($user) {
-            AuditLog::create([
+            $auditService->logAuthentication('logout', true, $request, [
+                'user_type' => 'student',
                 'user_id' => $user->id,
-                'action' => 'student_logout',
-                'description' => 'Student logged out of ISO 21001 survey system',
-                'ip_address' => $request->ip(),
             ]);
         }
-
-        // Log logout for audit trail for admins
         if ($admin) {
-            AuditLog::create([
-                'admin_id' => $admin->id,
-                'action' => 'admin_logout',
-                'description' => 'Admin logged out of ISO 21001 survey system',
-                'ip_address' => $request->ip(),
+            $auditService->logAuthentication('logout', true, $request, [
+                'user_type' => 'admin',
+                'user_id' => $admin->id,
             ]);
         }
 
@@ -317,7 +338,170 @@ class StudentController extends Controller
             return redirect()->route('student.login');
         }
 
+        // Check if user has valid consent (GDPR & ISO 27001 requirement)
+        // Existing users who registered before consent feature need to provide consent
+        $consentService = app(\App\Services\ConsentService::class);
+        $studentId = $user->student_id ?? null;
+
+        if ($studentId && !$consentService->hasValidConsent($studentId, 'survey_response')) {
+            // User doesn't have valid consent, redirect to consent page
+            return redirect()->route('student.consent.required')
+                ->with('info', 'Please provide consent to continue using the survey system.');
+        }
+
         return view('student.dashboard', compact('user'));
+    }
+
+    /**
+     * Show consent required page for existing users
+     *
+     * This page is shown to users who registered before the consent feature was added
+     * or users who haven't provided consent yet
+     */
+    public function showConsentRequired()
+    {
+        $user = Auth::user();
+
+        if (!$user || $user->role !== 'student') {
+            return redirect()->route('student.login');
+        }
+
+        $consentService = app(\App\Services\ConsentService::class);
+        $studentId = $user->student_id ?? null;
+
+        // If user already has valid consent, redirect to dashboard
+        if ($studentId && $consentService->hasValidConsent($studentId, 'survey_response')) {
+            return redirect()->route('student.dashboard')
+                ->with('success', 'You already have active consent.');
+        }
+
+        return view('student.consent-required', compact('user'));
+    }
+
+    /**
+     * Accept consent (GDPR & ISO 27001 compliant)
+     *
+     * Handles consent acceptance from existing users
+     */
+    public function acceptConsent(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user || $user->role !== 'student') {
+            return redirect()->route('student.login');
+        }
+
+        $validator = Validator::make($request->all(), [
+            'consent_given' => 'required|accepted',
+        ], [
+            'consent_given.required' => 'You must provide consent to continue.',
+            'consent_given.accepted' => 'You must check the consent box to continue.',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('student.consent.required')
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        if (!$user->student_id) {
+            return redirect()->route('student.consent.required')
+                ->with('error', 'Unable to record consent: Student ID not found. Please contact support.');
+        }
+
+        try {
+            $consentService = app(\App\Services\ConsentService::class);
+
+            // Record consent (method signature: bool $consentGiven, ?string $studentId, ?string $ipAddress, array $context)
+            $consentGiven = $consentService->validateAndRecordConsent(
+                true, // consent given
+                $user->student_id,
+                $request->ip(),
+                [
+                    'purpose' => 'survey_response',
+                    'source' => 'existing_user_consent_page',
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'consent_version' => '1.0',
+                ]
+            );
+
+            if ($consentGiven) {
+                // Determine redirect based on where user came from
+                $redirectTo = $request->input('redirect_to', route('student.dashboard'));
+
+                return redirect($redirectTo)
+                    ->with('success', 'Thank you for providing consent. You can now access all features of the survey system.');
+            } else {
+                return redirect()->route('student.consent.required')
+                    ->with('error', 'Failed to record consent. Please try again or contact support.');
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to record consent', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('student.consent.required')
+                ->with('error', 'An error occurred while recording consent. Please try again or contact support.');
+        }
+    }
+
+    /**
+     * Revoke consent (GDPR & ISO 27001 compliant)
+     *
+     * Allows students to revoke their consent at any time as required by GDPR
+     */
+    public function revokeConsent(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user || $user->role !== 'student') {
+            return redirect()->route('student.login');
+        }
+
+        if (!$user->student_id) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Unable to revoke consent: Student ID not found.');
+        }
+
+        try {
+            $consentService = app(\App\Services\ConsentService::class);
+            $revoked = $consentService->revokeConsent(
+                $user->student_id,
+                'survey_response',
+                $request->ip()
+            );
+
+            if ($revoked) {
+                // Log the revocation for audit trail
+                \App\Models\AuditLog::create([
+                    'user_id' => $user->id,
+                    'action' => 'consent_revoked_by_student',
+                    'description' => 'Student revoked consent for survey data processing',
+                    'ip_address' => $request->ip(),
+                    'new_values' => [
+                        'student_id' => '***REDACTED***',
+                        'purpose' => 'survey_response',
+                        'timestamp' => now()->toIso8601String(),
+                    ],
+                ]);
+
+                return redirect()->route('student.dashboard')
+                    ->with('success', 'Your consent has been successfully revoked. You will need to provide consent again to submit new surveys.');
+            } else {
+                return redirect()->route('student.dashboard')
+                    ->with('error', 'No active consent found to revoke.');
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to revoke consent', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('student.dashboard')
+                ->with('error', 'An error occurred while revoking consent. Please try again or contact support.');
+        }
     }
 
     /**
@@ -424,9 +608,9 @@ class StudentController extends Controller
             return redirect()->route('student.login');
         }
 
-        // Cache dashboard data for 3 minutes
+        // Cache dashboard data using CacheService for consistent caching strategy
         $cacheKey = 'dashboard:admin:' . $admin->id;
-        $dashboardData = \Illuminate\Support\Facades\Cache::remember($cacheKey, 180, function () {
+        $dashboardData = \App\Services\CacheService::remember($cacheKey, function () {
             return [
                 'totalResponses' => \App\Models\SurveyResponse::count(),
                 'recentResponses' => \App\Models\SurveyResponse::latest()->take(5)->get(),
@@ -434,7 +618,7 @@ class StudentController extends Controller
                     ->groupBy('track')
                     ->get(),
             ];
-        });
+        }, 'dashboard');
 
         return view('admin.dashboard', array_merge(
             ['admin' => $admin],
@@ -503,19 +687,42 @@ class StudentController extends Controller
         $search = $request->get('search');
         $perPage = $request->get('per_page', 20);
 
-        // Build query
-        $query = AuditLog::with('user')->orderBy('created_at', 'desc');
+        // Build query with eager loading to prevent N+1 queries
+        $query = AuditLog::with(['user'])->orderBy('created_at', 'desc');
 
         // Apply filters
         if ($action && $action !== 'all') {
             $query->where('action', $action);
         }
 
+        // Filter by resource type if needed (new feature)
+        if ($request->has('resource_type') && $request->get('resource_type') !== 'all') {
+            $query->where('resource_type', $request->get('resource_type'));
+        }
+
         if ($userType && $userType !== 'all') {
+            // Filter by user type - check metadata or description for user type
             if ($userType === 'student') {
-                $query->whereNotNull('user_id');
+                // Students typically have user_id and description mentions "student" or metadata has user_type=student
+                $query->where(function($q) {
+                    $q->where('description', 'LIKE', '%Student%')
+                      ->orWhere('description', 'LIKE', '%student%')
+                      ->orWhere(function($q2) {
+                          // Check if it's not an admin action
+                          $q2->whereNotNull('user_id')
+                            ->where(function($q3) {
+                                $q3->whereNull('metadata')
+                                  ->orWhere('metadata', 'NOT LIKE', '%"user_type":"admin"%');
+                            });
+                      });
+                });
             } elseif ($userType === 'admin') {
-                $query->whereNotNull('admin_id');
+                // Admins have descriptions mentioning "Admin" or metadata with user_type=admin
+                $query->where(function($q) {
+                    $q->where('description', 'LIKE', '%Admin%')
+                      ->orWhere('description', 'LIKE', '%admin%')
+                      ->orWhere('metadata', 'LIKE', '%"user_type":"admin"%');
+                });
             }
         }
 
@@ -531,7 +738,9 @@ class StudentController extends Controller
             $query->where(function($q) use ($search) {
                 $q->where('description', 'LIKE', "%{$search}%")
                   ->orWhere('ip_address', 'LIKE', "%{$search}%")
-                  ->orWhere('user_id', 'LIKE', "%{$search}%");
+                  ->orWhere('user_id', 'LIKE', "%{$search}%")
+                  ->orWhere('resource_type', 'LIKE', "%{$search}%")
+                  ->orWhere('resource_id', 'LIKE', "%{$search}%");
             });
         }
 
@@ -541,26 +750,71 @@ class StudentController extends Controller
         // Get unique actions for filter dropdown
         $actions = AuditLog::select('action')->distinct()->orderBy('action')->pluck('action');
 
-        // Create user types manually since we derive them from user_id/admin_id
+        // Get unique resource types for filter
+        $resourceTypes = AuditLog::select('resource_type')
+            ->distinct()
+            ->whereNotNull('resource_type')
+            ->orderBy('resource_type')
+            ->pluck('resource_type');
+
+        // Create user types manually
         $userTypes = collect(['student', 'admin']);
 
-        // Get statistics for filtered results
+        // Get statistics for filtered results - updated for new action structure
+        $baseQuery = AuditLog::query();
+        if ($action && $action !== 'all') {
+            $baseQuery->where('action', $action);
+        }
+        if ($dateFrom) {
+            $baseQuery->whereDate('created_at', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $baseQuery->whereDate('created_at', '<=', $dateTo);
+        }
+
+        // Calculate stats with backward compatibility
         $stats = [
-            'total' => $query->count(),
-            'loginCount' => AuditLog::whereIn('action', ['student_login', 'admin_login'])->count(),
-            'logoutCount' => AuditLog::whereIn('action', ['student_logout', 'admin_logout'])->count(),
-            'submissionCount' => AuditLog::where('action', 'submit_survey_response')->count(),
+            'total' => $baseQuery->count(),
+            'loginCount' => (clone $baseQuery)->where(function($q) {
+                $q->where('action', 'authentication')
+                  ->where('description', 'LIKE', '%login%')
+                  ->orWhereIn('action', ['student_login', 'admin_login']); // Backward compatibility
+            })->count(),
+            'logoutCount' => (clone $baseQuery)->where(function($q) {
+                $q->where('action', 'authentication')
+                  ->where('description', 'LIKE', '%logout%')
+                  ->orWhereIn('action', ['student_logout', 'admin_logout']); // Backward compatibility
+            })->count(),
+            'submissionCount' => (clone $baseQuery)->where(function($q) {
+                $q->where(function($q2) {
+                    $q2->where('action', 'data_modification')
+                      ->where('resource_type', 'survey_response')
+                      ->where('description', 'LIKE', '%survey%');
+                })
+                ->orWhere('action', 'submit_survey_response'); // Backward compatibility
+            })->count(),
+            'consentCount' => (clone $baseQuery)->where(function($q) {
+                $q->where('action', 'compliance')
+                  ->where('description', 'LIKE', '%consent%')
+                  ->orWhereIn('action', ['consent_given', 'consent_denied', 'consent_revoked']); // Backward compatibility
+            })->count(),
+            'dataAccessCount' => (clone $baseQuery)->where('action', 'data_access')->count(),
+            'dataModificationCount' => (clone $baseQuery)->where('action', 'data_modification')->count(),
         ];
 
-        // Log viewing of audit logs
-        AuditLog::create([
-            'admin_id' => $admin->id,
-            'action' => 'view_audit_logs',
-            'description' => 'Admin viewed system audit logs',
-            'ip_address' => request()->ip(),
-        ]);
+        // Log viewing of audit logs using AuditService
+        $auditService = app(\App\Services\AuditService::class);
+        $auditService->logDataAccess(
+            'audit_log',
+            null,
+            'view_audit_logs',
+            $request,
+            [
+                'filters' => $request->except('page'),
+            ]
+        );
 
-        return view('admin.audit-logs', compact('admin', 'auditLogs', 'actions', 'userTypes', 'action', 'userType', 'dateFrom', 'dateTo', 'search', 'perPage', 'stats'));
+        return view('admin.audit-logs', compact('admin', 'auditLogs', 'actions', 'userTypes', 'resourceTypes', 'action', 'userType', 'dateFrom', 'dateTo', 'search', 'perPage', 'stats'));
     }
 
     public function aiInsights()
@@ -571,13 +825,14 @@ class StudentController extends Controller
             return redirect()->route('student.login');
         }
 
-        // Log viewing of AI insights for audit trail
-        AuditLog::create([
-            'admin_id' => $admin->id,
-            'action' => 'view_ai_insights',
-            'description' => 'Admin accessed AI insights dashboard',
-            'ip_address' => request()->ip(),
-        ]);
+        // Log viewing of AI insights for audit trail using AuditService
+        $auditService = app(\App\Services\AuditService::class);
+        $auditService->logDataAccess(
+            'ai_insights',
+            null,
+            'view_dashboard',
+            request()
+        );
 
         return view('admin.ai-insights', compact('admin'));
     }

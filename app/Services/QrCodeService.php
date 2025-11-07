@@ -17,11 +17,14 @@ class QrCodeService
      */
     public function generateQrCode(array $data)
     {
+        // Set default target_url if not provided (final destination after scan)
+        $targetUrl = $data['target_url'] ?? route('survey.landing');
+        
         // Create QR code record
         $qrCode = QrCode::create([
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
-            'target_url' => $data['target_url'],
+            'target_url' => $targetUrl, // Final destination URL (e.g., survey landing page)
             'format' => $data['format'] ?? 'png',
             'size' => $data['size'] ?? 300,
             'foreground_color' => $data['foreground_color'] ?? '#000000',
@@ -37,8 +40,9 @@ class QrCodeService
             'created_by' => $data['created_by'] ?? null,
         ]);
 
-        // Generate and save the QR code file
-        $this->saveQrCodeFile($qrCode);
+        // Generate and save the QR code file using the public URL (for scan tracking)
+        // The QR code image encodes the public URL, which records the scan and redirects to target_url
+        $this->saveQrCodeFile($qrCode, $qrCode->getPublicUrl());
 
         return $qrCode;
     }
@@ -47,10 +51,14 @@ class QrCodeService
      * Generate and save QR code file.
      *
      * @param QrCode $qrCode
+     * @param string|null $urlToEncode Optional URL to encode in QR code (defaults to public URL for tracking)
      * @return string
      */
-    public function saveQrCodeFile(QrCode $qrCode)
+    public function saveQrCodeFile(QrCode $qrCode, $urlToEncode = null)
     {
+        // Use provided URL or default to QR code's public URL for scan tracking
+        $url = $urlToEncode ?? $qrCode->getPublicUrl();
+        
         // Create the QR code
         $foregroundRgb = $this->hexToRgb($qrCode->foreground_color);
         $backgroundRgb = $this->hexToRgb($qrCode->background_color);
@@ -66,8 +74,8 @@ class QrCodeService
             $qr = $this->applyCustomOptions($qr, $qrCode->custom_options);
         }
 
-        // Generate the QR code
-        $qrData = $qr->generate($qrCode->target_url);
+        // Generate the QR code with the tracking URL
+        $qrData = $qr->generate($url);
 
         // Determine file path
         $fileName = $this->generateFileName($qrCode);
@@ -109,7 +117,7 @@ class QrCodeService
                 $data = [
                     'name' => "CSS Grade {$gradeLevel} Section {$section}",
                     'description' => "QR code for CSS Grade {$gradeLevel}, Section {$section}",
-                    'target_url' => $config['target_url'],
+                    'target_url' => $config['target_url'] ?? null, // Will be auto-set to public URL
                     'format' => $config['format'] ?? 'png',
                     'size' => $config['size'] ?? 300,
                     'foreground_color' => $config['foreground_color'] ?? '#000000',

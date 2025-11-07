@@ -226,11 +226,11 @@
                         <p>
                             For any inquiries, concerns, or feedback regarding the survey or academic matters, please reach out to us via email:
                         </p>
-                        <a href="mailto:support@jru.edu" class="email-btn">
+                        <a href="mailto:support@kwadrateam.dev" class="email-btn">
                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                 <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
                             </svg>
-                            support@jru.edu
+                            support@kwadrateam.dev
                         </a>
                     </div>
 
@@ -288,7 +288,7 @@
                         <div class="faq-item">
                             <h4>Q: I'm having trouble accessing the survey. What should I do?</h4>
                             <p>
-                                A: First, ensure you're logged in with your student account. If you continue to experience issues, please email us at support@jru.edu with details about the problem (browser type, error messages, etc.), and we'll assist you promptly.
+                                A: First, ensure you're logged in with your student account. If you continue to experience issues, please email us at support@kwadrateam.dev with details about the problem (browser type, error messages, etc.), and we'll assist you promptly.
                             </p>
                         </div>
 

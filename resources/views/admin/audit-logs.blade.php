@@ -244,12 +244,19 @@
             letter-spacing: 0.5px;
         }
 
+        .action-authentication { background: linear-gradient(135deg, #28a745, #20c997); color: white; }
+        .action-dataaccess { background: linear-gradient(135deg, #ffc107, #ff9800); color: #333; }
+        .action-datamodification { background: linear-gradient(135deg, #17a2b8, #138496); color: white; }
+        .action-compliance { background: linear-gradient(135deg, #6f42c1, #5a32a3); color: white; }
         .action-login { background: linear-gradient(135deg, #28a745, #20c997); color: white; }
         .action-logout { background: linear-gradient(135deg, #6c757d, #5a6268); color: white; }
         .action-submit { background: linear-gradient(135deg, #17a2b8, #138496); color: white; }
         .action-access { background: linear-gradient(135deg, #ffc107, #ff9800); color: #333; }
         .action-error { background: linear-gradient(135deg, #dc3545, #e74c3c); color: white; }
         .action-export { background: linear-gradient(135deg, #6f42c1, #5a32a3); color: white; }
+        .action-consentgiven { background: linear-gradient(135deg, #28a745, #20c997); color: white; }
+        .action-consentdenied { background: linear-gradient(135deg, #dc3545, #e74c3c); color: white; }
+        .action-consentrevoked { background: linear-gradient(135deg, #ff9800, #f57c00); color: white; }
 
         .stats-bar {
             display: grid;
@@ -359,25 +366,36 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 8px;
+            flex-wrap: wrap;
+            gap: 6px;
             margin-top: 30px;
-            padding: 20px;
+            padding: 15px;
             background: rgba(255, 255, 255, 0.5);
             backdrop-filter: blur(10px);
             border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.3);
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: auto;
+            overflow-y: hidden;
         }
 
         .pagination a,
         .pagination span {
-            padding: 12px 16px;
+            padding: 10px 14px;
             border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 10px;
+            border-radius: 8px;
             text-decoration: none;
             color: #333;
             transition: all 0.3s ease;
             font-weight: 600;
             background: rgba(255, 255, 255, 0.8);
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: 40px;
+            text-align: center;
+            font-size: 14px;
         }
 
         .pagination a:hover {
@@ -399,6 +417,33 @@
             opacity: 0.5;
             pointer-events: none;
             background: rgba(200, 200, 200, 0.5);
+        }
+
+        .pagination-ellipsis {
+            padding: 10px 8px;
+            color: #666;
+            font-weight: 600;
+            user-select: none;
+        }
+
+        /* Responsive pagination */
+        @media (max-width: 768px) {
+            .pagination {
+                padding: 12px 8px;
+                gap: 4px;
+            }
+
+            .pagination a,
+            .pagination span {
+                padding: 8px 10px;
+                font-size: 13px;
+                min-width: 36px;
+            }
+
+            .pagination-ellipsis {
+                padding: 8px 4px;
+                font-size: 13px;
+            }
         }
 
         .no-data {
@@ -538,7 +583,7 @@
             <div class="logs-header">
                 <h1>System Audit Logs</h1>
                 <p>Comprehensive audit trail for ISO 21001 compliance and system security monitoring</p>
-                @if(request()->has('action') || request()->has('user_type') || request()->has('date_from') || request()->has('date_to') || request()->has('search'))
+                        @if(request()->has('action') || request()->has('user_type') || request()->has('resource_type') || request()->has('date_from') || request()->has('date_to') || request()->has('search'))
                     <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(255, 140, 0, 0.1)); border-radius: 12px; border-left: 4px solid #4285F4;">
                         <strong style="color: #4285F4;">
                             <svg style="width: 18px; height: 18px; vertical-align: middle; margin-right: 6px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -551,8 +596,12 @@
                                 Action: <em>{{ ucfirst(str_replace('_', ' ', request('action'))) }}</em>
                             @endif
                             @if(request()->has('user_type') && request('user_type') !== 'all')
-                                {{ request()->has('action') && request('action') !== 'all' ? ' | ' : '' }}
+                                {{ (request()->has('action') && request('action') !== 'all') ? ' | ' : '' }}
                                 User Type: <em>{{ ucfirst(request('user_type')) }}</em>
+                            @endif
+                            @if(request()->has('resource_type') && request('resource_type') !== 'all')
+                                {{ (request()->has('action') && request('action') !== 'all') || (request()->has('user_type') && request('user_type') !== 'all') ? ' | ' : '' }}
+                                Resource: <em>{{ ucfirst(str_replace('_', ' ', request('resource_type'))) }}</em>
                             @endif
                             @if(request()->has('date_from'))
                                 {{ (request()->has('action') && request('action') !== 'all') || (request()->has('user_type') && request('user_type') !== 'all') ? ' | ' : '' }}
@@ -600,6 +649,19 @@
                                 @foreach($userTypes as $type)
                                     <option value="{{ $type }}" {{ request('user_type') == $type ? 'selected' : '' }}>
                                         {{ ucfirst($type) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Resource Type Filter -->
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Resource Type</label>
+                            <select name="resource_type" class="filter-select" style="width: 100%; padding: 12px; border: 2px solid rgba(66, 133, 244, 0.2); border-radius: 10px; font-size: 14px; background: white; transition: all 0.3s ease;">
+                                <option value="all">All Resources</option>
+                                @foreach($resourceTypes ?? [] as $resourceType)
+                                    <option value="{{ $resourceType }}" {{ request('resource_type') == $resourceType ? 'selected' : '' }}>
+                                        {{ ucfirst(str_replace('_', ' ', $resourceType)) }}
                                     </option>
                                 @endforeach
                             </select>
@@ -676,6 +738,18 @@
                     <div class="stat-value">{{ $stats['submissionCount'] ?? 0 }}</div>
                     <div class="stat-label">Survey Submissions</div>
                 </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ $stats['consentCount'] ?? 0 }}</div>
+                    <div class="stat-label">Consent Events</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ $stats['dataAccessCount'] ?? 0 }}</div>
+                    <div class="stat-label">Data Access</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ $stats['dataModificationCount'] ?? 0 }}</div>
+                    <div class="stat-label">Data Modifications</div>
+                </div>
             </div>
 
             <!-- Logs Table -->
@@ -686,6 +760,7 @@
                             <tr>
                                 <th>Timestamp</th>
                                 <th>Action</th>
+                                <th>Resource</th>
                                 <th>User</th>
                                 <th>Details</th>
                                 <th>IP Address</th>
@@ -706,24 +781,205 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <div style="font-weight: 600; color: #2c3e50;">
-                                            @if($log->user_id)
-                                                Student
-                                            @elseif($log->admin_id)
-                                                Admin
-                                            @else
-                                                System
+                                        @php
+                                            // Infer resource type from action/description if not explicitly set
+                                            $resourceType = $log->resource_type;
+                                            $resourceId = $log->resource_id;
+                                            
+                                            // If resource_type is null, try to infer it from the action
+                                            if (!$resourceType) {
+                                                $action = strtolower($log->action ?? '');
+                                                $description = strtolower($log->description ?? '');
+                                                
+                                                // Map actions to resource types
+                                                if (in_array($action, ['authentication', 'admin_login', 'student_login', 'admin_logout', 'student_logout']) || 
+                                                    strpos($description, 'login') !== false || 
+                                                    strpos($description, 'logout') !== false) {
+                                                    $resourceType = 'session';
+                                                    // Try to get resource_id from user_id if available
+                                                    $resourceId = $resourceId ?: $log->user_id;
+                                                } elseif (strpos($description, 'survey') !== false || 
+                                                          strpos($action, 'survey') !== false || 
+                                                          strpos($action, 'submission') !== false) {
+                                                    $resourceType = 'survey_response';
+                                                } elseif (strpos($description, 'consent') !== false || 
+                                                          strpos($action, 'consent') !== false) {
+                                                    $resourceType = 'consent_record';
+                                                } elseif (strpos($action, 'ai_analysis') !== false || 
+                                                          strpos($action, 'view_ai') !== false) {
+                                                    $resourceType = 'ai_analysis';
+                                                } elseif (strpos($action, 'export') !== false || 
+                                                          strpos($description, 'export') !== false) {
+                                                    $resourceType = 'export';
+                                                } elseif (strpos($action, 'view') !== false || 
+                                                          strpos($action, 'access') !== false) {
+                                                    $resourceType = 'data_access';
+                                                }
+                                            }
+                                        @endphp
+                                        
+                                        @if($resourceType)
+                                            <div style="font-weight: 600; color: #4285F4;">
+                                                {{ ucfirst(str_replace('_', ' ', $resourceType)) }}
+                                            </div>
+                                            @if($resourceId)
+                                                <small style="color: #666;">ID: {{ $resourceId }}</small>
+                                            @elseif($log->user_id && $resourceType === 'session')
+                                                <small style="color: #666;">User ID: {{ $log->user_id }}</small>
                                             @endif
-                                        </div>
-                                        @if($log->user_id)
-                                            <small style="color: #666;">Student ID: {{ $log->user_id }}</small>
-                                        @elseif($log->admin_id)
-                                            <small style="color: #666;">Admin ID: {{ $log->admin_id }}</small>
+                                        @else
+                                            <span style="color: #999; font-style: italic;" title="This action is not associated with a specific resource (system-level event)">
+                                                System Event
+                                            </span>
                                         @endif
                                     </td>
                                     <td>
-                                        <div style="color: #5a6c7d; font-size: 14px; line-height: 1.5;">
-                                            {{ $log->description ?? 'No description available' }}
+                                        <div style="font-weight: 600; color: #2c3e50;">
+                                            @php
+                                                $userType = 'System';
+                                                if ($log->user_id) {
+                                                    // Check metadata for user_type
+                                                    if ($log->metadata && isset($log->metadata['user_type'])) {
+                                                        $userType = ucfirst($log->metadata['user_type']);
+                                                    } else {
+                                                        // Check new_values for user_type (backward compatibility)
+                                                        if ($log->new_values && isset($log->new_values['user_type'])) {
+                                                            $userType = ucfirst($log->new_values['user_type']);
+                                                        } else {
+                                                            $userType = 'Student';
+                                                        }
+                                                    }
+                                                }
+                                            @endphp
+                                            {{ $userType }}
+                                        </div>
+                                        @if($log->user_id)
+                                            <small style="color: #666;">User ID: {{ $log->user_id }}</small>
+                                        @endif
+                                        @if($log->user)
+                                            <small style="color: #666; display: block;">{{ $log->user->name ?? 'N/A' }}</small>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div style="color: #5a6c7d; font-size: 14px; line-height: 1.6; max-width: 500px;">
+                                            <!-- Description -->
+                                            <div style="font-weight: 500; color: #2c3e50; margin-bottom: 8px;">
+                                                {{ $log->description ?? 'No description available' }}
+                                            </div>
+
+                                            @php
+                                                // Extract and format key information from JSON data
+                                                $hasDetails = false;
+                                                $summaryItems = [];
+                                                $fullDetails = [];
+
+                                                // Process new_values
+                                                if ($log->new_values && is_array($log->new_values)) {
+                                                    $redactedValues = $log->new_values;
+                                                    if (isset($redactedValues['student_id']) && $redactedValues['student_id'] !== '***REDACTED***') {
+                                                        $redactedValues['student_id'] = '***REDACTED***';
+                                                    }
+                                                    
+                                                    // Extract key fields for summary
+                                                    $keyFields = ['auth_action', 'success', 'user_type', 'admin_id', 'access_action', 'resource_type', 'resource_id', 'action'];
+                                                    foreach ($keyFields as $key) {
+                                                        if (isset($redactedValues[$key])) {
+                                                            $summaryItems[] = [
+                                                                'label' => ucfirst(str_replace('_', ' ', $key)),
+                                                                'value' => is_bool($redactedValues[$key]) ? ($redactedValues[$key] ? 'Yes' : 'No') : $redactedValues[$key],
+                                                                'type' => 'new'
+                                                            ];
+                                                        }
+                                                    }
+                                                    
+                                                    // Store full data for expandable view
+                                                    if (!empty($redactedValues)) {
+                                                        $fullDetails['new_values'] = $redactedValues;
+                                                        $hasDetails = true;
+                                                    }
+                                                }
+
+                                                // Process old_values
+                                                if ($log->old_values && is_array($log->old_values)) {
+                                                    $redactedOldValues = $log->old_values;
+                                                    if (isset($redactedOldValues['student_id']) && $redactedOldValues['student_id'] !== '***REDACTED***') {
+                                                        $redactedOldValues['student_id'] = '***REDACTED***';
+                                                    }
+                                                    
+                                                    if (!empty($redactedOldValues)) {
+                                                        $fullDetails['old_values'] = $redactedOldValues;
+                                                        $hasDetails = true;
+                                                    }
+                                                }
+
+                                                // Process metadata (exclude verbose nested objects from summary)
+                                                if ($log->metadata && is_array($log->metadata)) {
+                                                    // Extract simple key-value pairs for summary
+                                                    foreach ($log->metadata as $key => $value) {
+                                                        // Skip complex nested objects (like admin object) in summary
+                                                        if (!is_array($value) && !is_object($value)) {
+                                                            $summaryItems[] = [
+                                                                'label' => ucfirst(str_replace('_', ' ', $key)),
+                                                                'value' => is_bool($value) ? ($value ? 'Yes' : 'No') : $value,
+                                                                'type' => 'meta'
+                                                            ];
+                                                        }
+                                                    }
+                                                    
+                                                    $fullDetails['metadata'] = $log->metadata;
+                                                    if (!empty($log->metadata)) {
+                                                        $hasDetails = true;
+                                                    }
+                                                }
+                                            @endphp
+
+                                            <!-- Summary of key information -->
+                                            @if(!empty($summaryItems))
+                                                <div style="margin-top: 8px; padding: 8px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.08), rgba(255, 140, 0, 0.05)); border-radius: 8px; border-left: 3px solid #4285F4;">
+                                                    @foreach($summaryItems as $item)
+                                                        <div style="display: flex; gap: 8px; margin-bottom: 4px; font-size: 12px;">
+                                                            <span style="color: #666; font-weight: 600; min-width: 80px;">{{ $item['label'] }}:</span>
+                                                            <span style="color: #2c3e50;">{{ $item['value'] }}</span>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+
+                                            <!-- Expandable full details -->
+                                            @if($hasDetails)
+                                                <div style="margin-top: 8px;">
+                                                    <button type="button" 
+                                                            onclick="toggleDetails({{ $log->id }})" 
+                                                            class="details-toggle-btn"
+                                                            id="toggle-btn-{{ $log->id }}"
+                                                            style="background: rgba(66, 133, 244, 0.1); border: 1px solid rgba(66, 133, 244, 0.3); color: #4285F4; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">
+                                                        <span id="toggle-text-{{ $log->id }}">Show Details</span>
+                                                        <svg id="toggle-icon-{{ $log->id }}" style="width: 14px; height: 14px; vertical-align: middle; margin-left: 4px; display: inline-block; transition: transform 0.3s;" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                    </button>
+                                                    <div id="details-{{ $log->id }}" style="display: none; margin-top: 8px; animation: fadeIn 0.3s ease-in;">
+                                                        @if(isset($fullDetails['new_values']) && !empty($fullDetails['new_values']))
+                                                            <div style="padding: 10px; background: rgba(66, 133, 244, 0.05); border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #4285F4;">
+                                                                <strong style="color: #4285F4; font-size: 12px; display: block; margin-bottom: 6px;">New Values:</strong>
+                                                                <pre style="margin: 0; font-size: 11px; color: #555; white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto; background: rgba(255,255,255,0.5); padding: 8px; border-radius: 4px;">{{ json_encode($fullDetails['new_values'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                                            </div>
+                                                        @endif
+                                                        @if(isset($fullDetails['old_values']) && !empty($fullDetails['old_values']))
+                                                            <div style="padding: 10px; background: rgba(255, 140, 0, 0.05); border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #FF8C00;">
+                                                                <strong style="color: #FF8C00; font-size: 12px; display: block; margin-bottom: 6px;">Old Values:</strong>
+                                                                <pre style="margin: 0; font-size: 11px; color: #555; white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto; background: rgba(255,255,255,0.5); padding: 8px; border-radius: 4px;">{{ json_encode($fullDetails['old_values'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                                            </div>
+                                                        @endif
+                                                        @if(isset($fullDetails['metadata']) && !empty($fullDetails['metadata']))
+                                                            <div style="padding: 10px; background: rgba(108, 117, 125, 0.05); border-radius: 6px; border-left: 3px solid #6c757d;">
+                                                                <strong style="color: #6c757d; font-size: 12px; display: block; margin-bottom: 6px;">Metadata:</strong>
+                                                                <pre style="margin: 0; font-size: 11px; color: #555; white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto; background: rgba(255,255,255,0.5); padding: 8px; border-radius: 4px;">{{ json_encode($fullDetails['metadata'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @endif
                                         </div>
                                     </td>
                                     <td>
@@ -737,18 +993,47 @@
                     <!-- Pagination -->
                     <div class="pagination">
                         @if ($auditLogs->onFirstPage())
-                            <span class="disabled">« Previous</span>
+                            <span class="disabled">« Prev</span>
                         @else
-                            <a href="{{ $auditLogs->previousPageUrl() }}">« Previous</a>
+                            <a href="{{ $auditLogs->previousPageUrl() }}">« Prev</a>
                         @endif
 
-                        @foreach(range(1, $auditLogs->lastPage()) as $page)
-                            @if($page == $auditLogs->currentPage())
+                        @php
+                            $currentPage = $auditLogs->currentPage();
+                            $lastPage = $auditLogs->lastPage();
+                            $showPages = 7; // Number of page numbers to show
+                            
+                            // Calculate start and end pages
+                            $startPage = max(1, $currentPage - floor($showPages / 2));
+                            $endPage = min($lastPage, $startPage + $showPages - 1);
+                            
+                            // Adjust if we're near the end
+                            if ($endPage - $startPage < $showPages - 1) {
+                                $startPage = max(1, $endPage - $showPages + 1);
+                            }
+                        @endphp
+
+                        @if($startPage > 1)
+                            <a href="{{ $auditLogs->url(1) }}">1</a>
+                            @if($startPage > 2)
+                                <span class="pagination-ellipsis">...</span>
+                            @endif
+                        @endif
+
+                        @foreach(range($startPage, $endPage) as $page)
+                            @if($page == $currentPage)
                                 <span class="active">{{ $page }}</span>
                             @else
                                 <a href="{{ $auditLogs->url($page) }}">{{ $page }}</a>
                             @endif
                         @endforeach
+
+                        @if($endPage < $lastPage)
+                            @if($endPage < $lastPage - 1)
+                                <span class="pagination-ellipsis">...</span>
+                            @endif
+                            <a href="{{ $auditLogs->url($lastPage) }}">{{ $lastPage }}</a>
+                        @endif
 
                         @if ($auditLogs->hasMorePages())
                             <a href="{{ $auditLogs->nextPageUrl() }}">Next »</a>
@@ -770,7 +1055,14 @@
                 <div class="log-card">
                     <h3 style="color: #2c3e50; font-size: 20px; font-weight: 700; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid transparent; border-image: linear-gradient(90deg, #4285F4, #FF8C00) 1;">Recent Login Activity</h3>
                     @php
-                        $recentLogins = \App\Models\AuditLog::whereIn('action', ['student_login', 'admin_login'])->latest()->take(5)->get();
+                        $recentLogins = \App\Models\AuditLog::where(function($q) {
+                            $q->where('action', 'authentication')
+                              ->where('description', 'LIKE', '%login%')
+                              ->orWhereIn('action', ['student_login', 'admin_login']); // Backward compatibility
+                        })
+                        ->latest()
+                        ->take(5)
+                        ->get();
                     @endphp
 
                     @if($recentLogins->count() > 0)
@@ -798,7 +1090,17 @@
                 <div class="log-card">
                     <h3 style="color: #2c3e50; font-size: 20px; font-weight: 700; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid transparent; border-image: linear-gradient(90deg, #FF8C00, #FFD700) 1;">Recent Survey Submissions</h3>
                     @php
-                        $recentSubmissions = \App\Models\AuditLog::where('action', 'submit_survey_response')->latest()->take(5)->get();
+                        $recentSubmissions = \App\Models\AuditLog::where(function($q) {
+                            $q->where(function($q2) {
+                                $q2->where('action', 'data_modification')
+                                  ->where('resource_type', 'survey_response')
+                                  ->where('description', 'LIKE', '%survey%');
+                            })
+                            ->orWhere('action', 'submit_survey_response'); // Backward compatibility
+                        })
+                        ->latest()
+                        ->take(5)
+                        ->get();
                     @endphp
 
                     @if($recentSubmissions->count() > 0)
@@ -819,6 +1121,66 @@
                     @else
                         <div style="text-align: center; padding: 20px; color: #6c757d; font-style: italic;">
                             No recent survey submissions
+                        </div>
+                    @endif
+                </div>
+
+                <div class="log-card">
+                    <h3 style="color: #2c3e50; font-size: 20px; font-weight: 700; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid transparent; border-image: linear-gradient(90deg, #28a745, #20c997) 1;">
+                        <svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 8px; fill: #28a745;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                        </svg>
+                        Recent Consent Activity (GDPR & ISO 27001)
+                    </h3>
+                    @php
+                        $recentConsent = \App\Models\AuditLog::where(function($q) {
+                            $q->where('action', 'compliance')
+                              ->where(function($q2) {
+                                  $q2->where('description', 'LIKE', '%consent%')
+                                    ->orWhere('description', 'LIKE', '%Consent%');
+                              })
+                              ->orWhereIn('action', ['consent_given', 'consent_denied', 'consent_revoked']); // Backward compatibility
+                        })
+                        ->latest()
+                        ->take(5)
+                        ->get();
+                    @endphp
+
+                    @if($recentConsent->count() > 0)
+                        @foreach($recentConsent as $consent)
+                            <div class="log-item">
+                                <div class="log-header">
+                                    <div class="log-action" style="display: flex; align-items: center; gap: 6px;">
+                                        @if($consent->action === 'consent_given')
+                                            <svg style="width: 16px; height: 16px; fill: #28a745;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                            </svg>
+                                            Consent Given
+                                        @elseif($consent->action === 'consent_denied')
+                                            <svg style="width: 16px; height: 16px; fill: #dc3545;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                            </svg>
+                                            Consent Denied
+                                        @else
+                                            <svg style="width: 16px; height: 16px; fill: #ff9800;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                            </svg>
+                                            Consent Revoked
+                                        @endif
+                                    </div>
+                                    <div class="log-timestamp">{{ $consent->created_at->format('M j, g:i A') }}</div>
+                                </div>
+                                <div class="log-details">
+                                    {{ $consent->description ?? 'Consent action recorded' }}
+                                    @if($consent->ip_address)
+                                        <div class="log-ip">IP: {{ $consent->ip_address }}</div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div style="text-align: center; padding: 20px; color: #6c757d; font-style: italic;">
+                            No recent consent activity
                         </div>
                     @endif
                 </div>
@@ -926,6 +1288,43 @@
         //     });
         // });
 
+        // Toggle details visibility
+        function toggleDetails(logId) {
+            const detailsDiv = document.getElementById('details-' + logId);
+            const toggleText = document.getElementById('toggle-text-' + logId);
+            const toggleIcon = document.getElementById('toggle-icon-' + logId);
+            const toggleBtn = document.getElementById('toggle-btn-' + logId);
+            
+            if (detailsDiv.style.display === 'none' || !detailsDiv.style.display) {
+                detailsDiv.style.display = 'block';
+                toggleText.textContent = 'Hide Details';
+                toggleIcon.style.transform = 'rotate(180deg)';
+                toggleBtn.style.background = 'rgba(66, 133, 244, 0.2)';
+            } else {
+                detailsDiv.style.display = 'none';
+                toggleText.textContent = 'Show Details';
+                toggleIcon.style.transform = 'rotate(0deg)';
+                toggleBtn.style.background = 'rgba(66, 133, 244, 0.1)';
+            }
+        }
+
+        // Add hover effects to toggle buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleButtons = document.querySelectorAll('.details-toggle-btn');
+            toggleButtons.forEach(btn => {
+                btn.addEventListener('mouseenter', function() {
+                    this.style.background = 'rgba(66, 133, 244, 0.2)';
+                    this.style.transform = 'translateY(-1px)';
+                });
+                btn.addEventListener('mouseleave', function() {
+                    if (this.getAttribute('aria-expanded') !== 'true') {
+                        this.style.background = 'rgba(66, 133, 244, 0.1)';
+                    }
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+
         console.log('Enhanced Audit Logs page with filters loaded');
     </script>
 
@@ -933,6 +1332,21 @@
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .details-toggle-btn:hover {
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.2);
         }
 
         .filter-input:hover,

@@ -18,19 +18,20 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         // Use updateOrCreate to avoid duplicate entry errors
+        // This will update the password if the admin already exists
         Admin::updateOrCreate(
             ['username' => 'admin'],
             [
                 'name' => 'Kwadra Team Admin',
                 'email' => 'kwadrateam@gmail.com',
-                'password' => Hash::make('Admin@01'),
+                'password' => Hash::make('Admin@1'),
                 'email_verified_at' => now(),
             ]
         );
 
-        $this->command->info('Admin account created successfully.');
+        $this->command->info('Admin account created/updated successfully.');
         $this->command->info('Email: kwadrateam@gmail.com');
         $this->command->info('Username: admin');
-        $this->command->info('Password: Admin@01');
+        $this->command->info('Password: Admin@1');
     }
 }

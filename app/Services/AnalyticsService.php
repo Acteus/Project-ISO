@@ -181,6 +181,7 @@ class AnalyticsService
         return [
             'score' => $score,
             'percentage' => round(($score / 5.0) * 100, 1),
+            'level' => $risk_level,
             'risk_level' => $risk_level,
             'risk_color' => $risk_color,
             'risk_range' => $risk_range,

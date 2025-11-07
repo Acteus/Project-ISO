@@ -1,6 +1,6 @@
 // Survey functionality for Laravel with static HTML structure
-let currentStep = 1;
-let totalSteps = 8;
+let currentStep = 0; // Start with consent (step 0)
+let totalSteps = 8; // 8 survey sections (steps 1-8), plus consent (step 0)
 let surveyData = {};
 
 // Laravel-specific functions
@@ -439,10 +439,11 @@ function updateNavigationButtons() {
     const submitBtn = document.getElementById('submitBtn');
 
     if (prevBtn) {
-        prevBtn.disabled = currentStep === 0;
+        prevBtn.disabled = currentStep === 0; // Disable on consent step
     }
 
-    if (currentStep === surveySections.length - 1) {
+    // Show submit button on last survey step (step 8), not on consent
+    if (currentStep === totalSteps) {
         if (nextBtn) nextBtn.style.display = 'none';
         if (submitBtn) submitBtn.style.display = 'inline-flex';
     } else {
@@ -523,8 +524,8 @@ function mapFieldsForLaravelAPI(frontendData) {
         improvement_suggestions: extractImprovementSuggestions(frontendData.open_feedback),
         additional_comments: frontendData.open_feedback || '',
 
-        // Consent and privacy
-        consent_given: true, // Assume consent given when survey is submitted
+        // Consent and privacy (GDPR & ISO 27001 compliant)
+        consent_given: document.getElementById('consentGiven') ? document.getElementById('consentGiven').checked : false,
 
         // Indirect metrics (optional - can be populated from student records later)
         attendance_rate: null,
@@ -644,6 +645,17 @@ async function submitSurveyLaravel(event) {
     console.log('Submit survey called - Current step:', currentStep);
     console.log('Total steps:', totalSteps);
 
+    // Validate consent before submission
+    const consentCheckbox = document.getElementById('consentGiven');
+    if (!consentCheckbox || !consentCheckbox.checked) {
+        alert('You must provide consent before submitting the survey. Please go back to the consent section and check the consent box.');
+        // Scroll to consent section
+        showStep(0);
+        updateProgressBar();
+        updateNavigationButtons();
+        return;
+    }
+
     // Use validateCurrentStep for static HTML structure
     if (!validateCurrentStep()) {
         console.log('Validation failed for current step');
@@ -753,8 +765,8 @@ async function submitSurveyLaravel(event) {
             improvement_suggestions: extractImprovementSuggestions(additionalFeedbackField ? additionalFeedbackField.value : ''),
             additional_comments: additionalFeedbackField ? additionalFeedbackField.value : '',
 
-            // Consent and privacy
-            consent_given: true,
+            // Consent and privacy (GDPR & ISO 27001 compliant)
+            consent_given: document.getElementById('consentGiven') ? document.getElementById('consentGiven').checked : false,
 
             // Indirect metrics (optional)
             attendance_rate: null,
@@ -837,8 +849,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeStaticSurvey() {
-    // Show first step
-    showStep(1);
+    // Show first step (consent - step 0)
+    showStep(0);
     updateProgressBar();
     updateNavigationButtons();
 
@@ -882,8 +894,8 @@ function nextStep() {
 }
 
 function previousStep() {
-    // Move to previous step
-    if (currentStep > 1) {
+    // Move to previous step (can go back to consent step 0)
+    if (currentStep > 0) {
         showStep(currentStep - 1);
         updateProgressBar();
         updateNavigationButtons();
@@ -899,7 +911,24 @@ function validateCurrentStep() {
     let isValid = true;
 
     requiredInputs.forEach(input => {
-        if (input.type === 'radio') {
+        if (input.type === 'checkbox') {
+            // For checkboxes (like consent), check if checked
+            if (!input.checked) {
+                isValid = false;
+                // Highlight the checkbox wrapper
+                const checkboxWrapper = input.closest('.consent-checkbox-wrapper');
+                if (checkboxWrapper) {
+                    checkboxWrapper.style.border = '2px solid #dc2626';
+                    checkboxWrapper.style.backgroundColor = '#fee2e2';
+                    setTimeout(() => {
+                        checkboxWrapper.style.border = '';
+                        checkboxWrapper.style.backgroundColor = '';
+                    }, 2000);
+                }
+                // Scroll to checkbox
+                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        } else if (input.type === 'radio') {
             // Check if at least one radio button with this name is checked
             const radioName = input.getAttribute('name');
             const checkedRadio = currentStepElement.querySelector(`input[name="${radioName}"]:checked`);
@@ -924,13 +953,19 @@ function validateCurrentStep() {
     });
 
     if (!isValid) {
-        alert('Please answer all required questions before proceeding.');
+        if (currentStep === 0) {
+            alert('Please provide consent by checking the consent box before proceeding.');
+        } else {
+            alert('Please answer all required questions before proceeding.');
+        }
     }
 
     return isValid;
 }
 
 function updateProgressBar() {
+    // Calculate progress: step 0 (consent) = 0%, step 8 (last) = 100%
+    // So we use (currentStep / totalSteps) * 100
     const progressPercentage = Math.round((currentStep / totalSteps) * 100);
     const progressFill = document.getElementById('progressFill');
     const progressPercentageElement = document.getElementById('progressPercentage');
@@ -949,12 +984,13 @@ function updateNavigationButtons() {
     const nextBtn = document.getElementById('nextBtn');
     const submitBtn = document.getElementById('submitBtn');
 
-    // Disable/enable previous button
+    // Disable/enable previous button (disabled on consent step 0)
     if (prevBtn) {
-        prevBtn.disabled = currentStep === 1;
+        prevBtn.disabled = currentStep === 0;
     }
 
     // Show/hide next and submit buttons
+    // Submit button shows on last survey step (step 8), not on consent (step 0)
     if (currentStep === totalSteps) {
         if (nextBtn) nextBtn.style.display = 'none';
         if (submitBtn) submitBtn.style.display = 'inline-flex';

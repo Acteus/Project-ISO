@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AIController;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\ComplianceController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\VisualizationController;
@@ -20,9 +21,9 @@ Route::get('/admin/me', [AdminAuthController::class, 'me'])->middleware('auth:sa
 
 // Survey Routes (public routes that don't require authentication or CSRF)
 // Note: Using web middleware to maintain session for authenticated users
+// Rate limiting: 10 submissions per minute per IP to prevent abuse
 Route::post('/survey/submit', [SurveyController::class, 'submitResponse'])
-    ->middleware('web')
-    ->withoutMiddleware(['throttle']);
+    ->middleware(['web', 'throttle:10,1']);
 
 // Protected Admin Routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -85,4 +86,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ai/service-status', [AIController::class, 'getServiceStatus']);
     Route::get('/ai/metrics', [AIController::class, 'getAIMetrics']);
     Route::post('/ai/analyze/{type}', [AIController::class, 'runAnalysis']);
+
+    // Compliance and Audit Routes
+    Route::get('/compliance/status', [ComplianceController::class, 'getComplianceStatus']);
+    Route::get('/compliance/metrics', [ComplianceController::class, 'getComplianceMetrics']);
+    Route::get('/compliance/audit-logs', [ComplianceController::class, 'getAuditLogs']);
+    Route::get('/compliance/audit-trail/{resourceType}/{resourceId}', [ComplianceController::class, 'getResourceAuditTrail']);
 });

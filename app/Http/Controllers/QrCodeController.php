@@ -124,7 +124,7 @@ class QrCodeController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:500',
-            'target_url' => 'required|url',
+            'target_url' => 'nullable|url', // Optional - will be auto-set to QR code's public URL
             'format' => 'required|in:png,svg',
             'size' => 'required|integer|min:100|max:1000',
             'foreground_color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
@@ -223,7 +223,7 @@ class QrCodeController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:500',
-            'target_url' => 'required|url',
+            'target_url' => 'nullable|url', // Optional - will be auto-set to QR code's public URL
             'format' => 'required|in:png,svg',
             'size' => 'required|integer|min:100|max:1000',
             'foreground_color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
@@ -240,9 +240,17 @@ class QrCodeController extends Controller
 
         try {
             $oldValues = $qrCode->toArray();
-            $qrCode->update($request->all());
+            $updateData = $request->all();
+            
+            // Set default target_url if not provided (final destination after scan)
+            if (empty($updateData['target_url'])) {
+                $updateData['target_url'] = route('survey.landing');
+            }
+            
+            $qrCode->update($updateData);
 
             // Regenerate file if format, size, or colors changed
+            // Note: QR code always encodes the public URL for tracking, regardless of target_url
             if ($request->format !== $oldValues['format'] ||
                 $request->size !== $oldValues['size'] ||
                 $request->foreground_color !== $oldValues['foreground_color'] ||
@@ -325,7 +333,7 @@ class QrCodeController extends Controller
         if (!$admin instanceof \App\Models\Admin) return $admin;
 
         $request->validate([
-            'target_url' => 'required|url',
+            'target_url' => 'nullable|url', // Optional - each QR code will use its own public URL
             'format' => 'required|in:png,svg',
             'size' => 'required|integer|min:100|max:1000',
             'foreground_color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',

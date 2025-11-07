@@ -651,6 +651,9 @@ class ValidationService
                 'accessibility_compliance' => $accessibilityValidation,
                 'data_quality' => $dataQualityValidation
             ],
+            'direct_vs_indirect' => $directValidation,
+            'accessibility' => $accessibilityValidation,
+            'data_quality' => $dataQualityValidation,
             'overall_compliance' => [
                 'score' => round($overallScore, 1),
                 'status' => $overallScore >= 85 ? 'Fully Compliant' : ($overallScore >= 70 ? 'Mostly Compliant' : ($overallScore >= 60 ? 'Partially Compliant' : 'Non-Compliant')),

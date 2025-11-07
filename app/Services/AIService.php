@@ -329,6 +329,16 @@ class AIService
      */
     protected function analyzeSentimentPHP($comments)
     {
+        // Convert string to array if needed
+        if (is_string($comments)) {
+            $comments = [$comments];
+        }
+        
+        // Ensure it's an array
+        if (!is_array($comments)) {
+            $comments = [];
+        }
+
         // Expanded keyword lists for better sentiment detection
         $positiveKeywords = [
             'great', 'excellent', 'love', 'amazing', 'wonderful', 'helpful', 'supportive',
@@ -408,8 +418,13 @@ class AIService
         $overallSentiment = $totalWords > 0 ? $totalSentimentScore / count($comments) : 0;
         $sentimentPercentage = $totalWords > 0 ? ($overallSentiment + 1) * 50 : 50; // Scale to 0-100
 
+        // Determine sentiment (lowercase for compatibility with tests)
+        $sentiment = $overallSentiment >= 0 ? 'positive' : ($overallSentiment <= -0.2 ? 'negative' : 'neutral');
+        
         return [
-            'overall_sentiment' => $overallSentiment >= 0 ? 'Positive' : ($overallSentiment <= -0.2 ? 'Negative' : 'Neutral'),
+            'sentiment' => $sentiment, // Lowercase for compatibility
+            'overall_sentiment' => ucfirst($sentiment), // Capitalized version
+            'score' => round($sentimentPercentage, 2), // Alias for sentiment_score
             'sentiment_score' => round($sentimentPercentage, 2), // 0-100 scale
             'breakdown' => $sentimentBreakdown,
             'total_comments_analyzed' => count($comments),

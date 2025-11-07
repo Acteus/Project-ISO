@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\SurveyResponsesExport;
 use App\Models\SurveyResponse;
-use App\Models\AuditLog;
+use App\Services\AuditService;
 use App\Services\AIService;
 use App\Services\VisualizationService;
 use Illuminate\Http\Request;
@@ -17,11 +17,13 @@ class ExportController extends Controller
 {
     protected $aiService;
     protected $visualizationService;
+    protected $auditService;
 
-    public function __construct(AIService $aiService, VisualizationService $visualizationService)
+    public function __construct(AIService $aiService, VisualizationService $visualizationService, AuditService $auditService)
     {
         $this->aiService = $aiService;
         $this->visualizationService = $visualizationService;
+        $this->auditService = $auditService;
     }
 
     public function exportExcel(Request $request)
@@ -35,18 +37,19 @@ class ExportController extends Controller
 
         // Log the export activity (ISO 21001:8.2.4 - Traceability)
         if (Auth::check() && Auth::user()->role === 'admin') {
-            AuditLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'export_excel',
-                'description' => "Exported ISO 21001 survey responses to Excel (Track: " . ($track ?: 'All') . ", Grade: " . ($gradeLevel ?: 'All') . ", Year: " . ($academicYear ?: 'All') . ", Semester: " . ($semester ?: 'All') . ")",
-                'ip_address' => $request->ip(),
-                'new_values' => [
+            $this->auditService->logDataAccess(
+                'export',
+                null,
+                'export_excel',
+                $request,
+                [
+                    'format' => 'excel',
                     'track' => $track,
                     'grade_level' => $gradeLevel,
                     'academic_year' => $academicYear,
                     'semester' => $semester,
-                ],
-            ]);
+                ]
+            );
         }
 
         return Excel::download(new SurveyResponsesExport($track, $gradeLevel, $academicYear, $semester), $filename);
@@ -63,18 +66,19 @@ class ExportController extends Controller
 
         // Log the export activity (ISO 21001:8.2.4 - Traceability)
         if (Auth::check() && Auth::user()->role === 'admin') {
-            AuditLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'export_csv',
-                'description' => "Exported ISO 21001 survey responses to CSV (Track: " . ($track ?: 'All') . ", Grade: " . ($gradeLevel ?: 'All') . ", Year: " . ($academicYear ?: 'All') . ", Semester: " . ($semester ?: 'All') . ")",
-                'ip_address' => $request->ip(),
-                'new_values' => [
+            $this->auditService->logDataAccess(
+                'export',
+                null,
+                'export_csv',
+                $request,
+                [
+                    'format' => 'csv',
                     'track' => $track,
                     'grade_level' => $gradeLevel,
                     'academic_year' => $academicYear,
                     'semester' => $semester,
-                ],
-            ]);
+                ]
+            );
         }
 
         return Excel::download(new SurveyResponsesExport($track, $gradeLevel, $academicYear, $semester), $filename, \Maatwebsite\Excel\Excel::CSV);
@@ -126,18 +130,19 @@ class ExportController extends Controller
 
         // Log the export activity (ISO 21001:8.2.4 - Traceability)
         if (Auth::check() && Auth::user()->role === 'admin') {
-            AuditLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'export_pdf',
-                'description' => "Exported ISO 21001 survey report to PDF (Track: " . ($track ?: 'All') . ", Grade: " . ($gradeLevel ?: 'All') . ", Year: " . ($academicYear ?: 'All') . ", Semester: " . ($semester ?: 'All') . ")",
-                'ip_address' => $request->ip(),
-                'new_values' => [
+            $this->auditService->logDataAccess(
+                'export',
+                null,
+                'export_pdf',
+                $request,
+                [
+                    'format' => 'pdf',
                     'track' => $track,
                     'grade_level' => $gradeLevel,
                     'academic_year' => $academicYear,
                     'semester' => $semester,
-                ],
-            ]);
+                ]
+            );
         }
 
         return $dompdf->stream($filename);
@@ -195,18 +200,20 @@ class ExportController extends Controller
 
             // Log the export activity (ISO 21001:8.2.4 - Traceability)
             if (Auth::check() && Auth::user()->role === 'admin') {
-                AuditLog::create([
-                    'user_id' => Auth::id(),
-                    'action' => 'export_analytics_pdf',
-                    'description' => "Exported ISO 21001 analytics report to PDF (Track: " . ($track ?: 'All') . ", Grade: " . ($gradeLevel ?: 'All') . ", Year: " . ($academicYear ?: 'All') . ", Semester: " . ($semester ?: 'All') . ")",
-                    'ip_address' => $request->ip(),
-                    'new_values' => [
+                $this->auditService->logDataAccess(
+                    'export',
+                    null,
+                    'export_analytics_pdf',
+                    $request,
+                    [
+                        'format' => 'pdf',
+                        'report_type' => 'analytics',
                         'track' => $track,
                         'grade_level' => $gradeLevel,
                         'academic_year' => $academicYear,
                         'semester' => $semester,
-                    ],
-                ]);
+                    ]
+                );
             }
 
             return $dompdf->stream($filename);

@@ -410,6 +410,30 @@
                         </p>
                     </div>
                 </div>
+
+                <!-- Privacy Notice (GDPR & ISO 27001) -->
+                <div style="background: #f0f4ff; border-left: 4px solid #4338ca; padding: 1.5rem; margin-top: 2rem; border-radius: 8px;">
+                    <h3 style="color: #312e81; margin-bottom: 1rem; font-size: 1.1rem; font-weight: 700;">
+                        <svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 8px; fill: #4338ca;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                        </svg>
+                        Your Privacy Matters (GDPR & ISO 27001 Compliant)
+                    </h3>
+                    <p style="color: #374151; line-height: 1.6; margin-bottom: 0.75rem;">
+                        We are committed to protecting your privacy. This survey complies with GDPR and ISO 27001 data protection standards:
+                    </p>
+                    <ul style="color: #374151; line-height: 1.8; margin-left: 1.5rem; margin-bottom: 0.75rem;">
+                        <li><strong>Encrypted Data:</strong> Your student ID and comments are encrypted using AES-256 encryption</li>
+                        <li><strong>Data Minimization:</strong> We only collect essential ISO 21001 metrics necessary for quality assessment</li>
+                        <li><strong>Purpose Limitation:</strong> Data is used solely for educational quality improvement</li>
+                        <li><strong>Retention:</strong> Data is retained for 7 years as per ISO 21001 requirements</li>
+                        <li><strong>Your Rights:</strong> You can request access, correction, or deletion of your data at any time</li>
+                    </ul>
+                    <p style="color: #6b7280; font-size: 0.9rem; margin: 0;">
+                        By proceeding with the survey, you will be asked to provide explicit consent before submission. 
+                        <a href="{{ route('survey.privacy') }}" style="color: #4338ca; text-decoration: underline;">Learn more about our privacy policy</a>.
+                    </p>
+                </div>
             </div>
         </section>
     </main>
