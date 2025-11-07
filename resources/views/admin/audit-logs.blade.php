@@ -366,25 +366,36 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 8px;
+            flex-wrap: wrap;
+            gap: 6px;
             margin-top: 30px;
-            padding: 20px;
+            padding: 15px;
             background: rgba(255, 255, 255, 0.5);
             backdrop-filter: blur(10px);
             border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.3);
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: auto;
+            overflow-y: hidden;
         }
 
         .pagination a,
         .pagination span {
-            padding: 12px 16px;
+            padding: 10px 14px;
             border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 10px;
+            border-radius: 8px;
             text-decoration: none;
             color: #333;
             transition: all 0.3s ease;
             font-weight: 600;
             background: rgba(255, 255, 255, 0.8);
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: 40px;
+            text-align: center;
+            font-size: 14px;
         }
 
         .pagination a:hover {
@@ -406,6 +417,33 @@
             opacity: 0.5;
             pointer-events: none;
             background: rgba(200, 200, 200, 0.5);
+        }
+
+        .pagination-ellipsis {
+            padding: 10px 8px;
+            color: #666;
+            font-weight: 600;
+            user-select: none;
+        }
+
+        /* Responsive pagination */
+        @media (max-width: 768px) {
+            .pagination {
+                padding: 12px 8px;
+                gap: 4px;
+            }
+
+            .pagination a,
+            .pagination span {
+                padding: 8px 10px;
+                font-size: 13px;
+                min-width: 36px;
+            }
+
+            .pagination-ellipsis {
+                padding: 8px 4px;
+                font-size: 13px;
+            }
         }
 
         .no-data {
@@ -955,18 +993,47 @@
                     <!-- Pagination -->
                     <div class="pagination">
                         @if ($auditLogs->onFirstPage())
-                            <span class="disabled">« Previous</span>
+                            <span class="disabled">« Prev</span>
                         @else
-                            <a href="{{ $auditLogs->previousPageUrl() }}">« Previous</a>
+                            <a href="{{ $auditLogs->previousPageUrl() }}">« Prev</a>
                         @endif
 
-                        @foreach(range(1, $auditLogs->lastPage()) as $page)
-                            @if($page == $auditLogs->currentPage())
+                        @php
+                            $currentPage = $auditLogs->currentPage();
+                            $lastPage = $auditLogs->lastPage();
+                            $showPages = 7; // Number of page numbers to show
+                            
+                            // Calculate start and end pages
+                            $startPage = max(1, $currentPage - floor($showPages / 2));
+                            $endPage = min($lastPage, $startPage + $showPages - 1);
+                            
+                            // Adjust if we're near the end
+                            if ($endPage - $startPage < $showPages - 1) {
+                                $startPage = max(1, $endPage - $showPages + 1);
+                            }
+                        @endphp
+
+                        @if($startPage > 1)
+                            <a href="{{ $auditLogs->url(1) }}">1</a>
+                            @if($startPage > 2)
+                                <span class="pagination-ellipsis">...</span>
+                            @endif
+                        @endif
+
+                        @foreach(range($startPage, $endPage) as $page)
+                            @if($page == $currentPage)
                                 <span class="active">{{ $page }}</span>
                             @else
                                 <a href="{{ $auditLogs->url($page) }}">{{ $page }}</a>
                             @endif
                         @endforeach
+
+                        @if($endPage < $lastPage)
+                            @if($endPage < $lastPage - 1)
+                                <span class="pagination-ellipsis">...</span>
+                            @endif
+                            <a href="{{ $auditLogs->url($lastPage) }}">{{ $lastPage }}</a>
+                        @endif
 
                         @if ($auditLogs->hasMorePages())
                             <a href="{{ $auditLogs->nextPageUrl() }}">Next »</a>
