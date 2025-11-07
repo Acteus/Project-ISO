@@ -114,7 +114,7 @@ class SurveyResponse extends Model
 
     /**
      * Get encryption service instance
-     * 
+     *
      * @return EncryptionService
      */
     protected function encryptionService(): EncryptionService
@@ -124,7 +124,7 @@ class SurveyResponse extends Model
 
     /**
      * Get anonymization service instance
-     * 
+     *
      * @return AnonymizationService
      */
     protected function anonymizationService(): AnonymizationService
@@ -135,29 +135,29 @@ class SurveyResponse extends Model
     // Mutators for encryption using EncryptionService (AES-256)
     public function setStudentIdAttribute($value)
     {
-        $this->attributes['student_id'] = !empty($value) 
-            ? $this->encryptionService()->encrypt($value) 
+        $this->attributes['student_id'] = !empty($value)
+            ? $this->encryptionService()->encrypt($value)
             : $value;
     }
 
     public function setPositiveAspectsAttribute($value)
     {
-        $this->attributes['positive_aspects'] = !empty($value) 
-            ? $this->encryptionService()->encrypt($value) 
+        $this->attributes['positive_aspects'] = !empty($value)
+            ? $this->encryptionService()->encrypt($value)
             : $value;
     }
 
     public function setImprovementSuggestionsAttribute($value)
     {
-        $this->attributes['improvement_suggestions'] = !empty($value) 
-            ? $this->encryptionService()->encrypt($value) 
+        $this->attributes['improvement_suggestions'] = !empty($value)
+            ? $this->encryptionService()->encrypt($value)
             : $value;
     }
 
     public function setAdditionalCommentsAttribute($value)
     {
-        $this->attributes['additional_comments'] = !empty($value) 
-            ? $this->encryptionService()->encrypt($value) 
+        $this->attributes['additional_comments'] = !empty($value)
+            ? $this->encryptionService()->encrypt($value)
             : $value;
     }
 
@@ -208,12 +208,12 @@ class SurveyResponse extends Model
     {
         $wasRecentlyCreated = $this->wasRecentlyCreated;
         $result = parent::save($options);
-        
+
         // Clear cache after save (but not on first creation)
         if (!$wasRecentlyCreated) {
             $this->clearDecryptionCache();
         }
-        
+
         return $result;
     }
 
@@ -248,7 +248,7 @@ class SurveyResponse extends Model
 
     /**
      * Generate anonymous ID for analytics using SHA-256 (GDPR & ISO 27001 compliant)
-     * 
+     *
      * @return string SHA-256 anonymous ID
      */
     public function getAnonymousIdAttribute()
