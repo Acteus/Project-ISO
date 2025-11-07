@@ -343,7 +343,7 @@ body {
 .survey-main {
     /* Textured Background with JRU Colors (Blue, Gold, White) */
     background-color: #e8f4f8;
-    background-image: 
+    background-image:
         /* Diagonal stripes texture */
         repeating-linear-gradient(
             45deg,
@@ -363,18 +363,18 @@ body {
         radial-gradient(circle at 25% 25%, rgba(66, 133, 244, 0.04) 2px, transparent 2px),
         radial-gradient(circle at 75% 75%, rgba(255, 193, 7, 0.04) 2px, transparent 2px),
         /* Subtle gradient overlay */
-        linear-gradient(135deg, 
+        linear-gradient(135deg,
             rgba(179, 217, 255, 0.4) 0%,
             rgba(255, 233, 179, 0.3) 50%,
             rgba(179, 229, 252, 0.4) 100%
         );
-    background-size: 
+    background-size:
         100% 100%,
         100% 100%,
         20px 20px,
         20px 20px,
         100% 100%;
-    background-position: 
+    background-position:
         0 0,
         0 0,
         0 0,
@@ -394,7 +394,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: 
+    background:
         radial-gradient(circle at 30% 40%, rgba(66, 133, 244, 0.05) 0%, transparent 50%),
         radial-gradient(circle at 70% 60%, rgba(255, 193, 7, 0.05) 0%, transparent 50%);
     animation: backgroundPulse 10s ease-in-out infinite alternate;
@@ -487,20 +487,25 @@ body {
 
 /* Auto-save Indicator */
 .auto-save-indicator {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.5rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
     color: #16a34a;
     font-size: 0.875rem;
-    margin-top: 0.75rem;
     opacity: 0;
-    transform: translateY(-5px);
-    transition: all 0.3s ease;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    z-index: 10;
 }
 
 .auto-save-indicator.show {
     opacity: 1;
-    transform: translateY(0);
+    visibility: visible;
 }
 
 .auto-save-indicator svg {
@@ -696,7 +701,7 @@ body {
 }
 
 .validation-success {
-    border: 2px solid #16a34a !important;
+    border: 2px solid transparent !important;
 }
 
 @keyframes shake {
@@ -708,28 +713,29 @@ body {
 .question-group.validation-error {
     border: 2px solid #dc2626;
     background-color: #fef2f2;
-    animation: shake 0.3s ease;
+    animation: none;
 }
 
 .question-group.validation-success {
-    border: 2px solid #16a34a;
-    background-color: #f0fdf4;
+    border: 2px solid transparent;
+    background-color: #f3f4f6;
+    animation: none;
 }
 
 /* Survey Steps - Performance Optimized */
 .survey-step {
     display: none;
     contain: layout style paint;
-    will-change: display;
-    opacity: 0;
-    transform: translateY(10px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    will-change: auto;
+    opacity: 1;
+    transform: none;
+    transition: none;
 }
 
 .survey-step.active {
     display: block;
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
 }
 
 .survey-step[data-step="1"] {
@@ -765,6 +771,7 @@ body {
     background-color: #f3f4f6;
     padding: 1.5rem;
     border-radius: 0.5rem;
+    border: 2px solid transparent;
     margin-bottom: 1.5rem;
 }
 
@@ -802,11 +809,11 @@ body {
 }
 
 .likert-option:hover {
-    transform: translateY(-2px);
+    transform: none;
 }
 
 .likert-option:active {
-    transform: scale(0.95);
+    transform: none;
 }
 
 .likert-option:focus-within .likert-label::before {
@@ -899,12 +906,11 @@ body {
 /* Hover effects */
 .likert-option:hover .likert-label::before {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    transform: translateX(-50%) scale(1.05);
 }
 
 /* Checked state */
 .likert-option input[type="radio"]:checked ~ .likert-label::before {
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    box-shadow: none;
 }
 
 .likert-option:nth-child(1) input[type="radio"]:checked ~ .likert-label::before {
@@ -1003,9 +1009,9 @@ body {
 }
 
 .rating-input:checked + .rating-label {
-    background-color: #4338ca;
-    color: white;
-    border-color: #4338ca;
+    background-color: #f3f4f6;
+    color: #374151;
+    border-color: #9ca3af;
 }
 
 .rating-text {
@@ -1529,7 +1535,6 @@ body {
     }
 
     .likert-option:hover .likert-label::before {
-        transform: translateX(-50%) scale(1.03);
     }
 
     .likert-label small {

@@ -129,6 +129,21 @@
         <div class="container survey-container">
             <div class="survey-card">
                 <h1 class="survey-title">ISO Learner-Centric Survey</h1>
+                @if(isset($hasPreviousResponse) && $hasPreviousResponse)
+                <div id="retakePrompt" style="background:#fff3cd;border:1px solid #ffeeba;color:#856404;border-radius:8px;padding:16px;margin:12px 0;display:flex;flex-direction:column;gap:12px;">
+                    <div style="display:flex;align-items:center;gap:8px;font-weight:600;">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                        </svg>
+                        You have already submitted a survey.
+                    </div>
+                    <div>Would you like to take the survey again? Your new submission will be recorded separately.</div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button type="button" id="retakeConfirm" class="btn btn-secondary">Retake survey</button>
+                        <a href="{{ route('student.dashboard') }}" class="btn btn-outline">Go back to dashboard</a>
+                    </div>
+                </div>
+                @endif
                 <p class="survey-subtitle">
                     Your feedback helps us improve the quality of education for CSS Strand students.
                 </p>
@@ -143,7 +158,7 @@
                         <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                     </div>
                     <!-- Auto-save indicator -->
-                    <div class="auto-save-indicator" id="autoSaveIndicator" style="display: none;">
+                    <div class="auto-save-indicator" id="autoSaveIndicator">
                         <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                         </svg>
@@ -156,38 +171,34 @@
                     <div class="step-indicator" id="stepIndicator">
                         <div class="step-item" data-step="0">
                             <span class="step-number">1</span>
-                            <span class="step-label">Consent</span>
+                            <span class="step-label">Needs</span>
                         </div>
                         <div class="step-item" data-step="1">
                             <span class="step-number">2</span>
-                            <span class="step-label">Needs</span>
+                            <span class="step-label">Teaching</span>
                         </div>
                         <div class="step-item" data-step="2">
                             <span class="step-number">3</span>
-                            <span class="step-label">Teaching</span>
+                            <span class="step-label">Assessments</span>
                         </div>
                         <div class="step-item" data-step="3">
                             <span class="step-number">4</span>
-                            <span class="step-label">Assessments</span>
+                            <span class="step-label">Support</span>
                         </div>
                         <div class="step-item" data-step="4">
                             <span class="step-number">5</span>
-                            <span class="step-label">Support</span>
+                            <span class="step-label">Environment</span>
                         </div>
                         <div class="step-item" data-step="5">
                             <span class="step-number">6</span>
-                            <span class="step-label">Environment</span>
+                            <span class="step-label">Feedback</span>
                         </div>
                         <div class="step-item" data-step="6">
                             <span class="step-number">7</span>
-                            <span class="step-label">Feedback</span>
+                            <span class="step-label">Satisfaction</span>
                         </div>
                         <div class="step-item" data-step="7">
                             <span class="step-number">8</span>
-                            <span class="step-label">Satisfaction</span>
-                        </div>
-                        <div class="step-item" data-step="8">
-                            <span class="step-number">9</span>
                             <span class="step-label">Comments</span>
                         </div>
                     </div>
@@ -203,80 +214,12 @@
                         <input type="hidden" name="year_level" value="{{ Auth::user()->year_level === 11 ? 'Grade 11' : 'Grade 12' }}">
                     @endauth
 
-                    <!-- Consent Section (GDPR & ISO 27001 Compliant) - MUST BE FIRST -->
-                    @php
-                        $hasValidConsent = false;
-                        if (Auth::check() && Auth::user()->student_id) {
-                            $consentService = app(\App\Services\ConsentService::class);
-                            $hasValidConsent = $consentService->hasValidConsent(Auth::user()->student_id, 'survey_response');
-                        }
-                    @endphp
-                    <div id="consentSection" class="survey-step" data-step="0">
-                        <div class="consent-card" style="background: #f8f9fa; border: 2px solid #4338ca; border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0;">
-                            <h2 class="section-title" style="color: #312e81; margin-bottom: 1rem; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 10px;">
-                                <svg style="width: 28px; height: 28px; fill: #4338ca;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
-                                </svg>
-                                Data Privacy & Consent (GDPR & ISO 27001)
-                            </h2>
-                            <div style="margin-bottom: 1.5rem; line-height: 1.6; color: #374151;">
-                                <p style="margin-bottom: 1rem; font-size: 1.05rem;">
-                                    <strong>Your privacy is important to us.</strong> This survey collects data in compliance with GDPR and ISO 27001 standards.
-                                </p>
-                                <ul style="margin-left: 1.5rem; margin-bottom: 1rem; line-height: 1.8;">
-                                    <li>Your <strong>student ID and comments</strong> are encrypted using AES-256 encryption</li>
-                                    <li>Only <strong>essential ISO 21001 metrics</strong> are collected (data minimization)</li>
-                                    <li>Your data is used <strong>only for educational quality improvement</strong></li>
-                                    <li>Data is retained for <strong>7 years</strong> as per ISO 21001 requirements</li>
-                                    <li>You can <strong>request data deletion</strong> at any time</li>
-                                    <li>You can <strong>revoke consent</strong> anytime from your dashboard</li>
-                                </ul>
-                                @if($hasValidConsent)
-                                    <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 12px; margin-bottom: 1rem; border-radius: 4px;">
-                                        <p style="margin: 0; color: #155724; font-size: 0.95rem; line-height: 1.6;">
-                                            <strong>✓ Active Consent:</strong> You have already provided consent during registration. The checkbox below is pre-checked, but you can uncheck it if you wish to revoke consent for this submission.
-                                        </p>
-                                    </div>
-                                @else
-                                    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-bottom: 1rem; border-radius: 4px;">
-                                        <p style="margin: 0; color: #856404; font-size: 0.95rem; line-height: 1.6;">
-                                            <strong>Important:</strong> You must provide consent to proceed with this survey. 
-                                            Without consent, you cannot submit your responses.
-                                        </p>
-                                    </div>
-                                @endif
-                            </div>
-                            <div class="consent-checkbox-wrapper" style="display: flex; align-items: flex-start; gap: 0.75rem; background: white; padding: 1rem; border-radius: 8px; border: 2px solid #4338ca;">
-                                <input 
-                                    type="checkbox" 
-                                    id="consentGiven" 
-                                    name="consent_given" 
-                                    value="1"
-                                    @if(!$hasValidConsent) required @endif
-                                    @if($hasValidConsent) checked @endif
-                                    style="width: 22px; height: 22px; margin-top: 2px; cursor: pointer; flex-shrink: 0;"
-                                >
-                                <label for="consentGiven" style="cursor: pointer; flex: 1; line-height: 1.6; color: #374151; font-size: 1rem;">
-                                    <strong style="color: #312e81;">I consent to the collection and processing of my data</strong> as described above for the purpose of educational quality assessment and improvement. 
-                                    @if(!$hasValidConsent)
-                                        <span style="color: #dc3545; font-weight: 700;">*</span>
-                                    @endif
-                                </label>
-                            </div>
-                            <p style="margin-top: 1rem; font-size: 0.9rem; color: #6b7280; text-align: center;">
-                                @if($hasValidConsent)
-                                    Your consent is already active. You can proceed with the survey.
-                                @else
-                                    Please check the box above to proceed with the survey
-                                @endif
-                            </p>
-                        </div>
-                    </div>
+                    
 
                     <!-- Survey sections will be dynamically loaded here -->
                     <div id="surveySection" class="survey-sections-container">
                         <!-- Section 1: Learner Needs & Expectations -->
-                        <div class="survey-step" data-step="1" data-lazy="true" style="display: none;">
+                        <div class="survey-step" data-step="0" data-lazy="true" style="display: none;">
                             <h2 class="section-title">Learner Needs & Expectations</h2>
 
                             <div class="question-group">
@@ -359,7 +302,7 @@
                         </div>
 
                         <!-- Section 2: Teaching & Learning Quality -->
-                        <div class="survey-step" data-step="2" data-lazy="true" style="display: none;">
+                        <div class="survey-step" data-step="1" data-lazy="true" style="display: none;">
                             <h2 class="section-title">Teaching & Learning Quality</h2>
 
                             <div class="question-group">
@@ -442,7 +385,7 @@
                         </div>
 
                         <!-- Section 3: Assessments & Outcomes -->
-                        <div class="survey-step" data-step="3" data-lazy="true" style="display: none;">
+                        <div class="survey-step" data-step="2" data-lazy="true" style="display: none;">
                             <h2 class="section-title">Assessments & Outcomes</h2>
 
                             <div class="question-group">
@@ -525,7 +468,7 @@
                         </div>
 
                         <!-- Section 4: Support & Resources -->
-                        <div class="survey-step" data-step="4" data-lazy="true" style="display: none;">
+                        <div class="survey-step" data-step="3" data-lazy="true" style="display: none;">
                             <h2 class="section-title">Support & Resources</h2>
 
                             <div class="question-group">
@@ -608,7 +551,7 @@
                         </div>
 
                         <!-- Section 5: Environment & Inclusivity -->
-                        <div class="survey-step" data-step="5" data-lazy="true" style="display: none;">
+                        <div class="survey-step" data-step="4" data-lazy="true" style="display: none;">
                             <h2 class="section-title">Environment & Inclusivity</h2>
 
                             <div class="question-group">
@@ -691,7 +634,7 @@
                         </div>
 
                         <!-- Section 6: Feedback & Responsiveness -->
-                        <div class="survey-step" data-step="6" data-lazy="true" style="display: none;">
+                        <div class="survey-step" data-step="5" data-lazy="true" style="display: none;">
                             <h2 class="section-title">Feedback & Responsiveness</h2>
 
                             <div class="question-group">
@@ -774,7 +717,7 @@
                         </div>
 
                         <!-- Section 7: Overall Satisfaction -->
-                        <div class="survey-step" data-step="7" data-lazy="true" style="display: none;">
+                        <div class="survey-step" data-step="6" data-lazy="true" style="display: none;">
                             <h2 class="section-title">Overall Satisfaction</h2>
 
                             <div class="question-group">
@@ -857,7 +800,7 @@
                         </div>
 
                         <!-- Section 8: Additional Feedback -->
-                        <div class="survey-step" data-step="8" data-lazy="true" style="display: none;">
+                        <div class="survey-step" data-step="7" data-lazy="true" style="display: none;">
                             <h2 class="section-title">Additional Feedback</h2>
 
                             <div class="question-group">
@@ -929,8 +872,19 @@
         </div>
     </footer>
 
-    <script src="{{ asset('js/main.js') }}"></script>
-    <script src="{{ asset('js/survey.js') }}"></script>
+    <script src="{{ asset('js/main.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/survey.js') }}?v={{ time() }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var btn = document.getElementById('retakeConfirm');
+            var promptBox = document.getElementById('retakePrompt');
+            if (btn && promptBox) {
+                btn.addEventListener('click', function() {
+                    promptBox.style.display = 'none';
+                });
+            }
+        });
+    </script>
 
     <!-- Logout Modal Script -->
     @include('partials.logout-modal')

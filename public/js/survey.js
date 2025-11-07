@@ -1,6 +1,6 @@
 // Survey functionality for Laravel with static HTML structure
-let currentStep = 0; // Start with consent (step 0)
-let totalSteps = 8; // 8 survey sections (steps 1-8), plus consent (step 0)
+let currentStep = 0; // Start with first survey section (no consent step)
+let totalSteps = 7; // 8 total sections indexed 0..7 (no consent step)
 let surveyData = {};
 let loadedSteps = new Set([0]); // Track which steps have been loaded
 let touchStartX = 0;
@@ -529,7 +529,8 @@ function mapFieldsForLaravelAPI(frontendData) {
         additional_comments: frontendData.open_feedback || '',
 
         // Consent and privacy (GDPR & ISO 27001 compliant)
-        consent_given: document.getElementById('consentGiven') ? document.getElementById('consentGiven').checked : false,
+        // If user is authenticated (has student_id), consent was given during registration
+        consent_given: (frontendData.student_id) ? true : (document.getElementById('consentGiven') ? document.getElementById('consentGiven').checked : false),
 
         // Indirect metrics (optional - can be populated from student records later)
         attendance_rate: null,
@@ -633,14 +634,11 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
-// Prevent accidental navigation away
-window.addEventListener('beforeunload', function(event) {
-    if (Object.keys(surveyData).length > 0) {
-        event.preventDefault();
-        event.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-        return event.returnValue;
-    }
-});
+// Track if form is being submitted to prevent beforeunload warning
+let isSubmitting = false;
+
+// Prevent accidental navigation away (disabled - using auto-save instead)
+// Removed beforeunload warning as requested - data is auto-saved
 
 // Laravel-specific functions
 async function submitSurveyLaravel(event) {
@@ -674,9 +672,14 @@ async function submitSurveyLaravel(event) {
 
     console.log('Validation passed, proceeding with submission...');
 
+    // Set submitting flag to prevent beforeunload warnings
+    isSubmitting = true;
+
     const submitBtn = document.getElementById('submitBtn');
 
-    // Show loading state
+    // Show loading state with overlay
+    showLoadingOverlay();
+
     if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.classList.add('loading');
@@ -776,7 +779,8 @@ async function submitSurveyLaravel(event) {
             additional_comments: additionalFeedbackField ? additionalFeedbackField.value : '',
 
             // Consent and privacy (GDPR & ISO 27001 compliant)
-            consent_given: document.getElementById('consentGiven') ? document.getElementById('consentGiven').checked : false,
+            // If user is authenticated (has student_id), consent was given during registration
+            consent_given: (studentIdField && studentIdField.value) ? true : (document.getElementById('consentGiven') ? document.getElementById('consentGiven').checked : false),
 
             // Indirect metrics (optional)
             attendance_rate: null,
@@ -886,9 +890,6 @@ async function submitSurveyLaravel(event) {
             // Clear saved progress
             removeFromLocalStorage('surveyProgress');
             
-            // Show success message
-            showValidationMessage('Survey submitted successfully! Redirecting...', 'success');
-            
             // Update button to show success
             if (submitBtn) {
                 submitBtn.classList.remove('loading');
@@ -900,10 +901,13 @@ async function submitSurveyLaravel(event) {
                 if (btnIcon) btnIcon.style.display = 'inline-block';
             }
             
-            // Redirect after short delay
+            // Update loading overlay with success message
+            updateLoadingOverlay('Survey submitted successfully! Redirecting...', 'success');
+            
+            // Redirect immediately to thank you page
             setTimeout(() => {
                 window.location.href = '/thank-you';
-            }, 1500);
+            }, 500);
         } else {
             console.error('Survey submission failed. Response:', data);
             let errorMsg = data.message || 'Submission failed';
@@ -916,7 +920,15 @@ async function submitSurveyLaravel(event) {
     } catch (error) {
         console.error('Survey submission error:', error);
         console.error('Error stack:', error.stack);
-        alert('There was an error submitting your survey. Please try again.\n\nError: ' + error.message);
+        
+        // Reset submitting flag
+        isSubmitting = false;
+        
+        // Hide loading overlay
+        hideLoadingOverlay();
+        
+        // Show error message
+        showValidationMessage('There was an error submitting your survey. Please try again.\n\nError: ' + error.message, 'error');
 
         // Restore button state
         if (submitBtn) {
@@ -926,8 +938,9 @@ async function submitSurveyLaravel(event) {
             const btnLoader = submitBtn.querySelector('.btn-loader');
             const btnIcon = submitBtn.querySelector('.btn-icon-check');
             if (btnText) btnText.style.display = 'inline-block';
+            if (btnText) btnText.textContent = 'Submit';
             if (btnLoader) btnLoader.style.display = 'none';
-            if (btnIcon) btnIcon.style.display = 'inline-block';
+            if (btnIcon) btnIcon.style.display = 'none';
         }
     }
 }
@@ -948,19 +961,36 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeStaticSurvey() {
-    // Show first step (consent - step 0)
-    showStep(0);
+    // Ensure currentStep is valid (0 to totalSteps which is 7)
+    if (currentStep > totalSteps) {
+        currentStep = totalSteps;
+    }
+    if (currentStep < 0) {
+        currentStep = 0;
+    }
+    
+    // Show first step (step 0)
+    showStep(currentStep);
     updateProgressBar();
     updateNavigationButtons();
     updateStepIndicators();
     initializeEventListeners();
+    
+    // Load saved progress (this will override currentStep if there's saved data)
     loadSavedProgress();
+    
+    // Ensure buttons are updated after loading progress
+    setTimeout(() => {
+        updateNavigationButtons();
+    }, 150);
 
     // Set current year in footer
     const yearElement = document.getElementById('currentYear');
     if (yearElement) {
         yearElement.textContent = new Date().getFullYear();
     }
+    
+    console.log('Survey initialized. Total steps:', totalSteps, 'Current step:', currentStep);
 }
 
 // Initialize event listeners for enhanced functionality
@@ -992,8 +1022,8 @@ function initializeEventListeners() {
         });
     });
 
-    // Prevent accidental navigation away
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    // Removed beforeunload warning - data is auto-saved, no need to warn user
+    // isSubmitting flag will prevent warnings during submission
 }
 
 // Debounce utility
@@ -1038,16 +1068,10 @@ const handleFormInput = debounce(function(event) {
 function showAutoSaveIndicator() {
     const indicator = document.getElementById('autoSaveIndicator');
     if (indicator) {
-        indicator.style.display = 'flex';
         indicator.classList.add('show');
         
         setTimeout(() => {
             indicator.classList.remove('show');
-            setTimeout(() => {
-                if (!indicator.classList.contains('show')) {
-                    indicator.style.display = 'none';
-                }
-            }, 300);
         }, 2000);
     }
 }
@@ -1058,7 +1082,19 @@ function loadSavedProgress() {
         const saved = loadFromLocalStorage('surveyProgress');
         if (saved && saved.data) {
             surveyData = saved.data || {};
-            currentStep = saved.step || 0;
+            // Validate step is within valid range (0 to totalSteps, which is 7)
+            // Step 7 (Additional Feedback/Comments) is the LAST step
+            let stepToLoad = saved.step !== undefined ? saved.step : 0;
+            if (stepToLoad > totalSteps) {
+                console.warn('Saved step', stepToLoad, 'exceeds maximum', totalSteps, '. Resetting to last step.');
+                stepToLoad = totalSteps;
+            }
+            if (stepToLoad < 0) {
+                console.warn('Saved step is negative. Resetting to first step: 0');
+                stepToLoad = 0;
+            }
+            currentStep = stepToLoad;
+            console.log('Loading saved progress - Step:', currentStep, 'Total steps:', totalSteps);
             
             // Restore form values
             Object.keys(surveyData).forEach(key => {
@@ -1073,11 +1109,16 @@ function loadSavedProgress() {
                 }
             });
             
-            // Show appropriate step
+            // Show appropriate step (will be validated again in showStep)
             showStep(currentStep);
             updateProgressBar();
             updateNavigationButtons();
             updateStepIndicators();
+            
+            // Force update navigation buttons again to ensure correct state
+            setTimeout(() => {
+                updateNavigationButtons();
+            }, 100);
         }
     } catch (e) {
         console.error('Error loading saved progress:', e);
@@ -1085,6 +1126,18 @@ function loadSavedProgress() {
 }
 
 function showStep(step) {
+    // Ensure we don't go beyond the last step (step 7 = Additional Feedback)
+    if (step > totalSteps) {
+        console.warn('Attempted to navigate beyond last step. Staying on step', totalSteps);
+        step = totalSteps;
+    }
+    
+    // Ensure step is not negative
+    if (step < 0) {
+        console.warn('Attempted to navigate to negative step. Staying on step 0');
+        step = 0;
+    }
+
     // Hide all steps with animation
     document.querySelectorAll('.survey-step').forEach(stepElement => {
         stepElement.classList.remove('active');
@@ -1103,9 +1156,22 @@ function showStep(step) {
         // Force reflow for animation
         currentStepElement.offsetHeight;
         currentStepElement.classList.add('active');
+    } else {
+        console.warn('Step element not found for step', step);
+        // If step element doesn't exist and we're trying to go beyond, revert to last step
+        if (step > totalSteps) {
+            const lastStepElement = document.querySelector(`.survey-step[data-step="${totalSteps}"]`);
+            if (lastStepElement) {
+                lastStepElement.style.display = 'block';
+                lastStepElement.classList.add('active');
+                step = totalSteps;
+            }
+        }
     }
 
     currentStep = step;
+    
+    console.log('Showing step:', currentStep, 'Total steps:', totalSteps, 'Is last step:', currentStep >= totalSteps);
 
     // Scroll to top smoothly
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1114,6 +1180,37 @@ function showStep(step) {
     updateProgressBar();
     updateNavigationButtons();
     updateStepIndicators();
+    
+    // Enforce correct buttons visibility immediately on step change to avoid any flicker
+    try {
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const isLastStep = currentStep === totalSteps;
+        if (isLastStep) {
+            if (nextBtn) {
+                nextBtn.style.display = 'none';
+                nextBtn.style.visibility = 'hidden';
+                nextBtn.style.opacity = '0';
+                nextBtn.disabled = true;
+                nextBtn.setAttribute('aria-hidden', 'true');
+                nextBtn.onclick = null;
+            }
+            if (submitBtn) {
+                submitBtn.style.display = 'inline-flex';
+                submitBtn.style.visibility = 'visible';
+                submitBtn.style.opacity = '1';
+                submitBtn.disabled = false;
+                submitBtn.setAttribute('aria-hidden', 'false');
+            }
+        }
+    } catch (e) {
+        console.warn('Navigation buttons toggle error:', e);
+    }
+
+    // Force update navigation buttons after a brief delay to ensure DOM is ready
+    setTimeout(() => {
+        updateNavigationButtons();
+    }, 50);
     
     // Focus first input in step
     setTimeout(() => {
@@ -1125,17 +1222,35 @@ function showStep(step) {
 }
 
 function nextStep() {
-    // Validate current step
-    if (!validateCurrentStep()) {
-        return;
+    // Step 7 (displayed as step 8 in UI - "Comments"/"Additional Feedback") is the LAST step
+    // If already on last step, do nothing - Submit button should be visible, not Next
+    if (currentStep >= totalSteps) {
+        console.warn('Cannot go to next step - already on last step (step 7). Submit button should be visible.');
+        updateNavigationButtons();
+        return false;
     }
 
-    // Move to next step
+    // Validate current step before moving forward
+    if (!validateCurrentStep()) {
+        return false;
+    }
+
+    // Move to next step only if not on the last step
     if (currentStep < totalSteps) {
-        showStep(currentStep + 1);
+        const nextStepIndex = currentStep + 1;
+        // Double check we're not going beyond last step
+        if (nextStepIndex > totalSteps) {
+            console.warn('Attempted to navigate beyond last step. Staying on current step.');
+            updateNavigationButtons();
+            return false;
+        }
+        showStep(nextStepIndex);
         updateProgressBar();
         updateNavigationButtons();
+        return true;
     }
+    
+    return false;
 }
 
 function previousStep() {
@@ -1299,9 +1414,9 @@ function hideValidationMessage() {
 }
 
 function updateProgressBar() {
-    // Calculate progress: step 0 (consent) = 0%, step 8 (last) = 100%
-    // So we use (currentStep / totalSteps) * 100
-    const progressPercentage = Math.round((currentStep / totalSteps) * 100);
+    // Calculate progress: step 0 = 0%, step 7 (last step, Additional Feedback) = 100%
+    // Total steps are 0-7 (8 steps), so we use ((currentStep + 1) / (totalSteps + 1)) * 100
+    const progressPercentage = Math.round(((currentStep + 1) / (totalSteps + 1)) * 100);
     const progressFill = document.getElementById('progressFill');
     const progressPercentageElement = document.getElementById('progressPercentage');
 
@@ -1319,19 +1434,52 @@ function updateNavigationButtons() {
     const nextBtn = document.getElementById('nextBtn');
     const submitBtn = document.getElementById('submitBtn');
 
-    // Disable/enable previous button (disabled on consent step 0)
+    // Disable/enable previous button (disabled on step 0)
     if (prevBtn) {
         prevBtn.disabled = currentStep === 0;
     }
 
-    // Show/hide next and submit buttons
-    // Submit button shows on last survey step (step 8), not on consent (step 0)
-    if (currentStep === totalSteps) {
-        if (nextBtn) nextBtn.style.display = 'none';
-        if (submitBtn) submitBtn.style.display = 'inline-flex';
+    // Step 7 (displayed as step 8 in UI - "Comments"/"Additional Feedback") is the LAST step
+    // Show Submit button and hide Next button on step 7
+    const isLastStep = currentStep >= totalSteps;
+    
+    console.log('Updating navigation buttons - Current step:', currentStep, 'Total steps:', totalSteps, 'Is last step:', isLastStep);
+    
+    if (isLastStep) {
+        // On last step (step 7), show Submit button and hide Next button completely
+        if (nextBtn) {
+            nextBtn.style.display = 'none';
+            nextBtn.style.visibility = 'hidden';
+            nextBtn.style.opacity = '0';
+            nextBtn.disabled = true;
+            nextBtn.setAttribute('aria-hidden', 'true');
+            // Remove onclick to prevent any clicks
+            nextBtn.onclick = null;
+        }
+        if (submitBtn) {
+            submitBtn.style.display = 'inline-flex';
+            submitBtn.style.visibility = 'visible';
+            submitBtn.style.opacity = '1';
+            submitBtn.disabled = false;
+            submitBtn.setAttribute('aria-hidden', 'false');
+        }
+        console.log('✓ On last step (step 7/8 - Comments). Submit button shown, Next button hidden.');
     } else {
-        if (nextBtn) nextBtn.style.display = 'inline-flex';
-        if (submitBtn) submitBtn.style.display = 'none';
+        // On any other step (0-6), show Next button and hide Submit button
+        if (nextBtn) {
+            nextBtn.style.display = 'inline-flex';
+            nextBtn.style.visibility = 'visible';
+            nextBtn.style.opacity = '1';
+            nextBtn.disabled = false;
+            nextBtn.setAttribute('aria-hidden', 'false');
+        }
+        if (submitBtn) {
+            submitBtn.style.display = 'none';
+            submitBtn.style.visibility = 'hidden';
+            submitBtn.style.opacity = '0';
+            submitBtn.disabled = false;
+            submitBtn.setAttribute('aria-hidden', 'true');
+        }
     }
 }
 
@@ -1482,14 +1630,12 @@ function handleSwipe() {
     }
 }
 
-// Handle before unload
+// Handle before unload - DISABLED
+// Removed the beforeunload warning dialog as requested
+// Data is auto-saved, so users can safely navigate away
 function handleBeforeUnload(e) {
-    // Only show warning if there's unsaved data
-    if (Object.keys(surveyData).length > 0) {
-        e.preventDefault();
-        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-        return e.returnValue;
-    }
+    // Do nothing - allow navigation without warning
+    // Data is saved automatically via auto-save feature
 }
 
 // Save progress to localStorage
@@ -1522,5 +1668,129 @@ function saveProgress() {
         });
     } catch (e) {
         console.error('Error saving progress:', e);
+    }
+}
+
+// Loading overlay functions for better UX during submission
+function showLoadingOverlay() {
+    // Remove existing overlay if any
+    const existingOverlay = document.getElementById('surveyLoadingOverlay');
+    if (existingOverlay) {
+        existingOverlay.remove();
+    }
+
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'surveyLoadingOverlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        color: white;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    `;
+
+    // Create spinner
+    const spinner = document.createElement('div');
+    spinner.style.cssText = `
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+    `;
+
+    // Add spinner animation (only if not already added)
+    if (!document.getElementById('surveySpinnerStyle')) {
+        const style = document.createElement('style');
+        style.id = 'surveySpinnerStyle';
+        style.textContent = `
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+            @keyframes scaleIn {
+                from { transform: scale(0); }
+                to { transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Create message
+    const message = document.createElement('div');
+    message.id = 'surveyLoadingMessage';
+    message.textContent = 'Submitting your survey...';
+    message.style.cssText = `
+        font-size: 18px;
+        font-weight: 500;
+        margin-top: 10px;
+    `;
+
+    overlay.appendChild(spinner);
+    overlay.appendChild(message);
+    document.body.appendChild(overlay);
+
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+}
+
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('surveyLoadingOverlay');
+    if (overlay) {
+        overlay.remove();
+    }
+    document.body.style.overflow = '';
+}
+
+function updateLoadingOverlay(message, type = 'loading') {
+    const overlay = document.getElementById('surveyLoadingOverlay');
+    const messageEl = document.getElementById('surveyLoadingMessage');
+    
+    if (overlay && messageEl) {
+        messageEl.textContent = message || 'Processing...';
+        
+        if (type === 'success') {
+            overlay.style.background = 'rgba(34, 197, 94, 0.9)';
+            // Remove spinner and add checkmark
+            const spinner = overlay.querySelector('div[style*="border"]');
+            if (spinner) {
+                spinner.style.display = 'none';
+            }
+            
+            // Add checkmark if not exists
+            if (!overlay.querySelector('.checkmark')) {
+                const checkmark = document.createElement('div');
+                checkmark.className = 'checkmark';
+                checkmark.innerHTML = '✓';
+                checkmark.style.cssText = `
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 50%;
+                    background: white;
+                    color: #22c55e;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 30px;
+                    font-weight: bold;
+                    margin-bottom: 20px;
+                    animation: scaleIn 0.3s ease;
+                `;
+                
+                // Animation style already added above
+                
+                overlay.insertBefore(checkmark, messageEl);
+            }
+        }
     }
 }
