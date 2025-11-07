@@ -647,13 +647,19 @@ async function submitSurveyLaravel(event) {
 
     // Validate consent before submission
     const consentCheckbox = document.getElementById('consentGiven');
-    if (!consentCheckbox || !consentCheckbox.checked) {
-        alert('You must provide consent before submitting the survey. Please go back to the consent section and check the consent box.');
-        // Scroll to consent section
-        showStep(0);
-        updateProgressBar();
-        updateNavigationButtons();
-        return;
+    if (!consentCheckbox) {
+        console.warn('Consent checkbox not found. Proceeding with submission...');
+    } else if (!consentCheckbox.checked) {
+        // Only show alert if checkbox exists and is not checked
+        // If checkbox is hidden or doesn't have required attribute, it means consent was already given
+        if (consentCheckbox.hasAttribute('required')) {
+            alert('You must provide consent before submitting the survey. Please go back to the consent section and check the consent box.');
+            // Scroll to consent section
+            showStep(0);
+            updateProgressBar();
+            updateNavigationButtons();
+            return;
+        }
     }
 
     // Use validateCurrentStep for static HTML structure
@@ -751,12 +757,6 @@ async function submitSurveyLaravel(event) {
             physical_health_support: getQuestionValue('q15') || 1,
             overall_wellbeing_rating: getQuestionValue('q13') || 1,
 
-            // Feedback & Responsiveness (q16-q18)
-            // Note: These aren't mapped to specific fields yet, but including them
-            feedback_taken_seriously: getQuestionValue('q16') || 1,
-            school_responsiveness: getQuestionValue('q17') || 1,
-            visible_improvements: getQuestionValue('q18') || 1,
-
             // Overall Satisfaction (q19-q21)
             overall_satisfaction: getQuestionValue('q19') || 1,
 
@@ -790,20 +790,43 @@ async function submitSurveyLaravel(event) {
 
         // Submit to Laravel API backend
         console.log('Sending request to /api/survey/submit...');
-        const response = await fetch('/api/survey/submit', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(laravelData)
-        });
+        let response;
+        try {
+            response = await fetch('/api/survey/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(laravelData)
+            });
+        } catch (fetchError) {
+            // Network error (CORS, connection refused, etc.)
+            console.error('Network error during fetch:', fetchError);
+            throw new Error('Network error: Unable to connect to the server. Please check your internet connection and try again.');
+        }
 
         console.log('Response received. Status:', response.status, 'Status Text:', response.statusText);
 
-        const data = await response.json();
+        // Check if response has content before trying to parse JSON
+        let data;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                console.error('Error parsing JSON response:', jsonError);
+                throw new Error('Server returned an invalid response. Please try again.');
+            }
+        } else {
+            // Non-JSON response (could be HTML error page)
+            const text = await response.text();
+            console.error('Non-JSON response received:', text.substring(0, 200));
+            throw new Error(`Server error (${response.status}): ${response.statusText}. Please try again.`);
+        }
+
         console.log('Response data:', data);
 
         if (response.ok && data.message) {

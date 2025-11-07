@@ -155,6 +155,13 @@
                     @endauth
 
                     <!-- Consent Section (GDPR & ISO 27001 Compliant) - MUST BE FIRST -->
+                    @php
+                        $hasValidConsent = false;
+                        if (Auth::check() && Auth::user()->student_id) {
+                            $consentService = app(\App\Services\ConsentService::class);
+                            $hasValidConsent = $consentService->hasValidConsent(Auth::user()->student_id, 'survey_response');
+                        }
+                    @endphp
                     <div id="consentSection" class="survey-step" data-step="0">
                         <div class="consent-card" style="background: #f8f9fa; border: 2px solid #4338ca; border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0;">
                             <h2 class="section-title" style="color: #312e81; margin-bottom: 1rem; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 10px;">
@@ -175,12 +182,20 @@
                                     <li>You can <strong>request data deletion</strong> at any time</li>
                                     <li>You can <strong>revoke consent</strong> anytime from your dashboard</li>
                                 </ul>
-                                <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-bottom: 1rem; border-radius: 4px;">
-                                    <p style="margin: 0; color: #856404; font-size: 0.95rem; line-height: 1.6;">
-                                        <strong>Important:</strong> You must provide consent to proceed with this survey. 
-                                        Without consent, you cannot submit your responses.
-                                    </p>
-                                </div>
+                                @if($hasValidConsent)
+                                    <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 12px; margin-bottom: 1rem; border-radius: 4px;">
+                                        <p style="margin: 0; color: #155724; font-size: 0.95rem; line-height: 1.6;">
+                                            <strong>✓ Active Consent:</strong> You have already provided consent during registration. The checkbox below is pre-checked, but you can uncheck it if you wish to revoke consent for this submission.
+                                        </p>
+                                    </div>
+                                @else
+                                    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-bottom: 1rem; border-radius: 4px;">
+                                        <p style="margin: 0; color: #856404; font-size: 0.95rem; line-height: 1.6;">
+                                            <strong>Important:</strong> You must provide consent to proceed with this survey. 
+                                            Without consent, you cannot submit your responses.
+                                        </p>
+                                    </div>
+                                @endif
                             </div>
                             <div class="consent-checkbox-wrapper" style="display: flex; align-items: flex-start; gap: 0.75rem; background: white; padding: 1rem; border-radius: 8px; border: 2px solid #4338ca;">
                                 <input 
@@ -188,16 +203,23 @@
                                     id="consentGiven" 
                                     name="consent_given" 
                                     value="1"
-                                    required
+                                    @if(!$hasValidConsent) required @endif
+                                    @if($hasValidConsent) checked @endif
                                     style="width: 22px; height: 22px; margin-top: 2px; cursor: pointer; flex-shrink: 0;"
                                 >
                                 <label for="consentGiven" style="cursor: pointer; flex: 1; line-height: 1.6; color: #374151; font-size: 1rem;">
                                     <strong style="color: #312e81;">I consent to the collection and processing of my data</strong> as described above for the purpose of educational quality assessment and improvement. 
-                                    <span style="color: #dc3545; font-weight: 700;">*</span>
+                                    @if(!$hasValidConsent)
+                                        <span style="color: #dc3545; font-weight: 700;">*</span>
+                                    @endif
                                 </label>
                             </div>
                             <p style="margin-top: 1rem; font-size: 0.9rem; color: #6b7280; text-align: center;">
-                                Please check the box above to proceed with the survey
+                                @if($hasValidConsent)
+                                    Your consent is already active. You can proceed with the survey.
+                                @else
+                                    Please check the box above to proceed with the survey
+                                @endif
                             </p>
                         </div>
                     </div>
