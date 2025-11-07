@@ -81,7 +81,7 @@ class ConsentService
      */
     public function hasValidConsent(?string $studentId, string $purpose = 'survey_response'): bool
     {
-        if (!$studentId) {
+        if (empty($studentId)) {
             return false;
         }
 
@@ -160,12 +160,16 @@ class ConsentService
     /**
      * Get consent history for a student
      * 
-     * @param string $studentId
+     * @param string|null $studentId
      * @param string|null $purpose
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getConsentHistory(string $studentId, ?string $purpose = null)
+    public function getConsentHistory(?string $studentId, ?string $purpose = null)
     {
+        if (!$studentId) {
+            return collect([]);
+        }
+
         $query = ConsentRecord::where('student_id', $studentId)
             ->orderBy('created_at', 'desc');
 

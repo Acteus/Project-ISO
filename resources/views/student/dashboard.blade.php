@@ -422,8 +422,9 @@
 
                 @php
                     $consentService = app(\App\Services\ConsentService::class);
-                    $hasValidConsent = $consentService->hasValidConsent(Auth::user()->student_id, 'survey_response');
-                    $consentHistory = $consentService->getConsentHistory(Auth::user()->student_id, 'survey_response');
+                    $studentId = Auth::user()->student_id ?? null;
+                    $hasValidConsent = $studentId ? $consentService->hasValidConsent($studentId, 'survey_response') : false;
+                    $consentHistory = $studentId ? $consentService->getConsentHistory($studentId, 'survey_response') : collect([]);
                     $latestConsent = $consentHistory->first();
                 @endphp
 
@@ -496,26 +497,35 @@
                     </ul>
                 </div>
 
-                @if($hasValidConsent)
-                    <form method="POST" action="{{ route('student.consent.revoke') }}" id="revokeConsentForm" style="max-width: 600px;">
-                        @csrf
-                        <div style="background: #f8d7da; border: 1px solid #dc3545; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                            <p style="margin: 0; color: #721c24; font-size: 14px; line-height: 1.6;">
-                                <strong>Warning:</strong> Revoking consent will prevent you from submitting new surveys.
-                                This action will be logged for audit purposes.
+                @if($studentId)
+                    @if($hasValidConsent)
+                        <form method="POST" action="{{ route('student.consent.revoke') }}" id="revokeConsentForm" style="max-width: 600px;">
+                            @csrf
+                            <div style="background: #f8d7da; border: 1px solid #dc3545; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                                <p style="margin: 0; color: #721c24; font-size: 14px; line-height: 1.6;">
+                                    <strong>Warning:</strong> Revoking consent will prevent you from submitting new surveys.
+                                    This action will be logged for audit purposes.
+                                </p>
+                            </div>
+                            <button type="submit" class="btn" style="background: linear-gradient(135deg, #dc3545, #c82333); color: white;" onclick="return confirmRevokeConsent(event)">
+                                <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                                Revoke Consent
+                            </button>
+                        </form>
+                    @else
+                        <div style="background: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 8px;">
+                            <p style="margin: 0; color: #0c5460; font-size: 14px;">
+                                You currently do not have active consent. You will need to provide consent when submitting a survey.
                             </p>
                         </div>
-                        <button type="submit" class="btn" style="background: linear-gradient(135deg, #dc3545, #c82333); color: white;" onclick="return confirmRevokeConsent(event)">
-                            <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                            </svg>
-                            Revoke Consent
-                        </button>
-                    </form>
+                    @endif
                 @else
-                    <div style="background: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 8px;">
-                        <p style="margin: 0; color: #0c5460; font-size: 14px;">
-                            You currently do not have active consent. You will need to provide consent when submitting a survey.
+                    <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 8px;">
+                        <p style="margin: 0; color: #856404; font-size: 14px;">
+                            <strong>Note:</strong> Student ID not found. Consent management requires a valid student ID.
+                            Please contact support if you need assistance.
                         </p>
                     </div>
                 @endif
