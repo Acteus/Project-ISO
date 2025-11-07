@@ -20,9 +20,9 @@ Route::get('/admin/me', [AdminAuthController::class, 'me'])->middleware('auth:sa
 
 // Survey Routes (public routes that don't require authentication or CSRF)
 // Note: Using web middleware to maintain session for authenticated users
+// Rate limiting: 10 submissions per minute per IP to prevent abuse
 Route::post('/survey/submit', [SurveyController::class, 'submitResponse'])
-    ->middleware('web')
-    ->withoutMiddleware(['throttle']);
+    ->middleware(['web', 'throttle:10,1']);
 
 // Protected Admin Routes
 Route::middleware('auth:sanctum')->group(function () {

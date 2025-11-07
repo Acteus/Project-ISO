@@ -135,36 +135,41 @@ class StudentController extends Controller
             ], 422);
         }
 
-        // Check if this is an admin login (student_id = 'admin')
-        if ($request->student_id === 'admin') {
-            $admin = \App\Models\Admin::where('username', $request->student_id)->first();
+        // Check if this is an admin login attempt
+        // Admins can login with either username or email
+        $admin = \App\Models\Admin::where(function($query) use ($request) {
+            $query->where('username', $request->student_id)
+                  ->orWhere('email', $request->student_id);
+        })->first();
 
-            if ($admin && \Illuminate\Support\Facades\Hash::check($request->password, $admin->password)) {
-                // Store admin in session for web authentication
-                session(['admin' => $admin]);
+        if ($admin && \Illuminate\Support\Facades\Hash::check($request->password, $admin->password)) {
+            // Store admin in session for web authentication
+            session(['admin' => $admin]);
 
-                // Mark that we should regenerate on next request
-                $request->session()->put('_should_regenerate', true);
+            // Mark that we should regenerate on next request
+            $request->session()->put('_should_regenerate', true);
 
-                // Log admin login for audit trail
-                AuditLog::create([
-                    'admin_id' => $admin->id,
-                    'action' => 'admin_login',
-                    'description' => 'Admin logged into ISO 21001 survey system',
-                    'ip_address' => $request->ip(),
-                ]);
+            // Log admin login for audit trail
+            AuditLog::create([
+                'admin_id' => $admin->id,
+                'action' => 'admin_login',
+                'description' => 'Admin logged into ISO 21001 survey system',
+                'ip_address' => $request->ip(),
+            ]);
 
-                return response()->json([
-                    'message' => 'Admin login successful! Welcome back.',
-                    'redirect' => route('admin.dashboard'),
-                    'user' => [
-                        'name' => $admin->name,
-                        'username' => $admin->username,
-                        'role' => 'admin',
-                    ]
-                ]);
-            }
+            return response()->json([
+                'message' => 'Admin login successful! Welcome back.',
+                'redirect' => route('admin.dashboard'),
+                'user' => [
+                    'name' => $admin->name,
+                    'username' => $admin->username,
+                    'role' => 'admin',
+                ]
+            ]);
+        }
 
+        // If admin lookup found a user but password was wrong, return specific error
+        if ($admin) {
             return response()->json([
                 'message' => 'Invalid admin credentials. Please check your username and password.'
             ], 401);

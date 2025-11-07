@@ -50,8 +50,8 @@ Route::prefix('password')->name('password.')->group(function () {
     Route::post('/reset', [ForgotPasswordController::class, 'reset'])->name('update');
 });
 
-// Admin routes
-Route::prefix('admin')->name('admin.')->group(function () {
+// Admin routes - protected by EnsureAdmin middleware
+Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::get('/dashboard', [StudentController::class, 'adminDashboard'])->name('dashboard');
     Route::get('/responses', [StudentController::class, 'allResponses'])->name('responses');
     Route::get('/responses/{id}', [StudentController::class, 'viewResponse'])->name('response.view');
@@ -173,75 +173,77 @@ Route::get('/thank-you.html', function () {
     return redirect()->route('survey.thankyou');
 });
 
-// Debug logging for troubleshooting
-Route::get('/debug-login', function () {
-    Log::info('Login debug route accessed', [
-        'url' => request()->url(),
-        'full_url' => request()->fullUrl(),
-        'method' => request()->method(),
-        'user_agent' => request()->userAgent()
-    ]);
-    return response()->json(['message' => 'Debug route working']);
-});
+// Debug routes - only available in non-production environments
+if (!app()->environment('production')) {
+    Route::get('/debug-login', function () {
+        Log::info('Login debug route accessed', [
+            'url' => request()->url(),
+            'full_url' => request()->fullUrl(),
+            'method' => request()->method(),
+            'user_agent' => request()->userAgent()
+        ]);
+        return response()->json(['message' => 'Debug route working']);
+    });
 
-// Auth debug route
-Route::get('/debug-auth', function () {
-    $user = Auth::user();
-    $admin = session('admin');
-    $sessionId = session()->getId();
+    // Auth debug route
+    Route::get('/debug-auth', function () {
+        $user = Auth::user();
+        $admin = session('admin');
+        $sessionId = session()->getId();
 
-    // Get session data from database
-    $sessionData = DB::table('sessions')->where('id', $sessionId)->first();
+        // Get session data from database
+        $sessionData = DB::table('sessions')->where('id', $sessionId)->first();
 
-    return response()->json([
-        'authenticated' => Auth::check(),
-        'user' => $user ? [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'student_id' => $user->student_id,
-        ] : null,
-        'admin' => $admin ? [
-            'id' => $admin->id,
-            'name' => $admin->name,
-        ] : null,
-        'session_id' => substr($sessionId, 0, 10) . '...',
-        'session_has_user_id' => $sessionData ? $sessionData->user_id : 'NO SESSION FOUND',
-        'session_last_activity' => $sessionData ? date('Y-m-d H:i:s', $sessionData->last_activity) : null,
-        'all_session_data' => session()->all(),
-        'session_driver' => config('session.driver'),
-        'session_domain' => config('session.domain'),
-        'session_secure' => config('session.secure'),
-        'app_url' => config('app.url'),
-        'request_url' => request()->url(),
-        'request_host' => request()->getHost(),
-        'cookies' => request()->cookies->keys(),
-    ]);
-});
+        return response()->json([
+            'authenticated' => Auth::check(),
+            'user' => $user ? [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'student_id' => $user->student_id,
+            ] : null,
+            'admin' => $admin ? [
+                'id' => $admin->id,
+                'name' => $admin->name,
+            ] : null,
+            'session_id' => substr($sessionId, 0, 10) . '...',
+            'session_has_user_id' => $sessionData ? $sessionData->user_id : 'NO SESSION FOUND',
+            'session_last_activity' => $sessionData ? date('Y-m-d H:i:s', $sessionData->last_activity) : null,
+            'all_session_data' => session()->all(),
+            'session_driver' => config('session.driver'),
+            'session_domain' => config('session.domain'),
+            'session_secure' => config('session.secure'),
+            'app_url' => config('app.url'),
+            'request_url' => request()->url(),
+            'request_host' => request()->getHost(),
+            'cookies' => request()->cookies->keys(),
+        ]);
+    });
 
-// Manual login test route
-Route::get('/test-login/{studentId}', function ($studentId) {
-    $user = \App\Models\User::where('student_id', $studentId)->first();
+    // Manual login test route
+    Route::get('/test-login/{studentId}', function ($studentId) {
+        $user = \App\Models\User::where('student_id', $studentId)->first();
 
-    if (!$user) {
-        return response()->json(['error' => 'User not found']);
-    }
+        if (!$user) {
+            return response()->json(['error' => 'User not found']);
+        }
 
-    Auth::login($user);
-    request()->session()->regenerate();
+        Auth::login($user);
+        request()->session()->regenerate();
 
-    return response()->json([
-        'message' => 'Manually logged in',
-        'user' => [
-            'id' => $user->id,
-            'name' => $user->name,
-            'student_id' => $user->student_id,
-        ],
-        'authenticated' => Auth::check(),
-        'session_id' => session()->getId(),
-        'redirect_to' => route('survey.landing'),
-    ]);
-})->where('studentId', '.*');
+        return response()->json([
+            'message' => 'Manually logged in',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'student_id' => $user->student_id,
+            ],
+            'authenticated' => Auth::check(),
+            'session_id' => session()->getId(),
+            'redirect_to' => route('survey.landing'),
+        ]);
+    })->where('studentId', '.*');
+}
 
 // API Routes for Survey functionality
 Route::prefix('api')->group(function () {

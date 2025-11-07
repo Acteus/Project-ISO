@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * SurveyResponse Model
@@ -130,48 +131,89 @@ class SurveyResponse extends Model
         $this->attributes['additional_comments'] = !empty($value) ? Crypt::encryptString($value) : $value;
     }
 
-    // Accessors for decryption with logging
-    public function getStudentIdAttribute($value)
+    /**
+     * Cache decrypted values to improve performance.
+     * Cache key format: survey_response_{id}_{field}
+     * Cache duration: 1 hour (3600 seconds)
+     */
+    private function getCachedDecryptedValue(string $field, $encryptedValue, int $cacheDuration = 3600)
     {
-        try {
-            return !empty($value) ? Crypt::decryptString($value) : null;
-        } catch (\Exception $e) {
-            Log::error('Failed to decrypt student_id: ' . $e->getMessage());
+        if (empty($encryptedValue)) {
             return null;
         }
+
+        // Generate cache key based on model ID and field name
+        $cacheKey = "survey_response_{$this->id}_{$field}";
+
+        // Try to get from cache first
+        return Cache::remember($cacheKey, $cacheDuration, function () use ($encryptedValue, $field) {
+            try {
+                return Crypt::decryptString($encryptedValue);
+            } catch (\Exception $e) {
+                Log::error("Failed to decrypt {$field}: " . $e->getMessage(), [
+                    'response_id' => $this->id,
+                    'field' => $field,
+                ]);
+                return null;
+            }
+        });
+    }
+
+    /**
+     * Clear cached decrypted values for this model instance.
+     * Should be called when the model is updated.
+     */
+    private function clearDecryptionCache()
+    {
+        $fields = ['student_id', 'positive_aspects', 'improvement_suggestions', 'additional_comments'];
+        foreach ($fields as $field) {
+            Cache::forget("survey_response_{$this->id}_{$field}");
+        }
+    }
+
+    /**
+     * Override the save method to clear cache when model is updated.
+     */
+    public function save(array $options = [])
+    {
+        $wasRecentlyCreated = $this->wasRecentlyCreated;
+        $result = parent::save($options);
+        
+        // Clear cache after save (but not on first creation)
+        if (!$wasRecentlyCreated) {
+            $this->clearDecryptionCache();
+        }
+        
+        return $result;
+    }
+
+    // Accessors for decryption with caching
+    public function getStudentIdAttribute($value)
+    {
+        // Get raw encrypted value from attributes
+        $rawValue = $this->attributes['student_id'] ?? $value;
+        return $this->getCachedDecryptedValue('student_id', $rawValue);
     }
 
     public function getPositiveAspectsAttribute($value)
     {
-        if (empty($value)) return null;
-        try {
-            return Crypt::decryptString($value);
-        } catch (\Exception $e) {
-            Log::error('Failed to decrypt positive_aspects: ' . $e->getMessage());
-            return null;
-        }
+        // Get raw encrypted value from attributes
+        $rawValue = $this->attributes['positive_aspects'] ?? $value;
+        return $this->getCachedDecryptedValue('positive_aspects', $rawValue);
     }
 
     public function getImprovementSuggestionsAttribute($value)
     {
-        if (empty($value)) return null;
-        try {
-            return Crypt::decryptString($value);
-        } catch (\Exception $e) {
-            Log::error('Failed to decrypt improvement_suggestions: ' . $e->getMessage());
-            return null;
-        }
+        // Get raw encrypted value from attributes
+        $rawValue = $this->attributes['improvement_suggestions'] ?? $value;
+        return $this->getCachedDecryptedValue('improvement_suggestions', $rawValue);
     }
 
     public function getAdditionalCommentsAttribute($value)
     {
-        if (empty($value)) return null;
-        try {
-            return Crypt::decryptString($value);
-        } catch (\Exception $e) {
-            Log::error('Failed to decrypt additional_comments: ' . $e->getMessage());
-            return null;
-        }
+        // Get raw encrypted value from attributes
+        $rawValue = $this->attributes['additional_comments'] ?? $value;
+        return $this->getCachedDecryptedValue('additional_comments', $rawValue);
     }
 
     // Generate anonymous ID for analytics
