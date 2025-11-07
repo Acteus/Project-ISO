@@ -154,9 +154,26 @@ return [
     | available to. By default, the cookie will be available to the root
     | domain and all subdomains. Typically, this shouldn't be changed.
     |
+    | For local development, this is automatically set to null to allow
+    | cookies to work with localhost. For production, set SESSION_DOMAIN
+    | in your .env file.
+    |
     */
 
-    'domain' => env('SESSION_DOMAIN'),
+    'domain' => (function() {
+        $appEnv = env('APP_ENV', 'production');
+        $appUrl = env('APP_URL', '');
+
+        // Automatically set to null for local development
+        if ($appEnv === 'local' ||
+            str_contains($appUrl, 'localhost') ||
+            str_contains($appUrl, '127.0.0.1')) {
+            return null;
+        }
+
+        // Use SESSION_DOMAIN from .env for production, or null if not set
+        return env('SESSION_DOMAIN', null);
+    })(),
 
     /*
     |--------------------------------------------------------------------------
@@ -167,9 +184,26 @@ return [
     | to the server if the browser has a HTTPS connection. This will keep
     | the cookie from being sent to you when it can't be done securely.
     |
+    | For local development (HTTP), this should be false. For production
+    | (HTTPS), set SESSION_SECURE_COOKIE=true in your .env file.
+    |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    'secure' => (function() {
+        $appEnv = env('APP_ENV', 'production');
+        $appUrl = env('APP_URL', '');
+
+        // Automatically set to false for local development (HTTP)
+        if ($appEnv === 'local' ||
+            str_contains($appUrl, 'localhost') ||
+            str_contains($appUrl, '127.0.0.1')) {
+            return false;
+        }
+
+        // Use SESSION_SECURE_COOKIE from .env for production
+        $secure = env('SESSION_SECURE_COOKIE');
+        return $secure !== null ? (bool) $secure : null;
+    })(),
 
     /*
     |--------------------------------------------------------------------------
