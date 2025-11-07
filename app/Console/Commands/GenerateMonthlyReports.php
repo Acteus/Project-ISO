@@ -6,9 +6,6 @@ use App\Models\Admin;
 use App\Services\VisualizationService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
-use PDF; // Assuming you have a PDF package like barryvdh/laravel-dompdf
 
 class GenerateMonthlyReports extends Command
 {
@@ -62,14 +59,11 @@ class GenerateMonthlyReports extends Command
                 return 1;
             }
 
-            // Generate PDF report
-            $pdfPath = $this->generatePDFReport($reportData);
+            // Build HTML report content for attachment
+            $reportHtml = $this->buildMonthlyReportHTML($reportData);
 
-            // Send emails with PDF attachment
-            $this->sendMonthlyReportEmails($reportData, $pdfPath, $testMode);
-
-            // Clean up temporary file
-            Storage::delete($pdfPath);
+            // Queue emails with HTML attachment
+            $this->queueMonthlyReportEmails($reportData, $reportHtml, $testMode);
 
             $this->info('✅ Monthly report generation completed successfully!');
 
@@ -79,24 +73,6 @@ class GenerateMonthlyReports extends Command
         }
 
         return 0;
-    }
-
-    /**
-     * Generate PDF report
-     */
-    private function generatePDFReport($reportData)
-    {
-        // Create PDF content (you would typically use a view for this)
-        $html = $this->buildMonthlyReportHTML($reportData);
-
-        // Generate PDF (assuming you have dompdf or similar package)
-        // For now, we'll create a simple HTML file as placeholder
-        $filename = 'monthly-report-' . $reportData['year'] . '-' . str_pad($reportData['month'], 2, '0', STR_PAD_LEFT) . '.html';
-        $path = 'temp/' . $filename;
-
-        Storage::put($path, $html);
-
-        return $path;
     }
 
     /**
@@ -201,9 +177,9 @@ class GenerateMonthlyReports extends Command
     }
 
     /**
-     * Send monthly report emails
+     * Queue monthly report emails
      */
-    private function sendMonthlyReportEmails($reportData, $pdfPath, $testMode = false)
+    private function queueMonthlyReportEmails($reportData, $reportHtml, $testMode = false)
     {
         $admins = $this->getAdminRecipients($testMode);
 
@@ -214,21 +190,21 @@ class GenerateMonthlyReports extends Command
 
         $this->info("Sending monthly reports to {$admins->count()} administrator(s)...");
 
-        $sentCount = 0;
+        $queuedCount = 0;
         $failedCount = 0;
 
         foreach ($admins as $admin) {
             try {
-                Mail::to($admin->email)->send(new \App\Mail\MonthlyComplianceReport($reportData, $pdfPath));
-                $this->info("✓ Sent to: {$admin->email}");
-                $sentCount++;
+                Mail::to($admin->email)->queue(new \App\Mail\MonthlyComplianceReport($reportData, $reportHtml));
+                $this->info("✓ Queued for: {$admin->email}");
+                $queuedCount++;
             } catch (\Exception $e) {
                 $this->error("✗ Failed to send to {$admin->email}: {$e->getMessage()}");
                 $failedCount++;
             }
         }
 
-        $this->info("Monthly report emails sent. Success: {$sentCount}, Failed: {$failedCount}");
+        $this->info("Monthly report emails queued. Queued: {$queuedCount}, Failed: {$failedCount}");
     }
 
     /**

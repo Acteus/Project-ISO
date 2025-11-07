@@ -72,3 +72,4 @@ class ConsentRecord extends Model
     }
 }
 
+

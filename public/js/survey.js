@@ -1,7 +1,11 @@
 // Survey functionality for Laravel with static HTML structure
-let currentStep = 0; // Start with consent (step 0)
-let totalSteps = 8; // 8 survey sections (steps 1-8), plus consent (step 0)
+let currentStep = 0; // Start with first survey section (no consent step)
+let totalSteps = 7; // 8 total sections indexed 0..7 (no consent step)
 let surveyData = {};
+let loadedSteps = new Set([0]); // Track which steps have been loaded
+let touchStartX = 0;
+let touchEndX = 0;
+let autoSaveTimeout = null;
 
 // Laravel-specific functions
 
@@ -525,7 +529,8 @@ function mapFieldsForLaravelAPI(frontendData) {
         additional_comments: frontendData.open_feedback || '',
 
         // Consent and privacy (GDPR & ISO 27001 compliant)
-        consent_given: document.getElementById('consentGiven') ? document.getElementById('consentGiven').checked : false,
+        // If user is authenticated (has student_id), consent was given during registration
+        consent_given: (frontendData.student_id) ? true : (document.getElementById('consentGiven') ? document.getElementById('consentGiven').checked : false),
 
         // Indirect metrics (optional - can be populated from student records later)
         attendance_rate: null,
@@ -629,14 +634,11 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
-// Prevent accidental navigation away
-window.addEventListener('beforeunload', function(event) {
-    if (Object.keys(surveyData).length > 0) {
-        event.preventDefault();
-        event.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-        return event.returnValue;
-    }
-});
+// Track if form is being submitted to prevent beforeunload warning
+let isSubmitting = false;
+
+// Prevent accidental navigation away (disabled - using auto-save instead)
+// Removed beforeunload warning as requested - data is auto-saved
 
 // Laravel-specific functions
 async function submitSurveyLaravel(event) {
@@ -647,13 +649,19 @@ async function submitSurveyLaravel(event) {
 
     // Validate consent before submission
     const consentCheckbox = document.getElementById('consentGiven');
-    if (!consentCheckbox || !consentCheckbox.checked) {
-        alert('You must provide consent before submitting the survey. Please go back to the consent section and check the consent box.');
-        // Scroll to consent section
-        showStep(0);
-        updateProgressBar();
-        updateNavigationButtons();
-        return;
+    if (!consentCheckbox) {
+        console.warn('Consent checkbox not found. Proceeding with submission...');
+    } else if (!consentCheckbox.checked) {
+        // Only show alert if checkbox exists and is not checked
+        // If checkbox is hidden or doesn't have required attribute, it means consent was already given
+        if (consentCheckbox.hasAttribute('required')) {
+            alert('You must provide consent before submitting the survey. Please go back to the consent section and check the consent box.');
+            // Scroll to consent section
+            showStep(0);
+            updateProgressBar();
+            updateNavigationButtons();
+            return;
+        }
     }
 
     // Use validateCurrentStep for static HTML structure
@@ -664,12 +672,23 @@ async function submitSurveyLaravel(event) {
 
     console.log('Validation passed, proceeding with submission...');
 
+    // Set submitting flag to prevent beforeunload warnings
+    isSubmitting = true;
+
     const submitBtn = document.getElementById('submitBtn');
 
-    // Show loading state
+    // Show loading state with overlay
+    showLoadingOverlay();
+
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>Submitting...</span>';
+        submitBtn.classList.add('loading');
+        const btnText = submitBtn.querySelector('.btn-text');
+        const btnLoader = submitBtn.querySelector('.btn-loader');
+        const btnIcon = submitBtn.querySelector('.btn-icon-check');
+        if (btnText) btnText.style.display = 'none';
+        if (btnLoader) btnLoader.style.display = 'inline-block';
+        if (btnIcon) btnIcon.style.display = 'none';
     }
 
     try {
@@ -751,12 +770,6 @@ async function submitSurveyLaravel(event) {
             physical_health_support: getQuestionValue('q15') || 1,
             overall_wellbeing_rating: getQuestionValue('q13') || 1,
 
-            // Feedback & Responsiveness (q16-q18)
-            // Note: These aren't mapped to specific fields yet, but including them
-            feedback_taken_seriously: getQuestionValue('q16') || 1,
-            school_responsiveness: getQuestionValue('q17') || 1,
-            visible_improvements: getQuestionValue('q18') || 1,
-
             // Overall Satisfaction (q19-q21)
             overall_satisfaction: getQuestionValue('q19') || 1,
 
@@ -766,7 +779,8 @@ async function submitSurveyLaravel(event) {
             additional_comments: additionalFeedbackField ? additionalFeedbackField.value : '',
 
             // Consent and privacy (GDPR & ISO 27001 compliant)
-            consent_given: document.getElementById('consentGiven') ? document.getElementById('consentGiven').checked : false,
+            // If user is authenticated (has student_id), consent was given during registration
+            consent_given: (studentIdField && studentIdField.value) ? true : (document.getElementById('consentGiven') ? document.getElementById('consentGiven').checked : false),
 
             // Indirect metrics (optional)
             attendance_rate: null,
@@ -776,7 +790,48 @@ async function submitSurveyLaravel(event) {
             counseling_sessions: null
         };
 
-        console.log('Submitting survey data:', laravelData);
+        // Explicitly remove any fields that are not allowed (data minimization)
+        const allowedFields = [
+            'student_id', 'track', 'grade_level', 'academic_year', 'semester', 'gender',
+            'curriculum_relevance_rating', 'learning_pace_appropriateness', 'individual_support_availability',
+            'learning_style_accommodation', 'teaching_quality_rating', 'learning_environment_rating',
+            'peer_interaction_satisfaction', 'extracurricular_satisfaction', 'academic_progress_rating',
+            'skill_development_rating', 'critical_thinking_improvement', 'problem_solving_confidence',
+            'physical_safety_rating', 'psychological_safety_rating', 'bullying_prevention_effectiveness',
+            'emergency_preparedness_rating', 'mental_health_support_rating', 'stress_management_support',
+            'physical_health_support', 'overall_wellbeing_rating', 'overall_satisfaction',
+            'positive_aspects', 'improvement_suggestions', 'additional_comments',
+            'feedback_taken_seriously', 'school_responsiveness', 'visible_improvements',
+            'attendance_rate', 'grade_average', 'participation_score', 'extracurricular_hours',
+            'counseling_sessions', 'consent_given'
+        ];
+        
+        // Filter out any fields that are not in the allowed list
+        const filteredData = {};
+        Object.keys(laravelData).forEach(key => {
+            if (allowedFields.includes(key)) {
+                filteredData[key] = laravelData[key];
+            } else {
+                console.warn('Filtering out disallowed field:', key);
+            }
+        });
+        
+        // Also check FormData for any additional allowed fields that might be in the form
+        if (formData) {
+            for (const [key, value] of formData.entries()) {
+                if (allowedFields.includes(key) && !filteredData.hasOwnProperty(key)) {
+                    filteredData[key] = value;
+                }
+            }
+        }
+        
+        // Also remove any q16, q17, q18 fields that might have been included from form data
+        delete filteredData.q16;
+        delete filteredData.q17;
+        delete filteredData.q18;
+
+        console.log('Submitting survey data (filtered):', filteredData);
+        console.log('Fields being sent:', Object.keys(filteredData));
 
         // Get CSRF token safely
         let csrfToken = '';
@@ -790,27 +845,69 @@ async function submitSurveyLaravel(event) {
 
         // Submit to Laravel API backend
         console.log('Sending request to /api/survey/submit...');
-        const response = await fetch('/api/survey/submit', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(laravelData)
-        });
+        let response;
+        try {
+            response = await fetch('/api/survey/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(filteredData)
+            });
+        } catch (fetchError) {
+            // Network error (CORS, connection refused, etc.)
+            console.error('Network error during fetch:', fetchError);
+            throw new Error('Network error: Unable to connect to the server. Please check your internet connection and try again.');
+        }
 
         console.log('Response received. Status:', response.status, 'Status Text:', response.statusText);
 
-        const data = await response.json();
+        // Check if response has content before trying to parse JSON
+        let data;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                console.error('Error parsing JSON response:', jsonError);
+                throw new Error('Server returned an invalid response. Please try again.');
+            }
+        } else {
+            // Non-JSON response (could be HTML error page)
+            const text = await response.text();
+            console.error('Non-JSON response received:', text.substring(0, 200));
+            throw new Error(`Server error (${response.status}): ${response.statusText}. Please try again.`);
+        }
+
         console.log('Response data:', data);
 
         if (response.ok && data.message) {
             console.log('Survey submitted successfully!');
-            // Show success message and redirect
-            alert(data.message);
-            window.location.href = '/thank-you';
+            
+            // Clear saved progress
+            removeFromLocalStorage('surveyProgress');
+            
+            // Update button to show success
+            if (submitBtn) {
+                submitBtn.classList.remove('loading');
+                const btnText = submitBtn.querySelector('.btn-text');
+                const btnLoader = submitBtn.querySelector('.btn-loader');
+                const btnIcon = submitBtn.querySelector('.btn-icon-check');
+                if (btnText) btnText.textContent = 'Submitted!';
+                if (btnLoader) btnLoader.style.display = 'none';
+                if (btnIcon) btnIcon.style.display = 'inline-block';
+            }
+            
+            // Update loading overlay with success message
+            updateLoadingOverlay('Survey submitted successfully! Redirecting...', 'success');
+            
+            // Redirect immediately to thank you page
+            setTimeout(() => {
+                window.location.href = '/thank-you';
+            }, 500);
         } else {
             console.error('Survey submission failed. Response:', data);
             let errorMsg = data.message || 'Submission failed';
@@ -823,12 +920,27 @@ async function submitSurveyLaravel(event) {
     } catch (error) {
         console.error('Survey submission error:', error);
         console.error('Error stack:', error.stack);
-        alert('There was an error submitting your survey. Please try again.\n\nError: ' + error.message);
+        
+        // Reset submitting flag
+        isSubmitting = false;
+        
+        // Hide loading overlay
+        hideLoadingOverlay();
+        
+        // Show error message
+        showValidationMessage('There was an error submitting your survey. Please try again.\n\nError: ' + error.message, 'error');
 
         // Restore button state
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = 'Submit <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+            submitBtn.classList.remove('loading');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const btnLoader = submitBtn.querySelector('.btn-loader');
+            const btnIcon = submitBtn.querySelector('.btn-icon-check');
+            if (btnText) btnText.style.display = 'inline-block';
+            if (btnText) btnText.textContent = 'Submit';
+            if (btnLoader) btnLoader.style.display = 'none';
+            if (btnIcon) btnIcon.style.display = 'none';
         }
     }
 }
@@ -849,48 +961,296 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeStaticSurvey() {
-    // Show first step (consent - step 0)
-    showStep(0);
+    // Ensure currentStep is valid (0 to totalSteps which is 7)
+    if (currentStep > totalSteps) {
+        currentStep = totalSteps;
+    }
+    if (currentStep < 0) {
+        currentStep = 0;
+    }
+    
+    // Show first step (step 0)
+    showStep(currentStep);
     updateProgressBar();
     updateNavigationButtons();
+    updateStepIndicators();
+    initializeEventListeners();
+    
+    // Load saved progress (this will override currentStep if there's saved data)
+    loadSavedProgress();
+    
+    // Ensure buttons are updated after loading progress
+    setTimeout(() => {
+        updateNavigationButtons();
+    }, 150);
 
     // Set current year in footer
     const yearElement = document.getElementById('currentYear');
     if (yearElement) {
         yearElement.textContent = new Date().getFullYear();
     }
+    
+    console.log('Survey initialized. Total steps:', totalSteps, 'Current step:', currentStep);
+}
+
+// Initialize event listeners for enhanced functionality
+function initializeEventListeners() {
+    // Form input listeners with debounced auto-save
+    const form = document.getElementById('surveyForm');
+    if (form) {
+        form.addEventListener('input', handleFormInput);
+        form.addEventListener('change', handleFormInput);
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', handleKeyboardNavigation);
+
+    // Mobile swipe gestures
+    const surveyCard = document.querySelector('.survey-card');
+    if (surveyCard) {
+        surveyCard.addEventListener('touchstart', handleTouchStart, { passive: true });
+        surveyCard.addEventListener('touchend', handleTouchEnd, { passive: true });
+    }
+
+    // Step indicator click handlers
+    const stepItems = document.querySelectorAll('.step-item');
+    stepItems.forEach((item, index) => {
+        item.addEventListener('click', () => {
+            if (index <= currentStep || checkSectionCompletion(index - 1)) {
+                goToStep(index);
+            }
+        });
+    });
+
+    // Removed beforeunload warning - data is auto-saved, no need to warn user
+    // isSubmitting flag will prevent warnings during submission
+}
+
+// Debounce utility
+function debounce(func, wait) {
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(autoSaveTimeout);
+            func(...args);
+        };
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(later, wait);
+    };
+}
+
+// Handle form input with debounced auto-save
+const handleFormInput = debounce(function(event) {
+    const input = event.target;
+    
+    // Save the value to surveyData immediately
+    if (input.type === 'radio' && input.checked) {
+        surveyData[input.name] = input.value;
+    } else if (input.type === 'checkbox') {
+        surveyData[input.name] = input.checked ? input.value : '';
+    } else {
+        surveyData[input.name] = input.value;
+    }
+    
+    // Validate field immediately
+    validateField(input);
+    
+    // Save progress
+    saveProgress();
+    
+    // Show auto-save indicator
+    showAutoSaveIndicator();
+    
+    // Update section completion
+    updateStepIndicators();
+}, 1000);
+
+// Show auto-save indicator
+function showAutoSaveIndicator() {
+    const indicator = document.getElementById('autoSaveIndicator');
+    if (indicator) {
+        indicator.classList.add('show');
+        
+        setTimeout(() => {
+            indicator.classList.remove('show');
+        }, 2000);
+    }
+}
+
+// Load saved progress
+function loadSavedProgress() {
+    try {
+        const saved = loadFromLocalStorage('surveyProgress');
+        if (saved && saved.data) {
+            surveyData = saved.data || {};
+            // Validate step is within valid range (0 to totalSteps, which is 7)
+            // Step 7 (Additional Feedback/Comments) is the LAST step
+            let stepToLoad = saved.step !== undefined ? saved.step : 0;
+            if (stepToLoad > totalSteps) {
+                console.warn('Saved step', stepToLoad, 'exceeds maximum', totalSteps, '. Resetting to last step.');
+                stepToLoad = totalSteps;
+            }
+            if (stepToLoad < 0) {
+                console.warn('Saved step is negative. Resetting to first step: 0');
+                stepToLoad = 0;
+            }
+            currentStep = stepToLoad;
+            console.log('Loading saved progress - Step:', currentStep, 'Total steps:', totalSteps);
+            
+            // Restore form values
+            Object.keys(surveyData).forEach(key => {
+                const input = document.querySelector(`[name="${key}"]`);
+                if (input) {
+                    if (input.type === 'radio') {
+                        const radio = document.querySelector(`[name="${key}"][value="${surveyData[key]}"]`);
+                        if (radio) radio.checked = true;
+                    } else {
+                        input.value = surveyData[key];
+                    }
+                }
+            });
+            
+            // Show appropriate step (will be validated again in showStep)
+            showStep(currentStep);
+            updateProgressBar();
+            updateNavigationButtons();
+            updateStepIndicators();
+            
+            // Force update navigation buttons again to ensure correct state
+            setTimeout(() => {
+                updateNavigationButtons();
+            }, 100);
+        }
+    } catch (e) {
+        console.error('Error loading saved progress:', e);
+    }
 }
 
 function showStep(step) {
-    // Hide all steps
+    // Ensure we don't go beyond the last step (step 7 = Additional Feedback)
+    if (step > totalSteps) {
+        console.warn('Attempted to navigate beyond last step. Staying on step', totalSteps);
+        step = totalSteps;
+    }
+    
+    // Ensure step is not negative
+    if (step < 0) {
+        console.warn('Attempted to navigate to negative step. Staying on step 0');
+        step = 0;
+    }
+
+    // Hide all steps with animation
     document.querySelectorAll('.survey-step').forEach(stepElement => {
+        stepElement.classList.remove('active');
         stepElement.style.display = 'none';
     });
 
-    // Show current step
+    // Load step content if lazy loaded
     const currentStepElement = document.querySelector(`.survey-step[data-step="${step}"]`);
     if (currentStepElement) {
+        // Mark as loaded
+        loadedSteps.add(step);
+        currentStepElement.setAttribute('data-loaded', 'true');
+        
+        // Show step with animation
         currentStepElement.style.display = 'block';
+        // Force reflow for animation
+        currentStepElement.offsetHeight;
+        currentStepElement.classList.add('active');
+    } else {
+        console.warn('Step element not found for step', step);
+        // If step element doesn't exist and we're trying to go beyond, revert to last step
+        if (step > totalSteps) {
+            const lastStepElement = document.querySelector(`.survey-step[data-step="${totalSteps}"]`);
+            if (lastStepElement) {
+                lastStepElement.style.display = 'block';
+                lastStepElement.classList.add('active');
+                step = totalSteps;
+            }
+        }
     }
 
     currentStep = step;
+    
+    console.log('Showing step:', currentStep, 'Total steps:', totalSteps, 'Is last step:', currentStep >= totalSteps);
 
-    // Scroll to top
+    // Scroll to top smoothly
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Update UI
+    updateProgressBar();
+    updateNavigationButtons();
+    updateStepIndicators();
+    
+    // Enforce correct buttons visibility immediately on step change to avoid any flicker
+    try {
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const isLastStep = currentStep === totalSteps;
+        if (isLastStep) {
+            if (nextBtn) {
+                nextBtn.style.display = 'none';
+                nextBtn.style.visibility = 'hidden';
+                nextBtn.style.opacity = '0';
+                nextBtn.disabled = true;
+                nextBtn.setAttribute('aria-hidden', 'true');
+                nextBtn.onclick = null;
+            }
+            if (submitBtn) {
+                submitBtn.style.display = 'inline-flex';
+                submitBtn.style.visibility = 'visible';
+                submitBtn.style.opacity = '1';
+                submitBtn.disabled = false;
+                submitBtn.setAttribute('aria-hidden', 'false');
+            }
+        }
+    } catch (e) {
+        console.warn('Navigation buttons toggle error:', e);
+    }
+
+    // Force update navigation buttons after a brief delay to ensure DOM is ready
+    setTimeout(() => {
+        updateNavigationButtons();
+    }, 50);
+    
+    // Focus first input in step
+    setTimeout(() => {
+        const firstInput = currentStepElement?.querySelector('input, textarea, select');
+        if (firstInput && firstInput.type !== 'hidden') {
+            firstInput.focus();
+        }
+    }, 300);
 }
 
 function nextStep() {
-    // Validate current step
-    if (!validateCurrentStep()) {
-        return;
+    // Step 7 (displayed as step 8 in UI - "Comments"/"Additional Feedback") is the LAST step
+    // If already on last step, do nothing - Submit button should be visible, not Next
+    if (currentStep >= totalSteps) {
+        console.warn('Cannot go to next step - already on last step (step 7). Submit button should be visible.');
+        updateNavigationButtons();
+        return false;
     }
 
-    // Move to next step
+    // Validate current step before moving forward
+    if (!validateCurrentStep()) {
+        return false;
+    }
+
+    // Move to next step only if not on the last step
     if (currentStep < totalSteps) {
-        showStep(currentStep + 1);
+        const nextStepIndex = currentStep + 1;
+        // Double check we're not going beyond last step
+        if (nextStepIndex > totalSteps) {
+            console.warn('Attempted to navigate beyond last step. Staying on current step.');
+            updateNavigationButtons();
+            return false;
+        }
+        showStep(nextStepIndex);
         updateProgressBar();
         updateNavigationButtons();
+        return true;
     }
+    
+    return false;
 }
 
 function previousStep() {
@@ -902,71 +1262,161 @@ function previousStep() {
     }
 }
 
+// Enhanced validation with visual feedback
 function validateCurrentStep() {
     const currentStepElement = document.querySelector(`.survey-step[data-step="${currentStep}"]`);
     if (!currentStepElement) return true;
 
+    // Clear previous validation messages
+    hideValidationMessage();
+    clearValidationErrors();
+
     // Get all required inputs in current step
     const requiredInputs = currentStepElement.querySelectorAll('[required]');
     let isValid = true;
+    const errors = [];
 
     requiredInputs.forEach(input => {
         if (input.type === 'checkbox') {
-            // For checkboxes (like consent), check if checked
             if (!input.checked) {
                 isValid = false;
-                // Highlight the checkbox wrapper
+                showFieldError(input, 'This field is required');
                 const checkboxWrapper = input.closest('.consent-checkbox-wrapper');
                 if (checkboxWrapper) {
-                    checkboxWrapper.style.border = '2px solid #dc2626';
-                    checkboxWrapper.style.backgroundColor = '#fee2e2';
+                    checkboxWrapper.classList.add('validation-error');
                     setTimeout(() => {
-                        checkboxWrapper.style.border = '';
-                        checkboxWrapper.style.backgroundColor = '';
-                    }, 2000);
+                        checkboxWrapper.classList.remove('validation-error');
+                    }, 3000);
                 }
-                // Scroll to checkbox
-                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                errors.push('Consent is required');
             }
         } else if (input.type === 'radio') {
-            // Check if at least one radio button with this name is checked
             const radioName = input.getAttribute('name');
             const checkedRadio = currentStepElement.querySelector(`input[name="${radioName}"]:checked`);
             if (!checkedRadio) {
                 isValid = false;
-                // Highlight the question group
                 const questionGroup = input.closest('.question-group');
-                if (questionGroup) {
-                    questionGroup.style.border = '2px solid #dc2626';
+                if (questionGroup && !questionGroup.classList.contains('validation-error')) {
+                    questionGroup.classList.add('validation-error');
+                    errors.push(`Please answer: ${questionGroup.querySelector('.question-label')?.textContent?.trim() || 'this question'}`);
                     setTimeout(() => {
-                        questionGroup.style.border = '';
-                    }, 2000);
+                        questionGroup.classList.remove('validation-error');
+                    }, 3000);
                 }
             }
         } else if (input.value.trim() === '') {
             isValid = false;
-            input.style.borderColor = '#dc2626';
-            setTimeout(() => {
-                input.style.borderColor = '';
-            }, 2000);
+            showFieldError(input, 'This field is required');
+            errors.push('Please fill in all required fields');
+        } else {
+            showFieldSuccess(input);
         }
     });
 
     if (!isValid) {
-        if (currentStep === 0) {
-            alert('Please provide consent by checking the consent box before proceeding.');
-        } else {
-            alert('Please answer all required questions before proceeding.');
+        showValidationMessage(errors.join('. '), 'error');
+        // Scroll to first error
+        const firstError = currentStepElement.querySelector('.validation-error, [style*="border-color: rgb(220, 38, 38)"]');
+        if (firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }
 
     return isValid;
 }
 
+// Validate individual field
+function validateField(input) {
+    if (input.hasAttribute('required')) {
+        if (input.type === 'checkbox' && !input.checked) {
+            showFieldError(input, '');
+            return false;
+        } else if (input.type === 'radio') {
+            const radioName = input.getAttribute('name');
+            const checkedRadio = document.querySelector(`input[name="${radioName}"]:checked`);
+            if (!checkedRadio) {
+                return false;
+            }
+        } else if (input.value.trim() === '') {
+            showFieldError(input, '');
+            return false;
+        }
+        showFieldSuccess(input);
+        return true;
+    }
+    return true;
+}
+
+// Show field error
+function showFieldError(input, message) {
+    input.classList.add('validation-error');
+    input.classList.remove('validation-success');
+    
+    const questionGroup = input.closest('.question-group');
+    if (questionGroup) {
+        questionGroup.classList.add('validation-error');
+        questionGroup.classList.remove('validation-success');
+    }
+}
+
+// Show field success
+function showFieldSuccess(input) {
+    input.classList.remove('validation-error');
+    input.classList.add('validation-success');
+    
+    const questionGroup = input.closest('.question-group');
+    if (questionGroup) {
+        questionGroup.classList.remove('validation-error');
+        questionGroup.classList.add('validation-success');
+        
+        setTimeout(() => {
+            questionGroup.classList.remove('validation-success');
+        }, 2000);
+    }
+}
+
+// Clear validation errors
+function clearValidationErrors() {
+    document.querySelectorAll('.validation-error').forEach(el => {
+        el.classList.remove('validation-error');
+    });
+}
+
+// Show validation message
+function showValidationMessage(message, type = 'error') {
+    const container = document.getElementById('validationMessage');
+    if (container) {
+        container.className = `validation-message ${type}`;
+        container.innerHTML = `
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                ${type === 'error' 
+                    ? '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>'
+                    : '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>'}
+            </svg>
+            <span>${message}</span>
+        `;
+        container.style.display = 'flex';
+        
+        if (type === 'success') {
+            setTimeout(() => {
+                hideValidationMessage();
+            }, 3000);
+        }
+    }
+}
+
+// Hide validation message
+function hideValidationMessage() {
+    const container = document.getElementById('validationMessage');
+    if (container) {
+        container.style.display = 'none';
+    }
+}
+
 function updateProgressBar() {
-    // Calculate progress: step 0 (consent) = 0%, step 8 (last) = 100%
-    // So we use (currentStep / totalSteps) * 100
-    const progressPercentage = Math.round((currentStep / totalSteps) * 100);
+    // Calculate progress: step 0 = 0%, step 7 (last step, Additional Feedback) = 100%
+    // Total steps are 0-7 (8 steps), so we use ((currentStep + 1) / (totalSteps + 1)) * 100
+    const progressPercentage = Math.round(((currentStep + 1) / (totalSteps + 1)) * 100);
     const progressFill = document.getElementById('progressFill');
     const progressPercentageElement = document.getElementById('progressPercentage');
 
@@ -984,18 +1434,363 @@ function updateNavigationButtons() {
     const nextBtn = document.getElementById('nextBtn');
     const submitBtn = document.getElementById('submitBtn');
 
-    // Disable/enable previous button (disabled on consent step 0)
+    // Disable/enable previous button (disabled on step 0)
     if (prevBtn) {
         prevBtn.disabled = currentStep === 0;
     }
 
-    // Show/hide next and submit buttons
-    // Submit button shows on last survey step (step 8), not on consent (step 0)
-    if (currentStep === totalSteps) {
-        if (nextBtn) nextBtn.style.display = 'none';
-        if (submitBtn) submitBtn.style.display = 'inline-flex';
+    // Step 7 (displayed as step 8 in UI - "Comments"/"Additional Feedback") is the LAST step
+    // Show Submit button and hide Next button on step 7
+    const isLastStep = currentStep >= totalSteps;
+    
+    console.log('Updating navigation buttons - Current step:', currentStep, 'Total steps:', totalSteps, 'Is last step:', isLastStep);
+    
+    if (isLastStep) {
+        // On last step (step 7), show Submit button and hide Next button completely
+        if (nextBtn) {
+            nextBtn.style.display = 'none';
+            nextBtn.style.visibility = 'hidden';
+            nextBtn.style.opacity = '0';
+            nextBtn.disabled = true;
+            nextBtn.setAttribute('aria-hidden', 'true');
+            // Remove onclick to prevent any clicks
+            nextBtn.onclick = null;
+        }
+        if (submitBtn) {
+            submitBtn.style.display = 'inline-flex';
+            submitBtn.style.visibility = 'visible';
+            submitBtn.style.opacity = '1';
+            submitBtn.disabled = false;
+            submitBtn.setAttribute('aria-hidden', 'false');
+        }
+        console.log('✓ On last step (step 7/8 - Comments). Submit button shown, Next button hidden.');
     } else {
-        if (nextBtn) nextBtn.style.display = 'inline-flex';
-        if (submitBtn) submitBtn.style.display = 'none';
+        // On any other step (0-6), show Next button and hide Submit button
+        if (nextBtn) {
+            nextBtn.style.display = 'inline-flex';
+            nextBtn.style.visibility = 'visible';
+            nextBtn.style.opacity = '1';
+            nextBtn.disabled = false;
+            nextBtn.setAttribute('aria-hidden', 'false');
+        }
+        if (submitBtn) {
+            submitBtn.style.display = 'none';
+            submitBtn.style.visibility = 'hidden';
+            submitBtn.style.opacity = '0';
+            submitBtn.disabled = false;
+            submitBtn.setAttribute('aria-hidden', 'true');
+        }
+    }
+}
+
+// Update step indicators
+function updateStepIndicators() {
+    const stepItems = document.querySelectorAll('.step-item');
+    stepItems.forEach((item, index) => {
+        item.classList.remove('active', 'completed');
+        
+        if (index === currentStep) {
+            item.classList.add('active');
+        } else if (index < currentStep || checkSectionCompletion(index)) {
+            item.classList.add('completed');
+        }
+    });
+}
+
+// Check if section is completed
+function checkSectionCompletion(step) {
+    // If step is before current step, consider it completed
+    if (step < currentStep) return true;
+    
+    const stepElement = document.querySelector(`.survey-step[data-step="${step}"]`);
+    if (!stepElement) return false;
+    
+    // Get unique required field names (radio groups count as one)
+    const requiredFields = new Set();
+    const radioGroups = new Set();
+    
+    stepElement.querySelectorAll('[required]').forEach(input => {
+        if (input.type === 'radio') {
+            radioGroups.add(input.name);
+        } else {
+            requiredFields.add(input.name || input.id);
+        }
+    });
+    
+    // Check if all radio groups have a selected value
+    let allRadioGroupsCompleted = true;
+    radioGroups.forEach(name => {
+        if (!stepElement.querySelector(`input[name="${name}"]:checked`)) {
+            allRadioGroupsCompleted = false;
+        }
+    });
+    
+    // Check if all other required fields are filled
+    let allFieldsCompleted = true;
+    requiredFields.forEach(name => {
+        const input = stepElement.querySelector(`[name="${name}"], #${name}`);
+        if (input) {
+            if (input.type === 'checkbox' && !input.checked) {
+                allFieldsCompleted = false;
+            } else if (input.value.trim() === '') {
+                allFieldsCompleted = false;
+            }
+        }
+    });
+    
+    return allRadioGroupsCompleted && allFieldsCompleted;
+}
+
+// Go to specific step
+function goToStep(step) {
+    if (step >= 0 && step <= totalSteps) {
+        // Validate current step before moving
+        if (step > currentStep && !validateCurrentStep()) {
+            return;
+        }
+        showStep(step);
+    }
+}
+
+// Keyboard navigation handler
+function handleKeyboardNavigation(e) {
+    // Don't interfere with typing in inputs
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        // Arrow key navigation for radio buttons
+        if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+            if (e.target.type === 'radio') {
+                e.preventDefault();
+                const radios = Array.from(
+                    document.querySelectorAll(`input[name="${e.target.name}"]`)
+                );
+                const currentIndex = radios.indexOf(e.target);
+                const nextIndex = e.key === 'ArrowRight' 
+                    ? (currentIndex + 1) % radios.length
+                    : (currentIndex - 1 + radios.length) % radios.length;
+                radios[nextIndex].focus();
+                radios[nextIndex].click();
+            }
+        }
+        // Enter to submit if on last step and in textarea
+        if (e.key === 'Enter' && e.target.tagName === 'TEXTAREA' && e.ctrlKey && currentStep === totalSteps) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                document.getElementById('surveyForm').requestSubmit();
+            }
+        }
+        return;
+    }
+    
+    // Global keyboard shortcuts
+    if (e.key === 'ArrowLeft' && currentStep > 0) {
+        e.preventDefault();
+        previousStep();
+    } else if (e.key === 'ArrowRight' && currentStep < totalSteps) {
+        e.preventDefault();
+        if (validateCurrentStep()) {
+            nextStep();
+        }
+    } else if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+        if (currentStep < totalSteps) {
+            e.preventDefault();
+            if (validateCurrentStep()) {
+                nextStep();
+            }
+        } else if (currentStep === totalSteps) {
+            e.preventDefault();
+            document.getElementById('surveyForm').requestSubmit();
+        }
+    }
+}
+
+// Touch gesture handlers for mobile swipe
+function handleTouchStart(e) {
+    touchStartX = e.changedTouches[0].screenX;
+}
+
+function handleTouchEnd(e) {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+}
+
+function handleSwipe() {
+    const swipeThreshold = 50;
+    const diff = touchStartX - touchEndX;
+    
+    // Swipe right (go to previous step)
+    if (diff < -swipeThreshold && currentStep > 0) {
+        previousStep();
+    }
+    // Swipe left (go to next step)
+    else if (diff > swipeThreshold && currentStep < totalSteps) {
+        if (validateCurrentStep()) {
+            nextStep();
+        }
+    }
+}
+
+// Handle before unload - DISABLED
+// Removed the beforeunload warning dialog as requested
+// Data is auto-saved, so users can safely navigate away
+function handleBeforeUnload(e) {
+    // Do nothing - allow navigation without warning
+    // Data is saved automatically via auto-save feature
+}
+
+// Save progress to localStorage
+function saveProgress() {
+    // Collect all form data
+    const form = document.getElementById('surveyForm');
+    if (!form) return;
+    
+    const formData = new FormData(form);
+    const data = {};
+    
+    // Collect all form values
+    for (const [key, value] of formData.entries()) {
+        data[key] = value;
+    }
+    
+    // Also collect radio button values
+    form.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
+        data[radio.name] = radio.value;
+    });
+    
+    surveyData = data;
+    
+    // Save to localStorage
+    try {
+        saveToLocalStorage('surveyProgress', {
+            step: currentStep,
+            data: surveyData,
+            timestamp: Date.now()
+        });
+    } catch (e) {
+        console.error('Error saving progress:', e);
+    }
+}
+
+// Loading overlay functions for better UX during submission
+function showLoadingOverlay() {
+    // Remove existing overlay if any
+    const existingOverlay = document.getElementById('surveyLoadingOverlay');
+    if (existingOverlay) {
+        existingOverlay.remove();
+    }
+
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'surveyLoadingOverlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        color: white;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    `;
+
+    // Create spinner
+    const spinner = document.createElement('div');
+    spinner.style.cssText = `
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+    `;
+
+    // Add spinner animation (only if not already added)
+    if (!document.getElementById('surveySpinnerStyle')) {
+        const style = document.createElement('style');
+        style.id = 'surveySpinnerStyle';
+        style.textContent = `
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+            @keyframes scaleIn {
+                from { transform: scale(0); }
+                to { transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Create message
+    const message = document.createElement('div');
+    message.id = 'surveyLoadingMessage';
+    message.textContent = 'Submitting your survey...';
+    message.style.cssText = `
+        font-size: 18px;
+        font-weight: 500;
+        margin-top: 10px;
+    `;
+
+    overlay.appendChild(spinner);
+    overlay.appendChild(message);
+    document.body.appendChild(overlay);
+
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+}
+
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('surveyLoadingOverlay');
+    if (overlay) {
+        overlay.remove();
+    }
+    document.body.style.overflow = '';
+}
+
+function updateLoadingOverlay(message, type = 'loading') {
+    const overlay = document.getElementById('surveyLoadingOverlay');
+    const messageEl = document.getElementById('surveyLoadingMessage');
+    
+    if (overlay && messageEl) {
+        messageEl.textContent = message || 'Processing...';
+        
+        if (type === 'success') {
+            overlay.style.background = 'rgba(34, 197, 94, 0.9)';
+            // Remove spinner and add checkmark
+            const spinner = overlay.querySelector('div[style*="border"]');
+            if (spinner) {
+                spinner.style.display = 'none';
+            }
+            
+            // Add checkmark if not exists
+            if (!overlay.querySelector('.checkmark')) {
+                const checkmark = document.createElement('div');
+                checkmark.className = 'checkmark';
+                checkmark.innerHTML = '✓';
+                checkmark.style.cssText = `
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 50%;
+                    background: white;
+                    color: #22c55e;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 30px;
+                    font-weight: bold;
+                    margin-bottom: 20px;
+                    animation: scaleIn 0.3s ease;
+                `;
+                
+                // Animation style already added above
+                
+                overlay.insertBefore(checkmark, messageEl);
+            }
+        }
     }
 }

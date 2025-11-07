@@ -5,25 +5,26 @@ namespace App\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Support\Str;
 
-class MonthlyComplianceReport extends Mailable
+class MonthlyComplianceReport extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     public $reportData;
-    public $pdfPath;
+    public $reportHtml;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($reportData, $pdfPath = null)
+    public function __construct($reportData, $reportHtml = null)
     {
         $this->reportData = $reportData;
-        $this->pdfPath = $pdfPath;
+        $this->reportHtml = $reportHtml;
     }
 
     /**
@@ -58,9 +59,16 @@ class MonthlyComplianceReport extends Mailable
     {
         $attachments = [];
 
-        if ($this->pdfPath && \Illuminate\Support\Facades\Storage::exists($this->pdfPath)) {
-            $attachments[] = Attachment::fromStorage($this->pdfPath)
-                ->as('monthly-compliance-report-' . $this->reportData['year'] . '-' . str_pad($this->reportData['month'], 2, '0', STR_PAD_LEFT) . '.html')
+        if ($this->reportHtml) {
+            $year = (string) ($this->reportData['year'] ?? now()->format('Y'));
+            $monthValue = $this->reportData['month'] ?? now()->format('m');
+            $monthSlug = is_numeric($monthValue)
+                ? str_pad((string) $monthValue, 2, '0', STR_PAD_LEFT)
+                : Str::slug((string) $monthValue, '-');
+
+            $attachments[] = Attachment::fromData(function () {
+                return $this->reportHtml;
+            }, 'monthly-compliance-report-' . $year . '-' . $monthSlug . '.html')
                 ->withMime('text/html');
         }
 

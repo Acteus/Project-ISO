@@ -80,50 +80,55 @@ return [
             'academic_year',
             'semester',
             'gender',
-            
+
             // ISO 21001 Learner Needs Assessment
             'curriculum_relevance_rating',
             'learning_pace_appropriateness',
             'individual_support_availability',
             'learning_style_accommodation',
-            
+
             // ISO 21001 Learner Satisfaction Metrics
             'teaching_quality_rating',
             'learning_environment_rating',
             'peer_interaction_satisfaction',
             'extracurricular_satisfaction',
-            
+
             // ISO 21001 Learner Success Indicators
             'academic_progress_rating',
             'skill_development_rating',
             'critical_thinking_improvement',
             'problem_solving_confidence',
-            
+
             // ISO 21001 Learner Safety Assessment
             'physical_safety_rating',
             'psychological_safety_rating',
             'bullying_prevention_effectiveness',
             'emergency_preparedness_rating',
-            
+
             // ISO 21001 Learner Wellbeing Metrics
             'mental_health_support_rating',
             'stress_management_support',
             'physical_health_support',
             'overall_wellbeing_rating',
-            
+
             // Overall Satisfaction
             'overall_satisfaction',
             'positive_aspects', // Encrypted
             'improvement_suggestions', // Encrypted
             'additional_comments', // Encrypted
-            
+
+            // Additional Feedback Fields (ISO 21001 compliant)
+            'feedback_taken_seriously',
+            'school_responsiveness',
+            'visible_improvements',
+
             // Indirect Metrics (ISO 21001 compliant)
             'attendance_rate',
             'grade_average',
             'participation_score',
             'extracurricular_hours',
             'counseling_sessions',
-            
+
             // Privacy fields
             'consent_given',
         ],
@@ -147,4 +152,5 @@ return [
         'backup_before_deletion' => env('BACKUP_BEFORE_DELETION', false),
     ],
 ];
+
 

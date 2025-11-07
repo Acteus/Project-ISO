@@ -123,3 +123,4 @@ class WeeklyMetricFactory extends Factory
     }
 }
 
+

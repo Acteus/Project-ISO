@@ -10,7 +10,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class WeeklyProgressReport extends Mailable
+class WeeklyProgressReport extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
