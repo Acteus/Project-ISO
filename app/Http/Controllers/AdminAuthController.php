@@ -19,6 +19,16 @@ class AdminAuthController extends Controller
         $admin = Admin::where('email', $request->email)->first();
 
         if (!$admin || !Hash::check($request->password, $admin->password)) {
+            // SECURITY FIX: Log failed authentication attempts
+            $auditService = app(\App\Services\AuditService::class);
+            $auditService->logAuthentication('login', false, $request, [
+                'user_type' => 'admin',
+                'email' => $request->email,
+                'reason' => $admin ? 'invalid_password' : 'user_not_found',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);

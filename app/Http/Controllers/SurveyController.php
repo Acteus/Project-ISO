@@ -7,6 +7,7 @@ use App\Services\AuditService;
 use App\Services\ConsentService;
 use App\Services\AnonymizationService;
 use App\Services\DataMinimizationService;
+use App\Services\InputSanitizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -271,6 +272,10 @@ class SurveyController extends Controller
 
         $data = $request->all();
 
+        // Sanitize input data to prevent XSS attacks
+        $sanitizationService = app(InputSanitizationService::class);
+        $data = $sanitizationService->sanitizeSurveyData($data);
+
         // Enforce data minimization - only essential ISO 21001 metrics (GDPR & ISO 27001 compliant)
         $minimizationService = app(DataMinimizationService::class);
         $minimizationCheck = $minimizationService->validateDataMinimization($data);
@@ -368,12 +373,30 @@ class SurveyController extends Controller
 
     public function getAnalytics(Request $request)
     {
-        $track = $request->query('track');
-        $gradeLevel = $request->query('grade_level');
-        $academicYear = $request->query('academic_year');
-        $semester = $request->query('semester');
-        $dateFrom = $request->query('date_from');
-        $dateTo = $request->query('date_to');
+        // Validate and sanitize query parameters
+        $validator = Validator::make($request->query(), [
+            'track' => 'nullable|in:CSS',
+            'grade_level' => 'nullable|integer|in:11,12',
+            'academic_year' => 'nullable|string|max:9|regex:/^\d{4}-\d{4}$|^\d{4}$/',
+            'semester' => 'nullable|in:1st,2nd',
+            'date_from' => 'nullable|date|date_format:Y-m-d',
+            'date_to' => 'nullable|date|date_format:Y-m-d|after_or_equal:date_from',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $sanitizationService = app(InputSanitizationService::class);
+        $track = $sanitizationService->sanitizeQueryParameter($request->query('track'), 'track');
+        $gradeLevel = $sanitizationService->sanitizeQueryParameter($request->query('grade_level'), 'grade_level');
+        $academicYear = $sanitizationService->sanitizeQueryParameter($request->query('academic_year'), 'academic_year');
+        $semester = $sanitizationService->sanitizeQueryParameter($request->query('semester'), 'semester');
+        $dateFrom = $sanitizationService->sanitizeQueryParameter($request->query('date_from'), 'date');
+        $dateTo = $sanitizationService->sanitizeQueryParameter($request->query('date_to'), 'date');
 
         // Log analytics access for audit (ISO 21001:8.2.4 - Data access traceability)
         // Note: AuditMiddleware will also log this, but this provides more context
@@ -581,6 +604,22 @@ class SurveyController extends Controller
 
     public function getAllResponses(Request $request)
     {
+        // Validate and sanitize query parameters
+        $validator = Validator::make($request->query(), [
+            'per_page' => 'nullable|integer|min:1|max:100',
+            'track' => 'nullable|in:CSS',
+            'grade_level' => 'nullable|integer|in:11,12',
+            'academic_year' => 'nullable|string|max:9|regex:/^\d{4}-\d{4}$|^\d{4}$/',
+            'semester' => 'nullable|in:1st,2nd',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
         // Log data access for ISO 21001:8.2.4 compliance
         $this->auditService->logDataAccess(
             'survey_response',
@@ -592,11 +631,13 @@ class SurveyController extends Controller
             ]
         );
 
-        $perPage = $request->query('per_page', 15);
-        $track = $request->query('track');
-        $gradeLevel = $request->query('grade_level');
-        $academicYear = $request->query('academic_year');
-        $semester = $request->query('semester');
+        $sanitizationService = app(InputSanitizationService::class);
+        $perPage = (int) $request->query('per_page', 15);
+        $perPage = max(1, min(100, $perPage)); // Ensure per_page is between 1 and 100
+        $track = $sanitizationService->sanitizeQueryParameter($request->query('track'), 'track');
+        $gradeLevel = $sanitizationService->sanitizeQueryParameter($request->query('grade_level'), 'grade_level');
+        $academicYear = $sanitizationService->sanitizeQueryParameter($request->query('academic_year'), 'academic_year');
+        $semester = $sanitizationService->sanitizeQueryParameter($request->query('semester'), 'semester');
 
         $query = SurveyResponse::query();
 

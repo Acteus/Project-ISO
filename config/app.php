@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | API Key Configuration
+    |--------------------------------------------------------------------------
+    |
+    | This key is used for API key-based authentication for service-to-service
+    | API calls. Set this in your ".env" file as LARAVEL_API_KEY.
+    |
+    */
+
+    'api_key' => env('LARAVEL_API_KEY', null),
+
 ];

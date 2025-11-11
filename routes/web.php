@@ -291,9 +291,10 @@ Route::prefix('api')->group(function () {
     Route::get('/ai/compliance-risk-meter', [AIController::class, 'getComplianceRiskMeter'])->middleware('throttle:30,1');
 
     // AI Service Status and Analysis routes (session-based auth for admin dashboard)
-    Route::get('/ai/service-status', [AIController::class, 'getServiceStatus']);
-    Route::get('/ai/metrics', [AIController::class, 'getAIMetrics']);
-    Route::post('/ai/analyze/{type}', [AIController::class, 'runAnalysis']);
+    // SECURITY FIX: Add rate limiting to prevent abuse
+    Route::get('/ai/service-status', [AIController::class, 'getServiceStatus'])->middleware('throttle:60,1'); // 60 requests per minute
+    Route::get('/ai/metrics', [AIController::class, 'getAIMetrics'])->middleware('throttle:60,1'); // 60 requests per minute
+    Route::post('/ai/analyze/{type}', [AIController::class, 'runAnalysis'])->middleware('throttle:30,1'); // 30 requests per minute
 
     // Export routes
     Route::get('/export/excel', [ExportController::class, 'exportExcel'])->name('api.export.excel');
@@ -318,5 +319,6 @@ Route::prefix('api')->group(function () {
     Route::get('/visualizations/response-rate', [VisualizationController::class, 'getResponseRateAnalytics']);
 
     // AI Analytics routes
-    Route::get('/ai/sentiment-analysis', [AIController::class, 'analyzeSentiment']);
+    // SECURITY FIX: Add rate limiting to prevent abuse
+    Route::get('/ai/sentiment-analysis', [AIController::class, 'analyzeSentiment'])->middleware('throttle:30,1'); // 30 requests per minute
 });

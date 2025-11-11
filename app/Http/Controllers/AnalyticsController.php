@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Services\AnalyticsService;
+use App\Services\InputSanitizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * Analytics Controller - Simplified API
@@ -39,14 +41,34 @@ class AnalyticsController extends Controller
     public function getSummary(Request $request)
     {
         try {
+            // Validate and sanitize query parameters
+            $validator = Validator::make($request->query(), [
+                'track' => 'nullable|in:CSS',
+                'grade_level' => 'nullable|integer|in:11,12',
+                'semester' => 'nullable|in:1st,2nd',
+                'academic_year' => 'nullable|string|max:9|regex:/^\d{4}-\d{4}$|^\d{4}$/',
+                'gender' => 'nullable|in:Male,Female,Non-binary,Prefer not to say',
+                'date_from' => 'nullable|date|date_format:Y-m-d',
+                'date_to' => 'nullable|date|date_format:Y-m-d|after_or_equal:date_from',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $sanitizationService = app(InputSanitizationService::class);
             $filters = [
-                'track' => $request->query('track'),
-                'grade_level' => $request->query('grade_level'),
-                'semester' => $request->query('semester'),
-                'academic_year' => $request->query('academic_year'),
-                'gender' => $request->query('gender'),
-                'date_from' => $request->query('date_from'),
-                'date_to' => $request->query('date_to'),
+                'track' => $sanitizationService->sanitizeQueryParameter($request->query('track'), 'track'),
+                'grade_level' => $sanitizationService->sanitizeQueryParameter($request->query('grade_level'), 'grade_level'),
+                'semester' => $sanitizationService->sanitizeQueryParameter($request->query('semester'), 'semester'),
+                'academic_year' => $sanitizationService->sanitizeQueryParameter($request->query('academic_year'), 'academic_year'),
+                'gender' => $sanitizationService->sanitizeQueryParameter($request->query('gender'), 'gender'),
+                'date_from' => $sanitizationService->sanitizeQueryParameter($request->query('date_from'), 'date'),
+                'date_to' => $sanitizationService->sanitizeQueryParameter($request->query('date_to'), 'date'),
             ];
 
             // Generate cache key from filters
@@ -84,17 +106,40 @@ class AnalyticsController extends Controller
     public function getTimeSeries(Request $request)
     {
         try {
-            $metric = $request->query('metric', 'overall_satisfaction');
-            $groupBy = $request->query('group_by', 'week'); // day, week, month
+            // Validate and sanitize query parameters
+            $validator = Validator::make($request->query(), [
+                'metric' => 'nullable|string|in:overall_satisfaction,learner_needs_index,satisfaction_score,success_index,safety_index,wellbeing_index',
+                'group_by' => 'nullable|string|in:day,week,month',
+                'track' => 'nullable|in:CSS',
+                'grade_level' => 'nullable|integer|in:11,12',
+                'semester' => 'nullable|in:1st,2nd',
+                'academic_year' => 'nullable|string|max:9|regex:/^\d{4}-\d{4}$|^\d{4}$/',
+                'gender' => 'nullable|in:Male,Female,Non-binary,Prefer not to say',
+                'date_from' => 'nullable|date|date_format:Y-m-d',
+                'date_to' => 'nullable|date|date_format:Y-m-d|after_or_equal:date_from',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $sanitizationService = app(InputSanitizationService::class);
+            $metric = $sanitizationService->sanitizeQueryParameter($request->query('metric', 'overall_satisfaction'), 'string') ?: 'overall_satisfaction';
+            $groupBy = $sanitizationService->sanitizeQueryParameter($request->query('group_by', 'week'), 'string');
+            $groupBy = in_array($groupBy, ['day', 'week', 'month']) ? $groupBy : 'week';
 
             $filters = [
-                'track' => $request->query('track'),
-                'grade_level' => $request->query('grade_level'),
-                'semester' => $request->query('semester'),
-                'academic_year' => $request->query('academic_year'),
-                'gender' => $request->query('gender'),
-                'date_from' => $request->query('date_from'),
-                'date_to' => $request->query('date_to'),
+                'track' => $sanitizationService->sanitizeQueryParameter($request->query('track'), 'track'),
+                'grade_level' => $sanitizationService->sanitizeQueryParameter($request->query('grade_level'), 'grade_level'),
+                'semester' => $sanitizationService->sanitizeQueryParameter($request->query('semester'), 'semester'),
+                'academic_year' => $sanitizationService->sanitizeQueryParameter($request->query('academic_year'), 'academic_year'),
+                'gender' => $sanitizationService->sanitizeQueryParameter($request->query('gender'), 'gender'),
+                'date_from' => $sanitizationService->sanitizeQueryParameter($request->query('date_from'), 'date'),
+                'date_to' => $sanitizationService->sanitizeQueryParameter($request->query('date_to'), 'date'),
             ];
 
             // Generate cache key from filters and parameters
@@ -134,14 +179,34 @@ class AnalyticsController extends Controller
     public function getCompliance(Request $request)
     {
         try {
+            // Validate and sanitize query parameters
+            $validator = Validator::make($request->query(), [
+                'track' => 'nullable|in:CSS',
+                'grade_level' => 'nullable|integer|in:11,12',
+                'semester' => 'nullable|in:1st,2nd',
+                'academic_year' => 'nullable|string|max:9|regex:/^\d{4}-\d{4}$|^\d{4}$/',
+                'gender' => 'nullable|in:Male,Female,Non-binary,Prefer not to say',
+                'date_from' => 'nullable|date|date_format:Y-m-d',
+                'date_to' => 'nullable|date|date_format:Y-m-d|after_or_equal:date_from',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $sanitizationService = app(InputSanitizationService::class);
             $filters = [
-                'track' => $request->query('track'),
-                'grade_level' => $request->query('grade_level'),
-                'semester' => $request->query('semester'),
-                'academic_year' => $request->query('academic_year'),
-                'gender' => $request->query('gender'),
-                'date_from' => $request->query('date_from'),
-                'date_to' => $request->query('date_to'),
+                'track' => $sanitizationService->sanitizeQueryParameter($request->query('track'), 'track'),
+                'grade_level' => $sanitizationService->sanitizeQueryParameter($request->query('grade_level'), 'grade_level'),
+                'semester' => $sanitizationService->sanitizeQueryParameter($request->query('semester'), 'semester'),
+                'academic_year' => $sanitizationService->sanitizeQueryParameter($request->query('academic_year'), 'academic_year'),
+                'gender' => $sanitizationService->sanitizeQueryParameter($request->query('gender'), 'gender'),
+                'date_from' => $sanitizationService->sanitizeQueryParameter($request->query('date_from'), 'date'),
+                'date_to' => $sanitizationService->sanitizeQueryParameter($request->query('date_to'), 'date'),
             ];
 
             // Generate cache key from filters

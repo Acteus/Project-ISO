@@ -191,6 +191,16 @@ class StudentController extends Controller
         // If admin lookup found a user but password was wrong, return error
         // Don't reveal whether it's an admin account for security
         if ($admin) {
+            // SECURITY FIX: Log failed authentication attempts
+            $auditService = app(\App\Services\AuditService::class);
+            $auditService->logAuthentication('login', false, $request, [
+                'user_type' => 'admin',
+                'admin_id' => $admin->id,
+                'reason' => 'invalid_password',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
             return response()->json([
                 'message' => 'Invalid credentials. Please check your username and password.'
             ], 401);
@@ -271,6 +281,17 @@ class StudentController extends Controller
                 ]
             ]);
         }
+
+        // SECURITY FIX: Log failed authentication attempts for students
+        $auditService = app(\App\Services\AuditService::class);
+        $auditService->logAuthentication('login', false, $request, [
+            'user_type' => 'student',
+            'login_field' => $loginField,
+            'login_value' => $request->student_id, // Log the attempted login identifier
+            'reason' => 'invalid_credentials',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
 
         // Generic error message for security (don't reveal if username exists)
         return response()->json([
@@ -681,16 +702,16 @@ class StudentController extends Controller
         }
 
         $lastCheck = $request->query('last_check');
-        
+
         // Get last update timestamp from cache
         $lastUpdate = \Illuminate\Support\Facades\Cache::get('dashboard:last_update', 0);
-        
+
         // If no last_check provided (first poll), always return data but don't mark as "updated"
         // If last_check is provided and matches or is newer, return no changes
         if ($lastCheck && $lastCheck > 0) {
             // Convert to integer for comparison
             $lastCheckInt = (int)$lastCheck;
-            
+
             // If last update is 0 (never updated) or is older/equal to last check, no changes
             if ($lastUpdate == 0 || $lastUpdate <= $lastCheckInt) {
                 return response()->json([
@@ -699,11 +720,11 @@ class StudentController extends Controller
                 ]);
             }
         }
-        
+
         // If we get here, either:
         // 1. No last_check provided (first poll) - return data but it's initial load
         // 2. lastUpdate > lastCheck (changes detected) - return updated data
-        
+
         // Changes detected - fetch updated data
         // Use same queries as adminDashboard for consistency
         $dashboardData = [
@@ -734,7 +755,7 @@ class StudentController extends Controller
                 }),
             'auditEventsCount' => \App\Models\AuditLog::where('action', 'submit_survey_response')->count(),
         ];
-        
+
         return response()->json($dashboardData);
     }
 
@@ -904,12 +925,45 @@ class StudentController extends Controller
         }
 
         // Calculate stats with backward compatibility
+        // SECURITY FIX: Separate successful and failed login counts
         $stats = [
             'total' => $baseQuery->count(),
             'loginCount' => (clone $baseQuery)->where(function($q) {
+                // Count successful logins: authentication action with success=true or legacy actions
+                $q->where(function($q1) {
+                    $q1->where('action', 'authentication')
+                       ->where('description', 'LIKE', '%login%')
+                       ->where(function($q2) {
+                           // Check for successful login (success=true or success not false)
+                           $q2->where('description', 'LIKE', '%successful%')
+                              ->orWhere(function($q3) {
+                                  // Check JSON for success=true (various formats)
+                                  $q3->where('new_values', 'LIKE', '%"success":true%')
+                                     ->orWhere('new_values', 'LIKE', '%"success":1%')
+                                     ->orWhere(function($q4) {
+                                         // If no success field, assume successful (old format)
+                                         $q4->whereNull('new_values')
+                                            ->orWhere(function($q5) {
+                                                $q5->where('new_values', 'NOT LIKE', '%"success":false%')
+                                                   ->where('new_values', 'NOT LIKE', '%"success":0%')
+                                                   ->where('description', 'NOT LIKE', '%failed%');
+                                            });
+                                     });
+                              });
+                       });
+                })
+                ->orWhereIn('action', ['student_login', 'admin_login']); // Backward compatibility - assume successful
+            })->count(),
+            'failedLoginCount' => (clone $baseQuery)->where(function($q) {
+                // SECURITY FIX: Count failed authentication attempts
                 $q->where('action', 'authentication')
                   ->where('description', 'LIKE', '%login%')
-                  ->orWhereIn('action', ['student_login', 'admin_login']); // Backward compatibility
+                  ->where(function($q2) {
+                      // Check for failed login indicators
+                      $q2->where('description', 'LIKE', '%failed%')
+                         ->orWhere('new_values', 'LIKE', '%"success":false%')
+                         ->orWhere('new_values', 'LIKE', '%"success":0%');
+                  });
             })->count(),
             'logoutCount' => (clone $baseQuery)->where(function($q) {
                 $q->where('action', 'authentication')

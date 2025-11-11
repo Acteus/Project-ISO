@@ -7,8 +7,10 @@ use App\Models\SurveyResponse;
 use App\Services\AuditService;
 use App\Services\AIService;
 use App\Services\VisualizationService;
+use App\Services\InputSanitizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -28,10 +30,26 @@ class ExportController extends Controller
 
     public function exportExcel(Request $request)
     {
-        $track = $request->query('track');
-        $gradeLevel = $request->query('grade_level');
-        $academicYear = $request->query('academic_year');
-        $semester = $request->query('semester');
+        // Validate and sanitize query parameters
+        $validator = Validator::make($request->query(), [
+            'track' => 'nullable|in:CSS',
+            'grade_level' => 'nullable|integer|in:11,12',
+            'academic_year' => 'nullable|string|max:9|regex:/^\d{4}-\d{4}$|^\d{4}$/',
+            'semester' => 'nullable|in:1st,2nd',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $sanitizationService = app(InputSanitizationService::class);
+        $track = $sanitizationService->sanitizeQueryParameter($request->query('track'), 'track');
+        $gradeLevel = $sanitizationService->sanitizeQueryParameter($request->query('grade_level'), 'grade_level');
+        $academicYear = $sanitizationService->sanitizeQueryParameter($request->query('academic_year'), 'academic_year');
+        $semester = $sanitizationService->sanitizeQueryParameter($request->query('semester'), 'semester');
 
         $filename = 'survey_responses_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
 
@@ -57,10 +75,26 @@ class ExportController extends Controller
 
     public function exportCsv(Request $request)
     {
-        $track = $request->query('track');
-        $gradeLevel = $request->query('grade_level');
-        $academicYear = $request->query('academic_year');
-        $semester = $request->query('semester');
+        // Validate and sanitize query parameters
+        $validator = Validator::make($request->query(), [
+            'track' => 'nullable|in:CSS',
+            'grade_level' => 'nullable|integer|in:11,12',
+            'academic_year' => 'nullable|string|max:9|regex:/^\d{4}-\d{4}$|^\d{4}$/',
+            'semester' => 'nullable|in:1st,2nd',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $sanitizationService = app(InputSanitizationService::class);
+        $track = $sanitizationService->sanitizeQueryParameter($request->query('track'), 'track');
+        $gradeLevel = $sanitizationService->sanitizeQueryParameter($request->query('grade_level'), 'grade_level');
+        $academicYear = $sanitizationService->sanitizeQueryParameter($request->query('academic_year'), 'academic_year');
+        $semester = $sanitizationService->sanitizeQueryParameter($request->query('semester'), 'semester');
 
         $filename = 'survey_responses_' . now()->format('Y-m-d_H-i-s') . '.csv';
 
@@ -86,10 +120,26 @@ class ExportController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $track = $request->query('track');
-        $gradeLevel = $request->query('grade_level');
-        $academicYear = $request->query('academic_year');
-        $semester = $request->query('semester');
+        // Validate and sanitize query parameters
+        $validator = Validator::make($request->query(), [
+            'track' => 'nullable|in:CSS',
+            'grade_level' => 'nullable|integer|in:11,12',
+            'academic_year' => 'nullable|string|max:9|regex:/^\d{4}-\d{4}$|^\d{4}$/',
+            'semester' => 'nullable|in:1st,2nd',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $sanitizationService = app(InputSanitizationService::class);
+        $track = $sanitizationService->sanitizeQueryParameter($request->query('track'), 'track');
+        $gradeLevel = $sanitizationService->sanitizeQueryParameter($request->query('grade_level'), 'grade_level');
+        $academicYear = $sanitizationService->sanitizeQueryParameter($request->query('academic_year'), 'academic_year');
+        $semester = $sanitizationService->sanitizeQueryParameter($request->query('semester'), 'semester');
 
         $query = SurveyResponse::query();
 
@@ -150,11 +200,28 @@ class ExportController extends Controller
 
     public function exportAnalyticsReport(Request $request)
     {
-        $track = $request->query('track');
-        $gradeLevel = $request->query('grade_level');
-        $academicYear = $request->query('academic_year');
-        $semester = $request->query('semester');
-        $format = $request->query('format', 'pdf'); // pdf or excel
+        // Validate and sanitize query parameters
+        $validator = Validator::make($request->query(), [
+            'track' => 'nullable|in:CSS',
+            'grade_level' => 'nullable|integer|in:11,12',
+            'academic_year' => 'nullable|string|max:9|regex:/^\d{4}-\d{4}$|^\d{4}$/',
+            'semester' => 'nullable|in:1st,2nd',
+            'format' => 'nullable|in:pdf,excel',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $sanitizationService = app(InputSanitizationService::class);
+        $track = $sanitizationService->sanitizeQueryParameter($request->query('track'), 'track');
+        $gradeLevel = $sanitizationService->sanitizeQueryParameter($request->query('grade_level'), 'grade_level');
+        $academicYear = $sanitizationService->sanitizeQueryParameter($request->query('academic_year'), 'academic_year');
+        $semester = $sanitizationService->sanitizeQueryParameter($request->query('semester'), 'semester');
+        $format = $sanitizationService->sanitizeQueryParameter($request->query('format', 'pdf'), 'string') ?: 'pdf';
 
         $query = SurveyResponse::query();
 

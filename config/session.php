@@ -32,6 +32,7 @@ return [
     |
     */
 
+    // SECURITY FIX: Set reasonable session lifetime (120 minutes = 2 hours)
     'lifetime' => (int) env('SESSION_LIFETIME', 120),
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
@@ -47,7 +48,8 @@ return [
     |
     */
 
-    'encrypt' => env('SESSION_ENCRYPT', false),
+    // SECURITY FIX: Enable session encryption for production
+    'encrypt' => env('SESSION_ENCRYPT', env('APP_ENV') === 'production'),
 
     /*
     |--------------------------------------------------------------------------
@@ -216,6 +218,7 @@ return [
     |
     */
 
+    // SECURITY FIX: Prevent JavaScript access to session cookies
     'http_only' => env('SESSION_HTTP_ONLY', true),
 
     /*
@@ -233,6 +236,8 @@ return [
     |
     */
 
+    // SECURITY FIX: Use 'lax' for SameSite to prevent CSRF while allowing normal navigation
+    // Use 'strict' for maximum security (may break some legitimate cross-site requests)
     'same_site' => env('SESSION_SAME_SITE', 'lax'),
 
     /*

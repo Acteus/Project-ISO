@@ -257,6 +257,49 @@
         .action-consentgiven { background: linear-gradient(135deg, #28a745, #20c997); color: white; }
         .action-consentdenied { background: linear-gradient(135deg, #dc3545, #e74c3c); color: white; }
         .action-consentrevoked { background: linear-gradient(135deg, #ff9800, #f57c00); color: white; }
+        
+        /* SECURITY FIX: Style for failed authentication attempts */
+        .log-item.failed-auth {
+            border-left: 4px solid #dc3545;
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.08), rgba(231, 76, 60, 0.05));
+        }
+        
+        .log-item.failed-auth:hover {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.15), rgba(231, 76, 60, 0.1));
+        }
+        
+        .failed-auth-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #dc3545, #e74c3c);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 8px;
+        }
+        
+        .failure-reason {
+            display: inline-block;
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+        
+        .logs-table tbody tr.failed-auth {
+            border-left: 4px solid #dc3545;
+            background: linear-gradient(90deg, rgba(220, 53, 69, 0.05), rgba(255, 255, 255, 0.5));
+        }
+        
+        .logs-table tbody tr.failed-auth:hover {
+            background: linear-gradient(90deg, rgba(220, 53, 69, 0.1), rgba(255, 255, 255, 0.7));
+        }
 
         .stats-bar {
             display: grid;
@@ -728,7 +771,13 @@
                 </div>
                 <div class="stat-item">
                     <div class="stat-value">{{ $stats['loginCount'] ?? 0 }}</div>
-                    <div class="stat-label">Login Events</div>
+                    <div class="stat-label">Successful Logins</div>
+                </div>
+                <div class="stat-item" style="border-left: 4px solid #dc3545;">
+                    <div class="stat-value" style="background: linear-gradient(135deg, #dc3545, #e74c3c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                        {{ $stats['failedLoginCount'] ?? 0 }}
+                    </div>
+                    <div class="stat-label">Failed Login Attempts</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value">{{ $stats['logoutCount'] ?? 0 }}</div>
@@ -768,7 +817,32 @@
                         </thead>
                         <tbody>
                             @foreach($auditLogs as $log)
-                                <tr>
+                                @php
+                                    // SECURITY FIX: Check if this is a failed authentication attempt
+                                    $isFailedAuth = false;
+                                    $failureReason = null;
+                                    $authMetadata = null;
+                                    
+                                    if ($log->action === 'authentication' && $log->new_values) {
+                                        $newValues = is_array($log->new_values) ? $log->new_values : json_decode($log->new_values, true);
+                                        if (isset($newValues['success']) && $newValues['success'] === false) {
+                                            $isFailedAuth = true;
+                                            $failureReason = $newValues['reason'] ?? 'unknown';
+                                            $authMetadata = $newValues;
+                                        }
+                                    }
+                                    
+                                    // Also check metadata for backward compatibility
+                                    if (!$isFailedAuth && $log->metadata) {
+                                        $metadata = is_array($log->metadata) ? $log->metadata : json_decode($log->metadata, true);
+                                        if (isset($metadata['success']) && $metadata['success'] === false) {
+                                            $isFailedAuth = true;
+                                            $failureReason = $metadata['reason'] ?? 'unknown';
+                                            $authMetadata = $metadata;
+                                        }
+                                    }
+                                @endphp
+                                <tr class="{{ $isFailedAuth ? 'failed-auth' : '' }}">
                                     <td>
                                         <div style="display: flex; flex-direction: column;">
                                             <span style="font-weight: 600; color: #2c3e50;">{{ $log->created_at->format('M j, Y') }}</span>
@@ -779,6 +853,9 @@
                                         <span class="action-type action-{{ str_replace('_', '', $log->action) }}">
                                             {{ ucfirst(str_replace('_', ' ', $log->action)) }}
                                         </span>
+                                        @if($isFailedAuth)
+                                            <span class="failed-auth-badge">Failed</span>
+                                        @endif
                                     </td>
                                     <td>
                                         @php
@@ -863,9 +940,22 @@
                                     <td>
                                         <div style="color: #5a6c7d; font-size: 14px; line-height: 1.6; max-width: 500px;">
                                             <!-- Description -->
-                                            <div style="font-weight: 500; color: #2c3e50; margin-bottom: 8px;">
+                                            <div style="font-weight: 500; color: {{ $isFailedAuth ? '#dc3545' : '#2c3e50' }}; margin-bottom: 8px;">
                                                 {{ $log->description ?? 'No description available' }}
                                             </div>
+                                            
+                                            <!-- SECURITY FIX: Display failure reason for failed authentication attempts -->
+                                            @if($isFailedAuth && $failureReason)
+                                                <div class="failure-reason">
+                                                    <strong>Failure Reason:</strong> 
+                                                    {{ ucfirst(str_replace('_', ' ', $failureReason)) }}
+                                                    @if(isset($authMetadata['login_field']))
+                                                        <span style="color: #666; font-size: 11px;">
+                                                            (via {{ ucfirst(str_replace('_', ' ', $authMetadata['login_field'])) }})
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            @endif
 
                                             @php
                                                 // Extract and format key information from JSON data
@@ -876,17 +966,48 @@
                                                 // Process new_values
                                                 if ($log->new_values && is_array($log->new_values)) {
                                                     $redactedValues = $log->new_values;
+                                                    
+                                                    // SECURITY FIX: Redact sensitive information
                                                     if (isset($redactedValues['student_id']) && $redactedValues['student_id'] !== '***REDACTED***') {
                                                         $redactedValues['student_id'] = '***REDACTED***';
                                                     }
+                                                    // Redact login_value (attempted identifier) for security
+                                                    if (isset($redactedValues['login_value'])) {
+                                                        // Mask the login value but keep first/last few characters for identification
+                                                        $loginValue = $redactedValues['login_value'];
+                                                        if (strlen($loginValue) > 4) {
+                                                            $redactedValues['login_value'] = substr($loginValue, 0, 2) . '***' . substr($loginValue, -2);
+                                                        } else {
+                                                            $redactedValues['login_value'] = '***REDACTED***';
+                                                        }
+                                                    }
+                                                    // Redact email if present
+                                                    if (isset($redactedValues['email'])) {
+                                                        $email = $redactedValues['email'];
+                                                        $emailParts = explode('@', $email);
+                                                        if (count($emailParts) === 2) {
+                                                            $redactedValues['email'] = substr($emailParts[0], 0, 2) . '***@' . $emailParts[1];
+                                                        } else {
+                                                            $redactedValues['email'] = '***REDACTED***';
+                                                        }
+                                                    }
                                                     
                                                     // Extract key fields for summary
-                                                    $keyFields = ['auth_action', 'success', 'user_type', 'admin_id', 'access_action', 'resource_type', 'resource_id', 'action'];
+                                                    $keyFields = ['auth_action', 'success', 'user_type', 'admin_id', 'access_action', 'resource_type', 'resource_id', 'action', 'reason', 'login_field'];
                                                     foreach ($keyFields as $key) {
                                                         if (isset($redactedValues[$key])) {
+                                                            $value = $redactedValues[$key];
+                                                            // Format boolean values
+                                                            if (is_bool($value)) {
+                                                                $value = $value ? 'Yes' : 'No';
+                                                            }
+                                                            // Format failure reasons
+                                                            if ($key === 'reason' && is_string($value)) {
+                                                                $value = ucfirst(str_replace('_', ' ', $value));
+                                                            }
                                                             $summaryItems[] = [
                                                                 'label' => ucfirst(str_replace('_', ' ', $key)),
-                                                                'value' => is_bool($redactedValues[$key]) ? ($redactedValues[$key] ? 'Yes' : 'No') : $redactedValues[$key],
+                                                                'value' => $value,
                                                                 'type' => 'new'
                                                             ];
                                                         }
@@ -1067,13 +1188,36 @@
 
                     @if($recentLogins->count() > 0)
                         @foreach($recentLogins as $login)
-                            <div class="log-item">
+                            @php
+                                // SECURITY FIX: Check if this is a failed login attempt
+                                $isFailedLogin = false;
+                                $failureReason = null;
+                                
+                                if ($login->new_values) {
+                                    $newValues = is_array($login->new_values) ? $login->new_values : json_decode($login->new_values, true);
+                                    if (isset($newValues['success']) && $newValues['success'] === false) {
+                                        $isFailedLogin = true;
+                                        $failureReason = $newValues['reason'] ?? 'unknown';
+                                    }
+                                }
+                            @endphp
+                            <div class="log-item {{ $isFailedLogin ? 'failed-auth' : '' }}">
                                 <div class="log-header">
-                                    <div class="log-action">{{ ucfirst(str_replace('_', ' ', $login->action)) }}</div>
+                                    <div class="log-action" style="display: flex; align-items: center; gap: 6px;">
+                                        {{ ucfirst(str_replace('_', ' ', $login->action)) }}
+                                        @if($isFailedLogin)
+                                            <span class="failed-auth-badge" style="margin-left: 0;">Failed</span>
+                                        @endif
+                                    </div>
                                     <div class="log-timestamp">{{ $login->created_at->format('M j, g:i A') }}</div>
                                 </div>
                                 <div class="log-details">
                                     {{ $login->description ?? 'User logged in' }}
+                                    @if($isFailedLogin && $failureReason)
+                                        <div class="failure-reason" style="margin-top: 6px;">
+                                            Reason: {{ ucfirst(str_replace('_', ' ', $failureReason)) }}
+                                        </div>
+                                    @endif
                                     @if($login->ip_address)
                                         <div class="log-ip">IP: {{ $login->ip_address }}</div>
                                     @endif

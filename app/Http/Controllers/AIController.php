@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\SurveyResponse;
 use App\Services\AIService;
+use App\Services\InputSanitizationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class AIController extends Controller
 {
@@ -36,11 +38,32 @@ class AIController extends Controller
 
     public function clusterResponses(Request $request)
     {
-        $track = $request->query('track');
-        $gradeLevel = $request->query('grade_level');
-        $academicYear = $request->query('academic_year');
-        $semester = $request->query('semester');
-        $k = $request->query('clusters', 3);
+        // Validate and sanitize query parameters
+        $validator = Validator::make($request->query(), [
+            'track' => 'nullable|in:CSS',
+            'grade_level' => 'nullable|integer|in:11,12',
+            'academic_year' => 'nullable|string|max:9|regex:/^\d{4}-\d{4}$|^\d{4}$/',
+            'semester' => 'nullable|in:1st,2nd',
+            'clusters' => 'nullable|integer|min:2|max:10',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // SECURITY FIX: Sanitize all query parameters before use
+        $sanitizationService = app(InputSanitizationService::class);
+        $track = $sanitizationService->sanitizeQueryParameter($request->query('track'), 'track');
+        $gradeLevel = $sanitizationService->sanitizeQueryParameter($request->query('grade_level'), 'grade_level');
+        $academicYear = $sanitizationService->sanitizeQueryParameter($request->query('academic_year'), 'academic_year');
+        $semester = $sanitizationService->sanitizeQueryParameter($request->query('semester'), 'semester');
+        // SECURITY FIX: Validate clusters parameter using sanitization service
+        $clustersParam = $sanitizationService->sanitizeQueryParameter($request->query('clusters'), 'integer');
+        $k = $clustersParam !== null ? (int) $clustersParam : 3;
+        $k = max(2, min(10, $k)); // Ensure clusters is between 2 and 10
 
         $query = SurveyResponse::query();
 
@@ -79,12 +102,30 @@ class AIController extends Controller
 
     public function analyzeSentiment(Request $request)
     {
-        $track = $request->query('track');
-        $gradeLevel = $request->query('grade_level');
-        $academicYear = $request->query('academic_year');
-        $semester = $request->query('semester');
-        $dateFrom = $request->query('date_from');
-        $dateTo = $request->query('date_to');
+        // Validate and sanitize query parameters
+        $validator = Validator::make($request->query(), [
+            'track' => 'nullable|in:CSS',
+            'grade_level' => 'nullable|integer|in:11,12',
+            'academic_year' => 'nullable|string|max:9|regex:/^\d{4}-\d{4}$|^\d{4}$/',
+            'semester' => 'nullable|in:1st,2nd',
+            'date_from' => 'nullable|date|date_format:Y-m-d',
+            'date_to' => 'nullable|date|date_format:Y-m-d|after_or_equal:date_from',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $sanitizationService = app(InputSanitizationService::class);
+        $track = $sanitizationService->sanitizeQueryParameter($request->query('track'), 'track');
+        $gradeLevel = $sanitizationService->sanitizeQueryParameter($request->query('grade_level'), 'grade_level');
+        $academicYear = $sanitizationService->sanitizeQueryParameter($request->query('academic_year'), 'academic_year');
+        $semester = $sanitizationService->sanitizeQueryParameter($request->query('semester'), 'semester');
+        $dateFrom = $sanitizationService->sanitizeQueryParameter($request->query('date_from'), 'date');
+        $dateTo = $sanitizationService->sanitizeQueryParameter($request->query('date_to'), 'date');
 
         $query = SurveyResponse::query();
 
@@ -149,10 +190,27 @@ class AIController extends Controller
 
     public function extractKeywords(Request $request)
     {
-        $track = $request->query('track');
-        $gradeLevel = $request->query('grade_level');
-        $academicYear = $request->query('academic_year');
-        $semester = $request->query('semester');
+        // Validate and sanitize query parameters
+        $validator = Validator::make($request->query(), [
+            'track' => 'nullable|in:CSS',
+            'grade_level' => 'nullable|integer|in:11,12',
+            'academic_year' => 'nullable|string|max:9|regex:/^\d{4}-\d{4}$|^\d{4}$/',
+            'semester' => 'nullable|in:1st,2nd',
+            'min_frequency' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $sanitizationService = app(InputSanitizationService::class);
+        $track = $sanitizationService->sanitizeQueryParameter($request->query('track'), 'track');
+        $gradeLevel = $sanitizationService->sanitizeQueryParameter($request->query('grade_level'), 'grade_level');
+        $academicYear = $sanitizationService->sanitizeQueryParameter($request->query('academic_year'), 'academic_year');
+        $semester = $sanitizationService->sanitizeQueryParameter($request->query('semester'), 'semester');
 
         $query = SurveyResponse::query();
 
@@ -198,7 +256,8 @@ class AIController extends Controller
             ]);
         }
 
-        $minFrequency = $request->query('min_frequency', 2);
+        $minFrequency = (int) $request->query('min_frequency', 2);
+        $minFrequency = max(1, min(100, $minFrequency)); // Ensure min_frequency is between 1 and 100
         $keywords = $this->aiService->extractKeywords($comments, $minFrequency);
 
         return response()->json([
@@ -209,10 +268,26 @@ class AIController extends Controller
 
     public function getComplianceRiskMeter(Request $request)
     {
-        $track = $request->query('track');
-        $gradeLevel = $request->query('grade_level');
-        $academicYear = $request->query('academic_year');
-        $semester = $request->query('semester');
+        // Validate and sanitize query parameters
+        $validator = Validator::make($request->query(), [
+            'track' => 'nullable|in:CSS',
+            'grade_level' => 'nullable|integer|in:11,12',
+            'academic_year' => 'nullable|string|max:9|regex:/^\d{4}-\d{4}$|^\d{4}$/',
+            'semester' => 'nullable|in:1st,2nd',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $sanitizationService = app(InputSanitizationService::class);
+        $track = $sanitizationService->sanitizeQueryParameter($request->query('track'), 'track');
+        $gradeLevel = $sanitizationService->sanitizeQueryParameter($request->query('grade_level'), 'grade_level');
+        $academicYear = $sanitizationService->sanitizeQueryParameter($request->query('academic_year'), 'academic_year');
+        $semester = $sanitizationService->sanitizeQueryParameter($request->query('semester'), 'semester');
 
         $query = SurveyResponse::query();
 
@@ -547,11 +622,12 @@ class AIController extends Controller
                             'stress_management_support' => $response->stress_management_support,
                             'physical_health_support' => $response->physical_health_support,
                             'overall_wellbeing_rating' => $response->overall_wellbeing_rating,
-                            'attendance_rate' => $response->attendance_rate ?? 85, // Default to 85% attendance
-                            'grade_average' => $response->grade_average ?? 85, // Default to 85% grade (percentage scale 0-100)
-                            'participation_score' => $response->participation_score ?? 80, // Default to 80% participation
-                            'extracurricular_hours' => $response->extracurricular_hours ?? 10,
-                            'counseling_sessions' => $response->counseling_sessions ?? 2,
+                            // SECURITY FIX: Validate default values to ensure they're within acceptable ranges
+                            'attendance_rate' => $this->validateNumericRange($response->attendance_rate ?? 85, 0, 100, 85),
+                            'grade_average' => $this->validateNumericRange($response->grade_average ?? 85, 0, 100, 85),
+                            'participation_score' => $this->validateNumericRange($response->participation_score ?? 80, 0, 100, 80),
+                            'extracurricular_hours' => $this->validateNumericRange($response->extracurricular_hours ?? 10, 0, 168, 10),
+                            'counseling_sessions' => $this->validateNumericRange($response->counseling_sessions ?? 2, 0, 52, 2),
                             'track' => $response->track,
                             'gender' => $response->gender,
                         ];
@@ -577,8 +653,8 @@ class AIController extends Controller
                             'learning_pace_appropriateness' => $recentResponse->learning_pace_appropriateness,
                             'individual_support_availability' => $recentResponse->individual_support_availability,
                             'teaching_quality_rating' => $recentResponse->teaching_quality_rating,
-                            'attendance_rate' => $recentResponse->attendance_rate ?? 85,
-                            'participation_score' => $recentResponse->participation_score ?? 80,
+                            'attendance_rate' => $this->validateNumericRange($recentResponse->attendance_rate ?? 85, 0, 100, 85),
+                            'participation_score' => $this->validateNumericRange($recentResponse->participation_score ?? 80, 0, 100, 80),
                             'overall_satisfaction' => $recentResponse->overall_satisfaction
                         ];
                         \Illuminate\Support\Facades\Log::info('Performance: Sending data to Flask', ['data' => $data]);
@@ -594,7 +670,7 @@ class AIController extends Controller
                     $recentResponse = \App\Models\SurveyResponse::latest()->first();
                     if ($recentResponse) {
                         $data = [
-                            'attendance_rate' => $recentResponse->attendance_rate ?? 75,
+                            'attendance_rate' => $this->validateNumericRange($recentResponse->attendance_rate ?? 75, 0, 100, 75),
                             'overall_satisfaction' => $recentResponse->overall_satisfaction,
                             'academic_progress_rating' => $recentResponse->academic_progress_rating,
                             'physical_safety_rating' => $recentResponse->physical_safety_rating,
@@ -618,7 +694,7 @@ class AIController extends Controller
                             'wellbeing_index' => floatval(($recentResponse->mental_health_support_rating + $recentResponse->stress_management_support + $recentResponse->physical_health_support + $recentResponse->overall_wellbeing_rating) / 4),
                             'overall_satisfaction' => floatval($recentResponse->overall_satisfaction),
                             // Additional risk factors
-                            'attendance_rate' => $recentResponse->attendance_rate ?? 85,
+                            'attendance_rate' => $this->validateNumericRange($recentResponse->attendance_rate ?? 85, 0, 100, 85),
                             'academic_progress_rating' => $recentResponse->academic_progress_rating,
                             'physical_safety_rating' => $recentResponse->physical_safety_rating,
                             'psychological_safety_rating' => $recentResponse->psychological_safety_rating,
@@ -647,7 +723,7 @@ class AIController extends Controller
                             $avgAcademicProgress = $historicalResponses->avg('academic_progress_rating');
                             $avgTeachingQuality = $historicalResponses->avg('teaching_quality_rating');
                             $avgSatisfaction = $historicalResponses->avg('overall_satisfaction');
-                            $avgAttendance = $historicalResponses->avg('attendance_rate') ?? 85;
+                            $avgAttendance = $this->validateNumericRange($historicalResponses->avg('attendance_rate') ?? 85, 0, 100, 85);
                             
                             // Prepare comprehensive data for Flask
                             $data = [
@@ -672,8 +748,8 @@ class AIController extends Controller
                                 'learning_pace_appropriateness' => $recentResponse->learning_pace_appropriateness,
                                 'individual_support_availability' => $recentResponse->individual_support_availability,
                                 'skill_development_rating' => $recentResponse->skill_development_rating,
-                                'attendance_rate' => $recentResponse->attendance_rate ?? 85,
-                                'participation_score' => $recentResponse->participation_score ?? 80,
+                                'attendance_rate' => $this->validateNumericRange($recentResponse->attendance_rate ?? 85, 0, 100, 85),
+                                'participation_score' => $this->validateNumericRange($recentResponse->participation_score ?? 80, 0, 100, 80),
                                 'overall_satisfaction' => $recentResponse->overall_satisfaction,
                                 
                                 // Timestamps for time series analysis
@@ -696,8 +772,8 @@ class AIController extends Controller
                                     'teaching_quality_rating' => $recentResponse->teaching_quality_rating,
                                     'academic_progress_rating' => $recentResponse->academic_progress_rating,
                                     'skill_development_rating' => $recentResponse->skill_development_rating,
-                                    'attendance_rate' => $recentResponse->attendance_rate ?? 85,
-                                    'participation_score' => $recentResponse->participation_score ?? 80,
+                                    'attendance_rate' => $this->validateNumericRange($recentResponse->attendance_rate ?? 85, 0, 100, 85),
+                                    'participation_score' => $this->validateNumericRange($recentResponse->participation_score ?? 80, 0, 100, 80),
                                     'overall_satisfaction' => $recentResponse->overall_satisfaction
                                 ]);
                             }
@@ -834,11 +910,12 @@ class AIController extends Controller
                                     'stress_management_support' => $response->stress_management_support,
                                     'physical_health_support' => $response->physical_health_support,
                                     'overall_wellbeing_rating' => $response->overall_wellbeing_rating,
-                                    'attendance_rate' => $response->attendance_rate ?? 85, // Default to 85% attendance
-                                    'grade_average' => $response->grade_average ?? 85, // Default to 85% grade (percentage scale 0-100)
-                                    'participation_score' => $response->participation_score ?? 80, // Default to 80% participation
-                                    'extracurricular_hours' => $response->extracurricular_hours ?? 10,
-                                    'counseling_sessions' => $response->counseling_sessions ?? 2,
+                                    // SECURITY FIX: Validate default values to ensure they're within acceptable ranges
+                                    'attendance_rate' => $this->validateNumericRange($response->attendance_rate ?? 85, 0, 100, 85),
+                                    'grade_average' => $this->validateNumericRange($response->grade_average ?? 85, 0, 100, 85),
+                                    'participation_score' => $this->validateNumericRange($response->participation_score ?? 80, 0, 100, 80),
+                                    'extracurricular_hours' => $this->validateNumericRange($response->extracurricular_hours ?? 10, 0, 168, 10), // Max 168 hours per week
+                                    'counseling_sessions' => $this->validateNumericRange($response->counseling_sessions ?? 2, 0, 52, 2), // Max 52 sessions per year
                                     'track' => $response->track,
                                     'gender' => $response->gender,
                                 ];
@@ -849,8 +926,8 @@ class AIController extends Controller
                             'learning_pace_appropriateness' => $recentResponse->learning_pace_appropriateness,
                             'individual_support_availability' => $recentResponse->individual_support_availability,
                             'teaching_quality_rating' => $recentResponse->teaching_quality_rating,
-                            'attendance_rate' => $recentResponse->attendance_rate ?? 85,
-                            'participation_score' => $recentResponse->participation_score ?? 80,
+                            'attendance_rate' => $this->validateNumericRange($recentResponse->attendance_rate ?? 85, 0, 100, 85),
+                            'participation_score' => $this->validateNumericRange($recentResponse->participation_score ?? 80, 0, 100, 80),
 
                             // Dropout risk fields
                             'academic_progress_rating' => $recentResponse->academic_progress_rating,
@@ -901,16 +978,20 @@ class AIController extends Controller
             }
 
         } catch (\Throwable $e) {
+            // SECURITY FIX: Don't expose sensitive error details to clients
+            // Log full error details internally for debugging
             \Illuminate\Support\Facades\Log::error('AI Analysis error', [
                 'type' => $type,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
             ]);
 
+            // Return generic error message to client
             return response()->json([
                 'success' => false,
-                'message' => 'Analysis failed: ' . $e->getMessage(),
-                'error_type' => get_class($e)
+                'message' => 'Analysis failed. Please try again later or contact support if the problem persists.'
             ], 500);
         }
     }
@@ -1122,5 +1203,34 @@ class AIController extends Controller
             default:
                 return ['result' => []];
         }
+    }
+
+    /**
+     * Validate numeric value is within acceptable range
+     * SECURITY FIX: Prevents magic numbers and ensures values are within bounds
+     *
+     * @param mixed $value
+     * @param float|int $min
+     * @param float|int $max
+     * @param float|int $default
+     * @return float|int
+     */
+    protected function validateNumericRange($value, $min, $max, $default)
+    {
+        // Convert to numeric if possible
+        $numericValue = is_numeric($value) ? (float)$value : $default;
+        
+        // Ensure value is within range
+        if ($numericValue < $min || $numericValue > $max) {
+            \Illuminate\Support\Facades\Log::warning('Numeric value out of range, using default', [
+                'value' => $value,
+                'min' => $min,
+                'max' => $max,
+                'default' => $default
+            ]);
+            return $default;
+        }
+        
+        return $numericValue;
     }
 }

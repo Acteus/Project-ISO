@@ -3,25 +3,71 @@
 namespace App\Http\Controllers;
 
 use App\Services\VisualizationService;
+use App\Services\InputSanitizationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class VisualizationController extends Controller
 {
     protected $visualizationService;
+    protected $sanitizationService;
 
     public function __construct(VisualizationService $visualizationService)
     {
         $this->visualizationService = $visualizationService;
+        $this->sanitizationService = app(InputSanitizationService::class);
+    }
+
+    /**
+     * Validate and sanitize common query parameters
+     * 
+     * @param Request $request
+     * @return array|null Returns null if validation fails, array of sanitized parameters if successful
+     */
+    protected function validateAndSanitizeCommonParams(Request $request): ?array
+    {
+        $validator = Validator::make($request->query(), [
+            'track' => 'nullable|in:CSS',
+            'grade_level' => 'nullable|integer|in:11,12',
+            'academic_year' => 'nullable|string|max:9|regex:/^\d{4}-\d{4}$|^\d{4}$/',
+            'semester' => 'nullable|in:1st,2nd',
+            'date_from' => 'nullable|date|date_format:Y-m-d',
+            'date_to' => 'nullable|date|date_format:Y-m-d|after_or_equal:date_from',
+            'min_frequency' => 'nullable|integer|min:1|max:100',
+            'metric' => 'nullable|string',
+            'group_by' => 'nullable|string|in:day,week,month',
+        ]);
+
+        if ($validator->fails()) {
+            return null;
+        }
+
+        return [
+            'track' => $this->sanitizationService->sanitizeQueryParameter($request->query('track'), 'track'),
+            'grade_level' => $this->sanitizationService->sanitizeQueryParameter($request->query('grade_level'), 'grade_level'),
+            'academic_year' => $this->sanitizationService->sanitizeQueryParameter($request->query('academic_year'), 'academic_year'),
+            'semester' => $this->sanitizationService->sanitizeQueryParameter($request->query('semester'), 'semester'),
+            'date_from' => $this->sanitizationService->sanitizeQueryParameter($request->query('date_from'), 'date'),
+            'date_to' => $this->sanitizationService->sanitizeQueryParameter($request->query('date_to'), 'date'),
+        ];
     }
 
     public function getBarChartData(Request $request)
     {
-        $track = $request->query('track');
-        $gradeLevel = $request->query('grade_level');
-        $academicYear = $request->query('academic_year');
-        $semester = $request->query('semester');
+        $params = $this->validateAndSanitizeCommonParams($request);
+        if ($params === null) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => 'Invalid query parameters'
+            ], 422);
+        }
 
-        $data = $this->visualizationService->generateBarChartData($track, $gradeLevel, $academicYear, $semester);
+        $data = $this->visualizationService->generateBarChartData(
+            $params['track'],
+            $params['grade_level'],
+            $params['academic_year'],
+            $params['semester']
+        );
 
         return response()->json([
             'message' => 'ISO 21001 Bar chart data generated successfully',
@@ -61,13 +107,24 @@ class VisualizationController extends Controller
 
     public function getWordCloudData(Request $request)
     {
-        $track = $request->query('track');
-        $gradeLevel = $request->query('grade_level');
-        $academicYear = $request->query('academic_year');
-        $semester = $request->query('semester');
-        $minFrequency = $request->query('min_frequency', 2);
+        $params = $this->validateAndSanitizeCommonParams($request);
+        if ($params === null) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => 'Invalid query parameters'
+            ], 422);
+        }
 
-        $data = $this->visualizationService->generateWordCloudData($track, $gradeLevel, $academicYear, $semester, $minFrequency);
+        $minFrequency = (int) $request->query('min_frequency', 2);
+        $minFrequency = max(1, min(100, $minFrequency));
+
+        $data = $this->visualizationService->generateWordCloudData(
+            $params['track'],
+            $params['grade_level'],
+            $params['academic_year'],
+            $params['semester'],
+            $minFrequency
+        );
 
         return response()->json([
             'message' => 'ISO 21001 Word cloud data generated successfully',

@@ -179,10 +179,12 @@ class FlaskAIClient
                     return $result;
                 } else {
                     $error = "HTTP {$response->status()}: {$response->body()}";
+                    // SECURITY FIX: Sanitize response body to prevent information disclosure
+                    $sanitizedResponse = $this->sanitizeErrorMessage($response->body());
                     Log::warning('Flask AI service request failed', [
                         'endpoint' => $endpoint,
                         'status' => $response->status(),
-                        'response' => $response->body(),
+                        'response' => mb_substr($sanitizedResponse, 0, 200), // Limit response length
                         'attempts' => $attempts + 1
                     ]);
                 }
@@ -190,9 +192,12 @@ class FlaskAIClient
             } catch (\Exception $e) {
                 $lastException = $e;
                 $error = $e->getMessage();
+                // SECURITY FIX: Sanitize error messages to prevent information disclosure
+                // Don't log full exception details or API keys
+                $sanitizedError = $this->sanitizeErrorMessage($e->getMessage());
                 Log::warning('Flask AI service request exception', [
                     'endpoint' => $endpoint,
-                    'error' => $e->getMessage(),
+                    'error' => $sanitizedError,
                     'attempts' => $attempts + 1
                 ]);
             }
@@ -208,9 +213,11 @@ class FlaskAIClient
         // Track performance for failed request
         $this->trackPerformance($endpoint, $startTime, $success, $error, $attempts);
 
+        // SECURITY FIX: Sanitize error messages to prevent information disclosure
+        $sanitizedFinalError = $lastException ? $this->sanitizeErrorMessage($lastException->getMessage()) : 'Unknown error';
         Log::error('Flask AI service request failed after all retries', [
             'endpoint' => $endpoint,
-            'final_error' => $lastException ? $lastException->getMessage() : 'Unknown error',
+            'final_error' => $sanitizedFinalError,
             'total_attempts' => $attempts
         ]);
 
@@ -247,6 +254,7 @@ class FlaskAIClient
 
     /**
      * Get service status and metrics
+     * SECURITY FIX: Don't expose API key or sensitive configuration
      */
     public function getServiceStatus(): array
     {
@@ -254,11 +262,12 @@ class FlaskAIClient
 
         return [
             'available' => $available,
-            'base_url' => $this->baseUrl,
+            'base_url' => $this->baseUrl, // This is okay to expose as it's internal service URL
             'timeout' => $this->timeout,
             'retries' => $this->retries,
             'last_checked' => now()->toISOString(),
-            'cache_enabled' => config('ai.enable_cache', true)
+            'cache_enabled' => config('ai.enable_cache', true),
+            // SECURITY: API key is intentionally NOT included in status response
         ];
     }
 
@@ -271,8 +280,36 @@ class FlaskAIClient
             Cache::forget('flask_ai_*'); // This is a pattern, but in practice you'd need to handle this differently
             return true;
         } catch (\Exception $e) {
-            Log::error('Failed to clear Flask AI cache', ['error' => $e->getMessage()]);
+            Log::error('Failed to clear Flask AI cache', ['error' => $this->sanitizeErrorMessage($e->getMessage())]);
             return false;
         }
+    }
+
+    /**
+     * Sanitize error messages to prevent information disclosure
+     * Removes API keys, sensitive data, and full stack traces from error messages
+     *
+     * @param string $errorMessage
+     * @return string
+     */
+    protected function sanitizeErrorMessage(string $errorMessage): string
+    {
+        // Remove API key patterns
+        $errorMessage = preg_replace('/Bearer\s+[A-Za-z0-9\-_]+/i', 'Bearer [REDACTED]', $errorMessage);
+        $errorMessage = preg_replace('/X-API-Key:\s*[A-Za-z0-9\-_]+/i', 'X-API-Key: [REDACTED]', $errorMessage);
+        $errorMessage = preg_replace('/api[_-]?key["\']?\s*[:=]\s*["\']?[A-Za-z0-9\-_]+/i', 'api_key: [REDACTED]', $errorMessage);
+        
+        // Remove authorization headers
+        $errorMessage = preg_replace('/Authorization:\s*[^\s]+/i', 'Authorization: [REDACTED]', $errorMessage);
+        
+        // Remove full file paths (keep only filename)
+        $errorMessage = preg_replace('/([A-Z]:\\\\|\\/)[^:]+([^:]+):/', '$2:', $errorMessage);
+        
+        // Limit error message length to prevent log flooding
+        if (strlen($errorMessage) > 500) {
+            $errorMessage = substr($errorMessage, 0, 497) . '...';
+        }
+        
+        return $errorMessage;
     }
 }
