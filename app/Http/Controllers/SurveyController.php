@@ -28,9 +28,33 @@ class SurveyController extends Controller
     public function landing(Request $request)
     {
         // Regenerate session if marked to do so (after login)
+        // This should preserve authentication state automatically, but we'll verify it
         if ($request->session()->has('_should_regenerate')) {
             $request->session()->forget('_should_regenerate');
+            
+            // Store current authentication state before regeneration as a safety measure
+            $currentUser = Auth::user();
+            $currentAdmin = session('admin');
+            $userId = $currentUser ? $currentUser->id : null;
+            
+            // Regenerate session (this creates a new session ID but preserves data)
             $request->session()->regenerate();
+            
+            // Verify and re-establish authentication state if it was lost during regeneration
+            // This is a safety measure to ensure users don't lose their login
+            if ($userId && $currentUser && !Auth::check()) {
+                // Re-authenticate the user if auth was lost
+                Auth::login($currentUser, false); // false = don't remember
+                Log::warning('Auth state lost during session regeneration, restored', [
+                    'user_id' => $userId,
+                ]);
+            }
+            
+            // Re-establish admin session if it existed and was lost
+            if ($currentAdmin && !session('admin')) {
+                session(['admin' => $currentAdmin]);
+                Log::warning('Admin session lost during regeneration, restored');
+            }
         }
 
         // Clean up old sessions occasionally (1% chance per request)
