@@ -403,9 +403,9 @@
         @endif
 
         <div class="form-group">
-          <label id="idLabel">Username, Student ID, or Email</label>
-          <input type="text" name="student_id" required placeholder="Enter your username, student ID, or email">
-          <div class="error-message">Please enter your username, student ID, or email</div>
+          <label id="idLabel">Student ID or Email</label>
+          <input type="text" name="student_id" required placeholder="Enter your student ID or email">
+          <div class="error-message">Please enter your student ID or email</div>
         </div>
 
         <div class="form-group">
