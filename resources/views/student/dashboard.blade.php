@@ -1295,6 +1295,17 @@
                             </svg>
                             <span>Back to Home</span>
                         </a>
+                        @if(!empty($hasPreviousResponse))
+                            <form method="POST" action="{{ route('student.responses.clear') }}" style="display: inline;">
+                                @csrf
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('This will delete your previous survey responses so you can submit a new one. Continue?');">
+                                    <svg style="width: 18px; height: 18px; fill: currentColor; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                        <path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1z"/>
+                                    </svg>
+                                    <span>Clear My Responses</span>
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             </div>

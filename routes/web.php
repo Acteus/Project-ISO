@@ -37,6 +37,7 @@ Route::prefix('student')->name('student.')->group(function () {
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard')->middleware(['auth', 'verified']);
     Route::post('/profile/update', [StudentController::class, 'updateProfile'])->name('profile.update')->middleware(['auth', 'verified']);
     Route::post('/password/update', [StudentController::class, 'updatePassword'])->name('password.update')->middleware(['auth', 'verified']);
+    Route::post('/responses/clear', [StudentController::class, 'clearResponses'])->name('responses.clear')->middleware(['auth', 'verified']);
     // Consent management (GDPR & ISO 27001) - requires email verification
     Route::get('/consent/required', [StudentController::class, 'showConsentRequired'])->name('consent.required')->middleware(['auth', 'verified']);
     Route::post('/consent/accept', [StudentController::class, 'acceptConsent'])->name('consent.accept')->middleware(['auth', 'verified']);

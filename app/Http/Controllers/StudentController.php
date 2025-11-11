@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\AuditLog;
+use App\Models\SurveyResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -458,7 +459,25 @@ class StudentController extends Controller
                 ->with('info', 'Please provide consent to continue using the survey system.');
         }
 
-        return view('student.dashboard', compact('user'));
+        // Determine if the student has a previous response (SurveyResponse uses encrypted student_id)
+        $hasPreviousResponse = false;
+        if ($user && $user->student_id) {
+            try {
+                $encryptionService = app(\App\Services\EncryptionService::class);
+                $encryptedStudentId = $encryptionService->encrypt($user->student_id);
+                $hasPreviousResponse = \App\Models\SurveyResponse::where('student_id', $encryptedStudentId)->exists();
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Unable to check previous survey response (dashboard)', [
+                    'error' => $e->getMessage(),
+                    'user_id' => $user->id ?? null,
+                ]);
+            }
+        }
+
+        return view('student.dashboard', [
+            'user' => $user,
+            'hasPreviousResponse' => $hasPreviousResponse,
+        ]);
     }
 
     /**
@@ -585,6 +604,61 @@ class StudentController extends Controller
 
         return redirect()->route('student.dashboard')
             ->with('success', 'Password updated successfully.');
+    }
+
+    /**
+     * Clear the authenticated student's previous survey responses
+     * so they can submit another one.
+     */
+    public function clearResponses(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'student') {
+            return redirect()->route('student.login');
+        }
+
+        if (!$user->student_id) {
+            return redirect()->route('student.dashboard')
+                ->with('error', 'Unable to clear responses: Student ID not found.');
+        }
+
+        try {
+            // SurveyResponse stores encrypted student_id; use EncryptionService to match
+            $encryptionService = app(\App\Services\EncryptionService::class);
+            $encryptedStudentId = $encryptionService->encrypt($user->student_id);
+
+            $deletedCount = SurveyResponse::where('student_id', $encryptedStudentId)->delete();
+
+            // Log deletion for audit trail (without exposing raw student_id)
+            AuditLog::create([
+                'user_id' => $user->id,
+                'action' => 'data_modification',
+                'resource_type' => 'survey_response',
+                'resource_id' => null,
+                'description' => 'Student cleared their survey responses to submit another',
+                'ip_address' => $request->ip(),
+                'new_values' => [
+                    'deleted_count' => $deletedCount,
+                    'student_id' => '***REDACTED***',
+                ],
+            ]);
+
+            if ($deletedCount > 0) {
+                return redirect()->route('student.dashboard')
+                    ->with('success', 'Your previous responses have been cleared. You can now submit a new survey.');
+            }
+
+            return redirect()->route('student.dashboard')
+                ->with('info', 'No previous responses were found to clear.');
+        } catch (\Exception $e) {
+            Log::error('Failed to clear survey responses', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('student.dashboard')
+                ->with('error', 'An error occurred while clearing responses. Please try again later.');
+        }
     }
 
     /**
@@ -1098,7 +1172,15 @@ class StudentController extends Controller
 
         // Ensure admin is passed as object for view compatibility
         $adminData = is_array($admin) ? (object)$admin : $admin;
-        return view('admin.all-responses', ['admin' => $adminData, 'responses' => $responses]);
+
+        // Get CSP nonce from request attributes (set by SecurityHeaders middleware)
+        $cspNonce = $request->attributes->get('csp-nonce', '');
+
+        return view('admin.all-responses', [
+            'admin' => $adminData,
+            'responses' => $responses,
+            'cspNonce' => $cspNonce,
+        ]);
     }
 
     public function auditLogs(Request $request)
