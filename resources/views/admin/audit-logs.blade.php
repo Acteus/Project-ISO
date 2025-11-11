@@ -626,6 +626,13 @@
             <div class="logs-header">
                 <h1>System Audit Logs</h1>
                 <p>Comprehensive audit trail for ISO 21001 compliance and system security monitoring</p>
+                <!-- SECURITY FIX: Information about enhanced security logging -->
+                <div style="margin-top: 15px; padding: 12px 18px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(255, 140, 0, 0.1)); border-radius: 10px; border-left: 4px solid #4285F4; font-size: 14px; color: #5a6c7d;">
+                    <svg style="width: 18px; height: 18px; vertical-align: middle; margin-right: 8px; fill: #4285F4;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    <strong style="color: #4285F4;">Enhanced Security Logging:</strong> Failed login attempts are automatically logged to both the audit database and a dedicated security log file (<code style="background: rgba(255,255,255,0.5); padding: 2px 6px; border-radius: 4px; font-size: 12px;">storage/logs/security.log</code>) for enhanced security monitoring and compliance.
+                </div>
                         @if(request()->has('action') || request()->has('user_type') || request()->has('resource_type') || request()->has('date_from') || request()->has('date_to') || request()->has('search'))
                     <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(255, 140, 0, 0.1)); border-radius: 12px; border-left: 4px solid #4285F4;">
                         <strong style="color: #4285F4;">
@@ -773,11 +780,17 @@
                     <div class="stat-value">{{ $stats['loginCount'] ?? 0 }}</div>
                     <div class="stat-label">Successful Logins</div>
                 </div>
-                <div class="stat-item" style="border-left: 4px solid #dc3545;">
+                <div class="stat-item" style="border-left: 4px solid #dc3545; position: relative;">
                     <div class="stat-value" style="background: linear-gradient(135deg, #dc3545, #e74c3c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
                         {{ $stats['failedLoginCount'] ?? 0 }}
                     </div>
                     <div class="stat-label">Failed Login Attempts</div>
+                    <!-- SECURITY FIX: Note about dedicated security log channel -->
+                    <div style="position: absolute; top: 8px; right: 8px; cursor: help;" title="Failed login attempts are also logged to storage/logs/security.log for enhanced security monitoring">
+                        <svg style="width: 16px; height: 16px; fill: #dc3545; opacity: 0.7;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                        </svg>
+                    </div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value">{{ $stats['logoutCount'] ?? 0 }}</div>

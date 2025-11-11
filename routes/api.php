@@ -21,9 +21,12 @@ Route::post('/admin/login', [AdminAuthController::class, 'login'])->middleware('
 Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::get('/admin/me', [AdminAuthController::class, 'me'])->middleware('auth:sanctum');
 
-// Survey Routes (public routes that don't require authentication or CSRF)
-// Note: Using web middleware to maintain session for authenticated users
-// Rate limiting: 10 submissions per minute per IP to prevent abuse
+// Survey Routes (public routes that don't require authentication)
+// SECURITY NOTE: This route uses web middleware for session support but is excluded from CSRF
+// because it's a public endpoint for external form submissions. It's protected by:
+// - Rate limiting: 10 submissions per minute per IP to prevent abuse
+// - Input validation and sanitization
+// - Session-based tracking for authenticated users (optional)
 Route::post('/survey/submit', [SurveyController::class, 'submitResponse'])
     ->middleware(['web', 'throttle:10,1']);
 
