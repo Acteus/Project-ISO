@@ -17,7 +17,7 @@ class SurveyResponseObserver
 
         // Clear analytics cache when new response is added
         CacheService::clearAnalyticsCache();
-        
+
         // Set last update timestamp for real-time dashboard polling
         \Illuminate\Support\Facades\Cache::forever('dashboard:last_update', now()->timestamp);
     }
@@ -31,7 +31,7 @@ class SurveyResponseObserver
 
         // Clear analytics cache when response is updated
         CacheService::clearAnalyticsCache();
-        
+
         // Set last update timestamp for real-time dashboard polling
         \Illuminate\Support\Facades\Cache::forever('dashboard:last_update', now()->timestamp);
     }
@@ -45,7 +45,7 @@ class SurveyResponseObserver
 
         // Clear analytics cache when response is deleted
         CacheService::clearAnalyticsCache();
-        
+
         // Set last update timestamp for real-time dashboard polling
         \Illuminate\Support\Facades\Cache::forever('dashboard:last_update', now()->timestamp);
     }

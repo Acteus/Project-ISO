@@ -127,6 +127,15 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        // SECURITY FIX: Dedicated security log channel for security events
+        'security' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/security.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_SECURITY_DAYS', 90), // Keep security logs for 90 days
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];

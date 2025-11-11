@@ -19,18 +19,30 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO);
 
         // CSRF Protection Configuration
-        // SECURITY FIX: Exclude API routes from CSRF protection as they use API authentication
-        // Note: api/survey/submit is excluded for external form submissions
-        // However, it's protected by rate limiting and input validation/sanitization
-        // Other API routes are protected by authentication (Sanctum or session-based)
+        // SECURITY FIX: CSRF protection is applied to all web routes by default
+        // API routes using Sanctum tokens (stateless) don't need CSRF protection
+        // State-changing API routes that use web middleware should have CSRF protection
+        //
+        // Excluded routes:
+        // - api/survey/submit: Public endpoint for external form submissions (protected by rate limiting)
+        // - api/admin/login: Stateless API authentication (uses Sanctum tokens, protected by rate limiting)
+        // - api/admin/logout: Stateless API authentication (uses Sanctum tokens, protected by auth:sanctum)
+        // - api/ai/*, api/export/*, api/visualization/*, api/visualizations/*:
+        //   All use Sanctum authentication (stateless tokens, no CSRF needed)
+        //
+        // Note: All other API routes use Sanctum authentication which is stateless and doesn't require CSRF.
+        // State-changing routes (POST, PUT, DELETE, PATCH) are protected by:
+        // 1. Sanctum token authentication (stateless, no CSRF needed)
+        // 2. Rate limiting where appropriate
+        // 3. Input validation and sanitization
         $middleware->validateCsrfTokens(except: [
-            'api/survey/submit', // Public endpoint for survey submissions (protected by rate limiting)
-            'api/admin/login', // API authentication endpoint (protected by rate limiting)
-            'api/admin/logout', // API authentication endpoint (protected by auth:sanctum)
-            'api/ai/*', // AI endpoints (protected by authentication and rate limiting)
-            'api/export/*', // Export endpoints (protected by authentication)
-            'api/visualization/*', // Visualization endpoints (protected by authentication)
-            'api/visualizations/*', // Advanced visualization endpoints (protected by authentication)
+            'api/survey/submit', // Public endpoint for survey submissions (protected by rate limiting and validation)
+            'api/admin/login', // Stateless API authentication endpoint (protected by rate limiting)
+            'api/admin/logout', // Stateless API authentication endpoint (protected by auth:sanctum)
+            'api/ai/*', // AI endpoints (protected by Sanctum authentication and rate limiting)
+            'api/export/*', // Export endpoints (protected by Sanctum authentication)
+            'api/visualization/*', // Visualization endpoints (protected by Sanctum authentication)
+            'api/visualizations/*', // Advanced visualization endpoints (protected by Sanctum authentication)
         ]);
 
         // Register cache response middleware

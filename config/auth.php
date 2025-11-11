@@ -110,6 +110,8 @@ return [
     |
     */
 
-    'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
+    // SECURITY FIX: Reduced password confirmation timeout from 3 hours to 15 minutes
+    // This ensures users must re-enter their password more frequently for sensitive operations
+    'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 900), // 15 minutes (was 3 hours)
 
 ];

@@ -155,6 +155,25 @@ class AuditService
         // Get user ID from additional data or current user for resource_id
         $resourceId = $additionalData['user_id'] ?? $additionalData['admin_id'] ?? $this->getUserId();
 
+        // SECURITY FIX: Log failed authentication attempts to security log channel
+        if (!$success && $action === 'login') {
+            $ipAddress = $request ? $request->ip() : request()->ip();
+            $userAgent = $request ? $request->userAgent() : request()->userAgent();
+            $userType = $additionalData['user_type'] ?? 'unknown';
+            $identifier = $additionalData['email'] ?? $additionalData['login_value'] ?? 'unknown';
+            $reason = $additionalData['reason'] ?? 'unknown';
+
+            Log::channel('security')->warning('Failed login attempt', [
+                'action' => $action,
+                'user_type' => $userType,
+                'identifier' => $identifier,
+                'reason' => $reason,
+                'ip_address' => $ipAddress,
+                'user_agent' => $userAgent,
+                'timestamp' => now()->toIso8601String(),
+            ]);
+        }
+
         return $this->log(
             'authentication',
             $description,
