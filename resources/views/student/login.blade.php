@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="{{ asset('css/functions.css') }}">
   <script src="{{ asset('js/Socmedlinks.js') }}"></script>
 
-  <script>
+  <script nonce="{{ $cspNonce ?? '' }}">
     // Auto-initialize social media links with mobile-friendly positioning
     document.addEventListener('DOMContentLoaded', function() {
       // Check if we're on a mobile device
@@ -370,9 +370,107 @@
       transform: scale(1.05);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
+
+    /* Loading overlay shown on submit to transition while navigating */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      color: #fff;
+      text-align: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .loading-overlay.show {
+      display: flex;
+      animation: fadeIn 0.25s ease forwards;
+    }
+
+    .loading-box {
+      background: linear-gradient(135deg, rgba(66,133,244,0.25), rgba(255,215,0,0.25));
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      padding: 28px 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      min-width: 260px;
+      max-width: 90vw;
+    }
+
+    .spinner {
+      width: 56px;
+      height: 56px;
+      border: 4px solid rgba(255,255,255,0.25);
+      border-top-color: #FFD700;
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+      font-size: 18px;
+    }
+
+    .loading-message {
+      font-size: 14px;
+      color: rgba(255,255,255,0.85);
+    }
+
+    .loading-progress {
+      width: 100%;
+      max-width: 320px;
+      height: 10px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 14px auto 0;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+    }
+
+    .loading-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #FFD700, #fff);
+      border-radius: 999px;
+      transition: width 0.1s linear;
+    }
+
+    /* Subtle fade-out on the card to complement navigation */
+    .login-container.fade-out {
+      animation: fadeCardOut 0.25s ease forwards;
+    }
+
+    @keyframes fadeCardOut {
+      to {
+        opacity: 0;
+        transform: translateY(10px) scale(0.99);
+      }
+    }
   </style>
 </head>
 <body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay" aria-hidden="true" aria-live="polite">
+    <div class="loading-box" role="status">
+      <div class="spinner" aria-hidden="true"></div>
+      <div class="loading-title">Signing you in…</div>
+      <div class="loading-message">Please wait while we take you to your dashboard.</div>
+      <div class="loading-progress" aria-hidden="true">
+        <div id="loadingProgressBar" class="loading-progress-bar"></div>
+      </div>
+    </div>
+  </div>
   <div class="login-container">
     <!-- Left Side: Branding -->
     <div class="branding">
@@ -390,13 +488,22 @@
         @csrf
 
         <!-- Session messages -->
+        @if ($errors->any())
+        <div style="padding: 10px; margin-bottom: 15px; background: rgba(244, 67, 54, 0.15); border-left: 3px solid #f44336; border-radius: 4px; color: #ffebee; font-size: 14px;">
+          <ul style="margin: 0 0 0 18px; padding: 0;">
+            @foreach ($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+        @endif
         @if(session('success'))
         <div style="padding: 10px; margin-bottom: 15px; background: rgba(76, 175, 80, 0.2); border-left: 3px solid #4CAF50; border-radius: 4px; color: #4CAF50; font-size: 14px;">
           {{ session('success') }}
         </div>
         @endif
 
-        @if(session('error'))
+        @if(session('error') && !$errors->any())
         <div style="padding: 10px; margin-bottom: 15px; background: rgba(244, 67, 54, 0.2); border-left: 3px solid #f44336; border-radius: 4px; color: #f44336; font-size: 14px;">
           {{ session('error') }}
         </div>
@@ -430,124 +537,148 @@
     </div>
   </div>
 
-  <script>
-    // Custom Modal Function
-    function showCustomModal(message, icon = '✓', title = 'Notification', isSuccess = true) {
-      // Remove any existing modal
-      const existingModal = document.querySelector('.custom-modal-overlay');
-      if (existingModal) {
-        existingModal.remove();
+  <script nonce="{{ $cspNonce ?? '' }}">
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Login page loaded with Facebook-inspired design');
+
+      const loginForm = document.getElementById('loginForm');
+      let isAutoSubmitting = false;
+      if (!loginForm) {
+        return;
       }
 
-      const modal = document.createElement('div');
-      modal.className = 'custom-modal-overlay';
-
-      modal.innerHTML = `
-        <div class="custom-modal-content">
-          <div class="custom-modal-icon">${icon}</div>
-          <div class="custom-modal-title">${title}</div>
-          <div class="custom-modal-message">${message}</div>
-          <button class="custom-modal-button" onclick="this.closest('.custom-modal-overlay').remove()">
-            OK
-          </button>
-        </div>
-      `;
-
-      document.body.appendChild(modal);
-
-      // Auto-close after 5 seconds for success messages
-      if (isSuccess) {
-        setTimeout(() => {
-          if (modal.parentElement) {
-            modal.remove();
+      loginForm.addEventListener('submit', function(e) {
+        if (isAutoSubmitting) {
+          // Allow natural submission on the second pass
+          return;
+        }
+        // Show overlay immediately to ensure visibility even on fast redirects
+        const overlay = document.getElementById('loadingOverlay');
+        const container = document.querySelector('.login-container');
+        // Adjust loading text for admin vs student (heuristic)
+        try {
+          const idInput = loginForm.querySelector('input[name="student_id"]');
+          const messageEl = document.querySelector('.loading-message');
+          if (idInput && messageEl) {
+            const idVal = (idInput.value || '').trim();
+            // Heuristic: admin usernames/emails often contain letters; student IDs are often numeric
+            const looksNumericOnly = /^\d+$/.test(idVal);
+            const looksLikeEmail = /@/.test(idVal);
+            const maybeAdmin = !looksNumericOnly; // treat non-pure-numeric as possibly admin
+            if (maybeAdmin) {
+              messageEl.textContent = 'Redirecting to Admin Dashboard…';
+            } else {
+              messageEl.textContent = 'Redirecting to Survey Landing…';
+            }
           }
-        }, 5000);
-      }
-    }
+        } catch (_) {}
+        if (overlay) {
+          overlay.classList.add('show');
+          overlay.setAttribute('aria-hidden', 'false');
+        }
+        if (container) {
+          container.classList.add('fade-out');
+        }
 
-    // Enhanced form validation and submission
-    document.getElementById("loginForm").addEventListener("submit", function(e) {
-      e.preventDefault(); // Prevent default form submission
+        const formGroups = loginForm.querySelectorAll('.form-group');
 
-      const formGroups = this.querySelectorAll(".form-group");
+        formGroups.forEach(group => {
+          group.classList.remove('error');
+          const errorMsg = group.querySelector('.error-message');
+          if (errorMsg) {
+            errorMsg.style.display = 'none';
+          }
+        });
 
-      // Reset all error states
-      formGroups.forEach(group => {
-        group.classList.remove('error');
-        const errorMsg = group.querySelector('.error-message');
-        if (errorMsg) errorMsg.style.display = "none";
+        const studentId = loginForm.querySelector('input[name="student_id"]');
+        const password = loginForm.querySelector('input[name="password"]');
+
+        let valid = true;
+
+        if (!studentId.value.trim()) {
+          const idGroup = studentId.closest('.form-group');
+          if (idGroup) {
+            idGroup.classList.add('error');
+            const errorDiv = idGroup.querySelector('.error-message');
+            if (errorDiv) {
+              errorDiv.style.display = 'block';
+            }
+          }
+          valid = false;
+        }
+
+        if (!password.value.trim()) {
+          const passwordGroup = password.closest('.form-group');
+          if (passwordGroup) {
+            passwordGroup.classList.add('error');
+            const errorDiv = passwordGroup.querySelector('.error-message');
+            if (errorDiv) {
+              errorDiv.style.display = 'block';
+            }
+          }
+          valid = false;
+        }
+
+        if (!valid) {
+          e.preventDefault();
+          // Hide overlay again if validation fails
+          if (overlay) {
+            overlay.classList.remove('show');
+            overlay.setAttribute('aria-hidden', 'true');
+          }
+          if (container) {
+            container.classList.remove('fade-out');
+          }
+          return;
+        }
+        // Valid: force a short loading period with progress bar, then submit
+        e.preventDefault();
+        const submitBtn = loginForm.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.style.opacity = '0.8';
+          submitBtn.style.cursor = 'not-allowed';
+          submitBtn.textContent = 'Signing in…';
+        }
+        const bar = document.getElementById('loadingProgressBar');
+        let progress = 0;
+        const durationMs = 2000; // 2.0s forced delay
+        const stepMs = 50;
+        const increment = 100 / (durationMs / stepMs);
+        const timer = setInterval(() => {
+          progress = Math.min(100, progress + increment);
+          if (bar) {
+            bar.style.width = progress + '%';
+          }
+          if (progress >= 100) {
+            clearInterval(timer);
+            isAutoSubmitting = true;
+            loginForm.submit();
+          }
+        }, stepMs);
       });
 
-      // Validate fields
-      const studentId = this.querySelector('input[name="student_id"]');
-      const password = this.querySelector('input[name="password"]');
+      // Also show overlay on any navigation away from the page (e.g., server redirect)
+      window.addEventListener('beforeunload', function() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+          overlay.classList.add('show');
+          overlay.setAttribute('aria-hidden', 'false');
+        }
+      });
 
-      let valid = true;
-
-      if (!studentId.value.trim()) {
-        studentId.closest('.form-group').classList.add('error');
-        valid = false;
-      }
-
-      if (!password.value.trim()) {
-        password.closest('.form-group').classList.add('error');
-        valid = false;
-      }
-
-      if (valid) {
-        // Submit form via AJAX
-        const formData = new FormData(this);
-
-        fetch(this.action, {
-          method: 'POST',
-          body: formData,
-          credentials: 'include', // Important: Include cookies in request
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': document.querySelector('[name="_token"]').value
+      // Ensure social media icons are present; re-init if missing (fallback)
+      setTimeout(function() {
+        const socialContainer = document.getElementById('social-media-container');
+        if (!socialContainer && window.SocialMediaManager && typeof window.SocialMediaManager.init === 'function') {
+          try {
+            window.SocialMediaManager.init();
+          } catch (err) {
+            console.warn('Failed to (re)init social media links:', err);
           }
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.message && data.redirect) {
-            // Show success message and redirect
-            showCustomModal(data.message, '✓', 'Success', true);
-            setTimeout(() => {
-              window.location.href = data.redirect;
-            }, 1500);
-          } else if (data.errors) {
-            // Show validation errors
-            Object.keys(data.errors).forEach(key => {
-              const errorMsg = data.errors[key][0];
-              const field = document.querySelector(`[name="${key}"]`);
-              if (field) {
-                const formGroup = field.closest('.form-group');
-                formGroup.classList.add('error');
-                const errorDiv = formGroup.querySelector('.error-message');
-                if (errorDiv) {
-                  errorDiv.textContent = errorMsg;
-                  errorDiv.style.display = 'block';
-                }
-              }
-            });
-          } else if (data.message) {
-            // Show error message
-            showCustomModal(data.message, '⚠️', 'Error', false);
-          }
-        })
-        .catch(error => {
-          console.error('Login error:', error);
-          showCustomModal('An error occurred during login. Please try again.', '❌', 'Error', false);
-        });
-      }
+        }
+      }, 600);
     });
-
-    // Login automatically detects admin or student based on credentials
-
-    // Add entrance animation on load
-    document.addEventListener('DOMContentLoaded', function() {
-       console.log('Login page loaded with Facebook-inspired design');
-     });
   </script>
 </body>
 </html>

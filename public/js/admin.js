@@ -252,5 +252,171 @@ window.addEventListener('load', function() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
+// Admin Layout Initialization
+(function() {
+    'use strict';
+    
+    // Set current year in footer
+    function setCurrentYear() {
+        const currentYearElement = document.getElementById('currentYear');
+        if (currentYearElement) {
+            currentYearElement.textContent = new Date().getFullYear();
+        }
+    }
+    
+    // Mobile menu toggle
+    function initMobileMenu() {
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileNav = document.getElementById('mobileNav');
+        
+        if (mobileMenuToggle && mobileNav) {
+            mobileMenuToggle.addEventListener('click', function() {
+                mobileNav.classList.toggle('show');
+            });
+        }
+        
+        // Close mobile menu when clicking outside
+        if (mobileNav && mobileMenuToggle) {
+            document.addEventListener('click', function(event) {
+                if (!mobileNav.contains(event.target) &&
+                    !mobileMenuToggle.contains(event.target)) {
+                    mobileNav.classList.remove('show');
+                }
+            });
+        }
+    }
+    
+    // Initialize logout handlers
+    function initLogoutHandlers() {
+        const logoutFormDesktop = document.getElementById('logoutFormDesktop');
+        const logoutFormMobile = document.getElementById('logoutFormMobile');
+        
+        if (logoutFormDesktop && typeof handleAdminLogout === 'function') {
+            logoutFormDesktop.addEventListener('submit', handleAdminLogout);
+        }
+        
+        if (logoutFormMobile && typeof handleAdminLogout === 'function') {
+            logoutFormMobile.addEventListener('submit', handleAdminLogout);
+        }
+    }
+    
+    // Initialize on DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setCurrentYear();
+            initMobileMenu();
+            initLogoutHandlers();
+        });
+    } else {
+        setCurrentYear();
+        initMobileMenu();
+        initLogoutHandlers();
+    }
+})();
+
+// Admin Logout Handler
+(function() {
+    'use strict';
+    
+    // Admin logout function with beautiful modal popup
+    window.handleAdminLogout = function(event) {
+        event.preventDefault();
+        
+        const form = event.target.closest('form');
+        if (!form) return;
+        
+        const formData = new FormData(form);
+        const csrfToken = document.querySelector('[name="_token"]')?.value || 
+                         document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(response => {
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            }
+            // If not JSON, still show modal (might be redirect)
+            return {};
+        })
+        .then(data => {
+            // Show beautiful logout modal
+            showAdminLogoutModal();
+        })
+        .catch(error => {
+            console.error('Logout error:', error);
+            // Show modal anyway even if request fails
+            showAdminLogoutModal();
+        });
+    };
+    
+    // Show the beautiful logout modal for admin
+    function showAdminLogoutModal() {
+        // Remove any existing modal
+        const existingModal = document.querySelector('.logout-modal-overlay');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        const modal = document.createElement('div');
+        modal.className = 'logout-modal-overlay show';
+        modal.tabIndex = -1;
+        
+        // Get login and home URLs from data attributes or use defaults
+        const loginUrl = document.body.getAttribute('data-login-url') || '/student/login';
+        const homeUrl = document.body.getAttribute('data-home-url') || '/home';
+        
+        modal.innerHTML = `
+            <div class="logout-modal-card">
+                <div class="logout-modal-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                    </svg>
+                </div>
+
+                <h1>Successfully Logged Out</h1>
+                <p>You have been safely logged out of the ISO 21001 Quality Education System. Thank you for your participation!</p>
+
+                <div class="logout-modal-actions">
+                    <a href="${loginUrl}" class="logout-modal-btn logout-modal-btn-primary">Log In Again</a>
+                    <a href="${homeUrl}" class="logout-modal-btn logout-modal-btn-secondary">Return Home</a>
+                </div>
+
+                <div class="logout-modal-security-notice">
+                    <h3>
+                        <svg class="logout-modal-checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        Security Notice
+                    </h3>
+                    <p>For your security, please close your browser if you're using a shared computer.</p>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Focus on modal
+        setTimeout(() => {
+            modal.focus();
+        }, 100);
+        
+        // Prevent background scrolling
+        document.body.style.overflow = 'hidden';
+    }
+    
+    // Make function globally available
+    window.showAdminLogoutModal = showAdminLogoutModal;
+})();
+
 
 

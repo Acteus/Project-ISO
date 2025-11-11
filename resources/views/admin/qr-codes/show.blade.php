@@ -468,7 +468,7 @@
                     <a href="{{ route('admin.qr-codes.index') }}" class="nav-link active">QR Codes</a>
                     <a href="{{ route('admin.ai.insights') }}" class="nav-link">AI Insights</a>
                     <a href="{{ route('admin.reports') }}" class="nav-link">Reports</a>
-                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;" onsubmit="handleAdminLogout(event)">
+                    <form method="POST" action="{{ route('student.logout') }}" id="logoutFormDesktop" style="display: inline;">
                         @csrf
                         <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
                             <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -499,8 +499,8 @@
                 <div class="actions-grid">
                     <a href="{{ route('admin.qr-codes.edit', $qrCode->id) }}" class="action-btn btn-warning">Edit QR Code</a>
                     <a href="{{ route('admin.qr-codes.download', $qrCode->id) }}" class="action-btn btn-success">Download File</a>
-                    <button onclick="copyToClipboard('{{ $qrCode->getPublicUrl() }}')" class="action-btn btn-info">Copy Link</button>
-                    <button onclick="printQRCode()" class="action-btn btn-primary">Print</button>
+                    <button type="button" id="copy-link-btn" class="action-btn btn-info" data-url="{{ $qrCode->getPublicUrl() }}">Copy Link</button>
+                    <button type="button" id="print-qr-btn" class="action-btn btn-primary">Print</button>
                 </div>
             </div>
 
@@ -511,8 +511,7 @@
                     <h3>QR Code Preview</h3>
                     @if($qrCode->file_path && $qrCode->fileExists())
                         <div class="qr-preview-image">
-                            <img src="{{ $qrCode->file_url }}" alt="QR Code" id="qr-image"
-                                 onerror="this.parentElement.innerHTML='<div style=\'color: #dc3545; padding: 20px; text-align: center;\'><p><strong>Image Load Error</strong></p><p style=\'font-size: 12px;\'>File path: {{ $qrCode->file_path }}</p><p style=\'font-size: 12px; word-break: break-all;\'>URL: {{ $qrCode->file_url }}</p></div>'">
+                            <img src="{{ $qrCode->file_url }}" alt="QR Code" id="qr-image" data-file-path="{{ $qrCode->file_path }}" data-file-url="{{ $qrCode->file_url }}">
                         </div>
                     @elseif($qrCode->file_path)
                         <div class="qr-preview-image" style="background: #fff3cd; color: #856404; padding: 20px; text-align: center;">
@@ -723,9 +722,44 @@
         </div>
     </footer>
 
-    <script>
+    <script src="{{ asset('js/admin.js') }}"></script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         // Set current year
         document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        // Attach event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Copy link button
+            const copyLinkBtn = document.getElementById('copy-link-btn');
+            if (copyLinkBtn) {
+                copyLinkBtn.addEventListener('click', function() {
+                    const url = this.getAttribute('data-url');
+                    copyToClipboard(url);
+                });
+            }
+
+            // Print button
+            const printBtn = document.getElementById('print-qr-btn');
+            if (printBtn) {
+                printBtn.addEventListener('click', printQRCode);
+            }
+
+            // QR image error handler
+            const qrImage = document.getElementById('qr-image');
+            if (qrImage) {
+                qrImage.addEventListener('error', function() {
+                    const filePath = this.getAttribute('data-file-path');
+                    const fileUrl = this.getAttribute('data-file-url');
+                    this.parentElement.innerHTML = '<div style="color: #dc3545; padding: 20px; text-align: center;"><p><strong>Image Load Error</strong></p><p style="font-size: 12px;">File path: ' + filePath + '</p><p style="font-size: 12px; word-break: break-all;">URL: ' + fileUrl + '</p></div>';
+                });
+            }
+
+            // Logout form handler
+            const logoutForm = document.getElementById('logoutFormDesktop');
+            if (logoutForm && typeof handleAdminLogout === 'function') {
+                logoutForm.addEventListener('submit', handleAdminLogout);
+            }
+        });
 
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(function() {
@@ -745,6 +779,14 @@
 
         function printQRCode() {
             const printWindow = window.open('', '_blank');
+            const qrImageUrl = '{{ $qrCode->file_url }}';
+            const qrName = '{{ addslashes($qrCode->name) }}';
+            const qrTrack = '{{ $qrCode->track }}';
+            const qrGrade = '{{ $qrCode->grade_level }}';
+            const qrSection = '{{ $qrCode->section }}';
+            const qrYear = '{{ $qrCode->academic_year }}';
+            const qrUrl = '{{ $qrCode->target_url }}';
+            
             printWindow.document.write(`
                 <html>
                 <head>
@@ -791,22 +833,40 @@
                 <body>
                     <div class="qr-container">
                         <h1>ISO Quality Education Survey</h1>
-                        <img src="{{ $qrCode->file_url }}" alt="QR Code" class="qr-image" onload="window.print(); window.close();">
+                        <img src="${qrImageUrl}" alt="QR Code" class="qr-image" id="print-qr-image">
                         <div class="qr-info">
-                            <div class="qr-name">{{ $qrCode->name }}</div>
+                            <div class="qr-name">${qrName}</div>
                             <div class="qr-details">
-                                {{ $qrCode->track }} Track |
-                                @if($qrCode->grade_level)Grade {{ $qrCode->grade_level }} | @endif
-                                @if($qrCode->section)Section {{ $qrCode->section }} | @endif
-                                {{ $qrCode->academic_year }}
+                                ${qrTrack} Track |
+                                ${qrGrade ? 'Grade ' + qrGrade + ' | ' : ''}
+                                ${qrSection ? 'Section ' + qrSection + ' | ' : ''}
+                                ${qrYear}
                             </div>
-                            <div class="qr-url">{{ $qrCode->target_url }}</div>
+                            <div class="qr-url">${qrUrl}</div>
                         </div>
                     </div>
                 </body>
                 </html>
             `);
             printWindow.document.close();
+            
+            // Wait for image to load, then print
+            const printImg = printWindow.document.getElementById('print-qr-image');
+            if (printImg) {
+                printImg.addEventListener('load', function() {
+                    printWindow.print();
+                    printWindow.close();
+                });
+                printImg.addEventListener('error', function() {
+                    printWindow.print();
+                    printWindow.close();
+                });
+            } else {
+                setTimeout(function() {
+                    printWindow.print();
+                    printWindow.close();
+                }, 500);
+            }
         }
 
         console.log('QR Code details page loaded');

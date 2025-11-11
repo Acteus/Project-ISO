@@ -81,14 +81,15 @@
       box-sizing: border-box;
     }
 
-    /* Override select color for better visibility */
+    /* Select styling for cross-browser legibility */
     select {
-      color: #fff;
+      color: #222;
+      background: rgba(255, 255, 255, 0.95);
     }
 
     select option {
-      background: rgba(0, 0, 0, 0.9);
-      color: #fff;
+      background: #fff;
+      color: #222;
     }
 
     /* Year check improvements */
@@ -289,31 +290,56 @@
     <p>Please fill in your information to access the ISO 21001 Survey System.</p>
 
     <div class="form-content">
-      <form id="studentForm" method="post" action="{{ route('student.register.post') }}">
+      <form
+        id="studentForm"
+        method="post"
+        action="{{ route('student.register.post') }}"
+        data-old-year="{{ old('year') }}"
+        data-old-section="{{ old('section') }}"
+      >
         @csrf
+        @if ($errors->any())
+        <div style="padding: 10px; margin-bottom: 15px; background: rgba(244, 67, 54, 0.15); border-left: 3px solid #f44336; border-radius: 4px; color: #ffebee; font-size: 14px;">
+          <ul style="margin: 0 0 0 18px; padding: 0;">
+            @foreach ($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+        @endif
+        @if(session('success'))
+        <div style="padding: 10px; margin-bottom: 15px; background: rgba(76, 175, 80, 0.2); border-left: 3px solid #4CAF50; border-radius: 4px; color: #4CAF50; font-size: 14px;">
+          {{ session('success') }}
+        </div>
+        @endif
+        @if(session('error') && !$errors->any())
+        <div style="padding: 10px; margin-bottom: 15px; background: rgba(244, 67, 54, 0.2); border-left: 3px solid #f44336; border-radius: 4px; color: #f44336; font-size: 14px;">
+          {{ session('error') }}
+        </div>
+        @endif
         <div class="form-group">
           <label>First Name</label>
-          <input type="text" name="firstname" required placeholder="Enter your first name">
+          <input type="text" name="firstname" required placeholder="Enter your first name" value="{{ old('firstname') }}">
           <div class="error-message">This field is required</div>
         </div>
 
         <div class="form-group">
           <label>Last Name</label>
-          <input type="text" name="lastname" required placeholder="Enter your last name">
+          <input type="text" name="lastname" required placeholder="Enter your last name" value="{{ old('lastname') }}">
           <div class="error-message">This field is required</div>
         </div>
 
         <div class="form-group">
           <label>Email Address</label>
-          <input type="email" name="email" required placeholder="your.email@example.com">
+          <input type="email" name="email" required placeholder="your.email@example.com" value="{{ old('email') }}">
           <div class="error-message">Please enter a valid email address</div>
         </div>
 
         <div class="form-group">
           <label>Year Level</label>
           <div class="year-check">
-            <label><input type="radio" name="year" value="11"> Grade 11</label>
-            <label><input type="radio" name="year" value="12"> Grade 12</label>
+            <label><input type="radio" name="year" value="11" {{ old('year') == '11' ? 'checked' : '' }}> Grade 11</label>
+            <label><input type="radio" name="year" value="12" {{ old('year') == '12' ? 'checked' : '' }}> Grade 12</label>
           </div>
           <div class="error-message">Please select your year level</div>
         </div>
@@ -321,14 +347,29 @@
         <div class="form-group">
           <label>Section</label>
           <select name="section" id="section" required>
-            <option value="">-- Select Year First --</option>
+            @php
+              $oldYear = old('year');
+              $oldSection = old('section');
+              $sections11 = ['C11a','C11b','C11c'];
+              $sections12 = ['C12a','C12b','C12c'];
+            @endphp
+            <option value="">{{ $oldYear ? '-- Select Section --' : '-- Select Year First --' }}</option>
+            @if($oldYear === '11')
+              @foreach($sections11 as $sec)
+                <option value="{{ $sec }}" {{ $oldSection === $sec ? 'selected' : '' }}>{{ $sec }}</option>
+              @endforeach
+            @elseif($oldYear === '12')
+              @foreach($sections12 as $sec)
+                <option value="{{ $sec }}" {{ $oldSection === $sec ? 'selected' : '' }}>{{ $sec }}</option>
+              @endforeach
+            @endif
           </select>
           <div class="error-message">Please select your section</div>
         </div>
 
         <div class="form-group">
           <label>Student ID</label>
-          <input type="text" name="studentid" required placeholder="Enter your student ID">
+          <input type="text" name="studentid" required placeholder="Enter your student ID" value="{{ old('studentid') }}">
           <div class="error-message">This field is required</div>
         </div>
 
@@ -361,342 +402,6 @@
     </div>
   </div>
 
-  <script>
-      console.log('Registration form loaded');
-
-      function updateSections() {
-          console.log('updateSections called');
-          let yearRadio = document.querySelector('input[name="year"]:checked');
-          if (!yearRadio) {
-              console.log('No year selected');
-              return;
-          }
-
-          let year = yearRadio.value;
-          console.log('Selected year:', year);
-
-          let sectionDropdown = document.getElementById("section");
-          if (!sectionDropdown) {
-              console.error('Section dropdown not found');
-              return;
-          }
-
-          // Clear old options but keep the first one
-          sectionDropdown.innerHTML = '<option value="">-- Select Section --</option>';
-
-          if (year === "11") {
-              console.log('Adding Grade 11 sections');
-              const sections = ["C11a", "C11b", "C11c"];
-              sections.forEach(sec => {
-                  let option = document.createElement("option");
-                  option.value = sec;
-                  option.textContent = sec;
-                  sectionDropdown.appendChild(option);
-                  console.log('Added section:', sec);
-              });
-          } else if (year === "12") {
-              console.log('Adding Grade 12 sections');
-              const sections = ["C12a", "C12b", "C12c"];
-              sections.forEach(sec => {
-                  let option = document.createElement("option");
-                  option.value = sec;
-                  option.textContent = sec;
-                  sectionDropdown.appendChild(option);
-                  console.log('Added section:', sec);
-              });
-          }
-
-          console.log('Final sections count:', sectionDropdown.children.length);
-          console.log('Section options:', Array.from(sectionDropdown.options).map(opt => opt.value));
-      }
-
-      // Add event listeners to radio buttons
-      document.addEventListener('DOMContentLoaded', function() {
-          const yearRadios = document.querySelectorAll('input[name="year"]');
-          console.log('Found', yearRadios.length, 'year radio buttons');
-
-          yearRadios.forEach(radio => {
-              radio.addEventListener('change', function() {
-                  console.log('Year selection changed:', this.value);
-                  updateSections();
-              });
-              console.log('Event listener attached to radio button:', radio.value);
-          });
-
-          // Real-time validation removed - all validation happens on submit only
-          // This allows users to freely enter their credentials without interference
-
-          // Also add a manual test function for debugging
-          window.testUpdateSections = function() {
-              console.log('Manual test of updateSections');
-              // Set grade 11
-              document.querySelector('input[name="year"][value="11"]').checked = true;
-              updateSections();
-          };
-      });
-
-      // Custom Modal Function
-      function showCustomModal(message, icon = '✓', title = 'Notification', isError = false) {
-          // Remove any existing modal
-          const existingModal = document.querySelector('.custom-modal-overlay');
-          if (existingModal) {
-              existingModal.remove();
-          }
-
-          const modal = document.createElement('div');
-          modal.className = 'custom-modal-overlay';
-          
-          // Use different colors for errors
-          const bgGradient = isError 
-              ? 'linear-gradient(135deg, #dc3545, #ff6b6b)' 
-              : 'linear-gradient(135deg, #4285f4, #ffd700)';
-
-          modal.innerHTML = `
-              <div class="custom-modal-content" style="background: ${bgGradient};">
-                  <div class="custom-modal-icon">${icon}</div>
-                  <div class="custom-modal-title">${title}</div>
-                  <div class="custom-modal-message">${message}</div>
-                  <button class="custom-modal-button" onclick="this.closest('.custom-modal-overlay').remove()">
-                      OK
-                  </button>
-              </div>
-          `;
-
-          document.body.appendChild(modal);
-      }
-
-      // Enhanced form validation with visual feedback
-      document.addEventListener('DOMContentLoaded', function() {
-          const studentForm = document.getElementById("studentForm");
-          if (studentForm) {
-              studentForm.addEventListener("submit", function(e) {
-                  e.preventDefault(); // Prevent default form submission
-
-                  console.log('Form submission started');
-                  let valid = true;
-                  const formGroups = this.querySelectorAll(".form-group");
-
-                  // Reset all error states
-                  formGroups.forEach(group => {
-                      group.classList.remove('error');
-                      const errorMsg = group.querySelector('.error-message');
-                      if (errorMsg) errorMsg.style.display = "none";
-                  });
-
-                  // Log all form data for debugging
-                  const formData = new FormData(this);
-                  console.log('Form data being validated:');
-                  for (let [key, value] of formData.entries()) {
-                      console.log(`  ${key}: ${value}`);
-                  }
-
-                  // Validate each field
-                  const fields = this.querySelectorAll("input[required], select[required]");
-                  const password = this.querySelector('input[name="password"]');
-                  const passwordConfirmation = this.querySelector('input[name="password_confirmation"]');
-
-                  fields.forEach((field, i) => {
-                      const formGroup = field.closest('.form-group');
-
-                      if (field.type === "radio" && !document.querySelector('input[name="year"]:checked')) {
-                          const yearGroup = document.querySelector('.year-check').closest('.form-group');
-                          yearGroup.classList.add('error');
-                          valid = false;
-                      } else if (field.type === "checkbox" && !field.checked) {
-                          formGroup.classList.add('error');
-                          valid = false;
-                      } else if (field.name === "acknowledge" && !field.checked) {
-                          formGroup.classList.add('error');
-                          valid = false;
-                          console.log('Acknowledge validation failed');
-                      } else if (field.type !== "radio" && field.type !== "checkbox" && !field.value.trim()) {
-                          formGroup.classList.add('error');
-                          valid = false;
-                          console.log('Field validation failed for:', field.name);
-                      } else {
-                          console.log('Field passed validation:', field.name, field.value);
-                      }
-                  });
-
-                  // Validate password length
-                  if (password && password.value.length < 8) {
-                      const formGroup = password.closest('.form-group');
-                      formGroup.classList.add('error');
-                      valid = false;
-                      console.log('Password too short');
-                  }
-
-                  // Validate password confirmation matches
-                  if (password && passwordConfirmation && password.value !== passwordConfirmation.value) {
-                      const formGroup = passwordConfirmation.closest('.form-group');
-                      formGroup.classList.add('error');
-                      valid = false;
-                      console.log('Passwords do not match');
-                  }
-
-                  if (valid) {
-                      console.log('Form validation passed, submitting...');
-
-                      try {
-                          // Submit form via AJAX
-                          const formData = new FormData(this);
-
-                          fetch(this.action, {
-                              method: 'POST',
-                              body: formData,
-                              credentials: 'include', // Important: Include cookies in request
-                              headers: {
-                                  'X-Requested-With': 'XMLHttpRequest',
-                                  'X-CSRF-TOKEN': document.querySelector('[name="_token"]').value
-                              }
-                          })
-                          .then(response => {
-                              console.log('Response status:', response.status);
-                              console.log('Response ok:', response.ok);
-
-                              // Clone response for error handling
-                              const responseClone = response.clone();
-
-                              return response.json().catch(err => {
-                                  console.error('JSON parsing error:', err);
-                                  return responseClone.text().then(text => {
-                                      console.error('Response text:', text);
-                                      throw new Error('Invalid JSON response from server');
-                                  });
-                              });
-                          })
-                          .then(data => {
-                              console.log('Response data:', data);
-
-                              if (data.message && data.redirect) {
-                                  // Show verification message with custom styling
-                                  const modal = document.createElement('div');
-                                  modal.style.cssText = `
-                                      position: fixed;
-                                      top: 0;
-                                      left: 0;
-                                      width: 100%;
-                                      height: 100%;
-                                      background: rgba(0, 0, 0, 0.8);
-                                      display: flex;
-                                      align-items: center;
-                                      justify-content: center;
-                                      z-index: 10000;
-                                  `;
-
-                                  const modalContent = document.createElement('div');
-                                  modalContent.style.cssText = `
-                                      background: linear-gradient(135deg, #4285f4, #ffd700);
-                                      padding: 40px;
-                                      border-radius: 15px;
-                                      max-width: 500px;
-                                      text-align: center;
-                                      color: white;
-                                      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-                                  `;
-
-                                  modalContent.innerHTML = `
-                                      <div style="font-size: 64px; margin-bottom: 20px;">✉️</div>
-                                      <h2 style="margin-bottom: 15px; font-family: 'Montserrat', sans-serif;">Registration Successful!</h2>
-                                      <p style="margin-bottom: 20px; line-height: 1.6; font-size: 15px;">
-                                          ${data.message}
-                                      </p>
-                                      <p style="margin-bottom: 25px; font-size: 14px; opacity: 0.9;">
-                                          Check your email: <strong>${data.user.email}</strong>
-                                      </p>
-                                      <button onclick="window.location.href='${data.redirect}'" style="
-                                          background: white;
-                                          color: #4285f4;
-                                          border: none;
-                                          padding: 15px 40px;
-                                          border-radius: 8px;
-                                          font-size: 16px;
-                                          font-weight: 600;
-                                          cursor: pointer;
-                                          transition: all 0.3s ease;
-                                      " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                          Continue
-                                      </button>
-                                  `;
-
-                                  modal.appendChild(modalContent);
-                                  document.body.appendChild(modal);
-
-                                  // Redirect after 10 seconds if user doesn't click
-                                  setTimeout(() => {
-                                      window.location.href = data.redirect;
-                                  }, 10000);
-                              } else if (data.errors) {
-                                  // Show validation errors
-                                  console.log('Validation errors:', data.errors);
-                                  
-                                  // Collect all error messages
-                                  let errorMessages = [];
-                                  
-                                  Object.keys(data.errors).forEach(key => {
-                                      const errorMsg = data.errors[key][0];
-                                      console.log(`Error for ${key}:`, errorMsg);
-                                      errorMessages.push(errorMsg);
-                                      
-                                      const field = document.querySelector(`[name="${key}"]`);
-                                      if (field) {
-                                          const formGroup = field.closest('.form-group');
-                                          formGroup.classList.add('error');
-                                          const errorDiv = formGroup.querySelector('.error-message');
-                                          if (errorDiv) {
-                                              errorDiv.textContent = errorMsg;
-                                              errorDiv.style.display = 'block';
-                                          }
-                                      }
-                                  });
-                                  
-                                  // Show modal with all error messages
-                                  const errorList = errorMessages.map(msg => `• ${msg}`).join('<br>');
-                                  showCustomModal(
-                                      `<div style="text-align: left; margin: 20px 0;">${errorList}</div>`, 
-                                      '⚠️', 
-                                      'Please Fix These Errors', 
-                                      true
-                                  );
-                                  
-                                  // Scroll to first error
-                                  const firstError = document.querySelector('.form-group.error');
-                                  if (firstError) {
-                                      firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                  }
-                              } else {
-                                  console.error('Unexpected response format:', data);
-                                  showCustomModal('Unexpected response from server. Please check console for details.', '❌', 'Error', true);
-                              }
-                          })
-                          .catch(error => {
-                              console.error('Network error during form submission:', error);
-                              showCustomModal('Network error: ' + error.message, '❌', 'Network Error', true);
-                          });
-                      } catch (error) {
-                          console.error('JavaScript error during form submission:', error);
-                          showCustomModal('JavaScript error: ' + error.message, '❌', 'Error', true);
-                      }
-                  } else {
-                      console.log('Form validation failed');
-                  }
-              });
-          }
-      });
-
-      // Page entrance animation
-      document.addEventListener('DOMContentLoaded', function() {
-          const container = document.querySelector('.container');
-
-          // Add entrance animation (optional)
-          setTimeout(() => {
-              if (container) {
-                  container.classList.add('page-entrance');
-              }
-          }, 100);
-
-          console.log('Registration page loaded with entrance animation');
-      });
-  </script>
+  <script src="{{ asset('js/student-register.js') }}" defer></script>
 </body>
 </html>

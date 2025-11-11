@@ -197,6 +197,33 @@
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
+    .progress-alerts {
+        margin-bottom: 40px;
+    }
+
+    .recent-responses-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+    .recent-responses-header h3 {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 24px;
+        font-weight: 700;
+        border-bottom: 3px solid transparent;
+        border-image: linear-gradient(90deg, #4285F4, #FF8C00) 1;
+        padding-bottom: 15px;
+    }
+
+    .btn-view-all {
+        padding: 12px 24px;
+        font-size: 14px;
+        text-decoration: none;
+    }
+
     .recent-responses h3 {
         margin-top: 0;
         color: #2c3e50;
@@ -245,6 +272,94 @@
         color: #6c757d;
         font-size: 14px;
         font-weight: 500;
+    }
+
+    .response-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+    }
+
+    .status-completed {
+        background: linear-gradient(135deg, #28a745, #20c997);
+    }
+
+    .btn-view-details {
+        padding: 10px 18px;
+        font-size: 14px;
+        text-decoration: none;
+    }
+
+    .alert-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .alert-icon {
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+
+    .alert-text {
+        flex: 1;
+    }
+
+    .alert-title {
+        color: #2c3e50;
+        font-size: 16px;
+        font-weight: 700;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .alert-message {
+        margin-top: 8px;
+        color: #5a6c7d;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    .dashboard-update-notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #4285F4, #2c6cd6);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+        z-index: 10001;
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: all 0.3s ease;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .dashboard-update-notification.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .metric-value-animated {
+        transition: all 0.3s ease;
+    }
+
+    .metric-value-highlight {
+        background-color: rgba(66, 133, 244, 0.2) !important;
+    }
+
+    body.modal-open {
+        overflow: hidden;
     }
 
     .track-distribution {
@@ -490,7 +605,7 @@
     </div>
 
     <!-- Progress Alerts Section -->
-    <div class="progress-alerts" id="progress-alerts" style="margin-bottom: 40px;">
+    <div class="progress-alerts" id="progress-alerts">
         <!-- Dynamic alerts loaded via JavaScript -->
     </div>
 
@@ -543,7 +658,7 @@
             </div>
             <h3>View Detailed Analytics</h3>
             <p>Access comprehensive survey analytics, trends, and insights from the ISO 21001 quality education system.</p>
-            <a href="{{ route('api.survey.analytics') }}" class="btn btn-primary" target="_blank">View Analytics</a>
+            <a href="{{ route('admin.analytics') }}" class="btn btn-primary">View Analytics</a>
         </div>
 
         <div class="action-card qr-codes">
@@ -576,7 +691,7 @@
             </div>
             <h3>Export Data</h3>
             <p>Export survey responses and analytics reports in Excel, CSV, or PDF format for further analysis.</p>
-            <button onclick="showExportModal()" class="btn btn-success">Export Data</button>
+            <button id="exportDataBtn" class="btn btn-success">Export Data</button>
         </div>
 
         <div class="action-card audit">
@@ -615,9 +730,9 @@
 
     <!-- Recent Responses -->
     <div class="recent-responses">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-            <h3 style="margin: 0;">Recent Survey Responses</h3>
-            <a href="{{ route('admin.responses') }}" class="btn btn-success" style="padding: 12px 24px; font-size: 14px; text-decoration: none;">View All Responses →</a>
+        <div class="recent-responses-header">
+            <h3>Recent Survey Responses</h3>
+            <a href="{{ route('admin.responses') }}" class="btn btn-success btn-view-all">View All Responses →</a>
         </div>
         @if($recentResponses->count() > 0)
             @foreach($recentResponses as $response)
@@ -626,9 +741,9 @@
                         <div class="response-track">{{ $response->track }} Track - Response #{{ $response->id }}</div>
                         <div class="response-date">{{ $response->created_at->format('M j, Y g:i A') }}</div>
                     </div>
-                    <div style="display: flex; gap: 12px; align-items: center;">
-                        <span style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;">Completed</span>
-                        <a href="{{ route('admin.response.view', $response->id) }}" class="btn btn-primary" style="padding: 10px 18px; font-size: 14px; text-decoration: none;">View Details</a>
+                    <div class="response-actions">
+                        <span class="status-badge status-completed">Completed</span>
+                        <a href="{{ route('admin.response.view', $response->id) }}" class="btn btn-primary btn-view-details">View Details</a>
                     </div>
                 </div>
             @endforeach
@@ -662,7 +777,7 @@
 <div class="export-modal-overlay" id="exportModal">
     <div class="export-modal">
         <div class="export-modal-inner">
-            <button class="modal-close" onclick="closeExportModal()">&times;</button>
+            <button class="modal-close" id="closeExportModalBtn">&times;</button>
 
             <div class="export-modal-header">
                 <h2>Choose Export Format</h2>
@@ -670,17 +785,17 @@
             </div>
 
             <div class="export-options">
-                <div class="export-option" data-format="excel" onclick="selectFormat('excel')">
+                <div class="export-option" data-format="excel" data-export-option>
                     <span class="export-option-icon">📗</span>
                     <div class="export-option-title">Excel</div>
                     <div class="export-option-desc">Best for data analysis and spreadsheets</div>
                 </div>
-                <div class="export-option" data-format="csv" onclick="selectFormat('csv')">
+                <div class="export-option" data-format="csv" data-export-option>
                     <span class="export-option-icon">📄</span>
                     <div class="export-option-title">CSV</div>
                     <div class="export-option-desc">Universal format for all systems</div>
                 </div>
-                <div class="export-option" data-format="pdf" onclick="selectFormat('pdf')">
+                <div class="export-option" data-format="pdf" data-export-option>
                     <span class="export-option-icon">📕</span>
                     <div class="export-option-title">PDF</div>
                     <div class="export-option-desc">Professional report format</div>
@@ -688,8 +803,8 @@
             </div>
 
             <div class="export-modal-actions">
-                <button class="modal-btn modal-btn-secondary" onclick="closeExportModal()">Cancel</button>
-                <button class="modal-btn modal-btn-primary" id="exportButton" onclick="performExport()" disabled>
+                <button class="modal-btn modal-btn-secondary" id="cancelExportBtn">Cancel</button>
+                <button class="modal-btn modal-btn-primary" id="exportButton" disabled>
                     Export Data
                 </button>
             </div>
@@ -699,18 +814,18 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
     // Export Modal Functions
     let selectedFormat = null;
 
     function showExportModal() {
         document.getElementById('exportModal').classList.add('active');
-        document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open');
     }
 
     function closeExportModal() {
         document.getElementById('exportModal').classList.remove('active');
-        document.body.style.overflow = '';
+        document.body.classList.remove('modal-open');
         selectedFormat = null;
         document.querySelectorAll('.export-option').forEach(option => {
             option.classList.remove('selected');
@@ -765,18 +880,53 @@
         }, 1000);
     }
 
-    // Close modal when clicking outside
-    document.getElementById('exportModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeExportModal();
+    // Initialize export modal event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        // Export button
+        const exportDataBtn = document.getElementById('exportDataBtn');
+        if (exportDataBtn) {
+            exportDataBtn.addEventListener('click', showExportModal);
         }
-    });
 
-    // Close modal with Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && document.getElementById('exportModal').classList.contains('active')) {
-            closeExportModal();
+        // Close modal buttons
+        const closeExportModalBtn = document.getElementById('closeExportModalBtn');
+        const cancelExportBtn = document.getElementById('cancelExportBtn');
+        if (closeExportModalBtn) {
+            closeExportModalBtn.addEventListener('click', closeExportModal);
         }
+        if (cancelExportBtn) {
+            cancelExportBtn.addEventListener('click', closeExportModal);
+        }
+
+        // Export option selection
+        document.querySelectorAll('[data-export-option]').forEach(option => {
+            option.addEventListener('click', function() {
+                selectFormat(this.getAttribute('data-format'));
+            });
+        });
+
+        // Export button
+        const exportButton = document.getElementById('exportButton');
+        if (exportButton) {
+            exportButton.addEventListener('click', performExport);
+        }
+
+        // Close modal when clicking outside
+        const exportModal = document.getElementById('exportModal');
+        if (exportModal) {
+            exportModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeExportModal();
+                }
+            });
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && exportModal && exportModal.classList.contains('active')) {
+                closeExportModal();
+            }
+        });
     });
 
     // Enhanced progress alerts loading
@@ -816,11 +966,11 @@
 
             alertsHtml += `
                 <div class="alert ${alertClass}">
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        ${alert.icon ? `<div style="font-size: 24px;">${alert.icon}</div>` : ''}
-                        <div style="flex: 1;">
-                            <strong style="color: #2c3e50; font-size: 16px; font-weight: 700;">${alert.title}</strong>
-                            <div style="margin-top: 8px; color: #5a6c7d; font-size: 15px; line-height: 1.5;">${alert.message}</div>
+                    <div class="alert-content">
+                        ${alert.icon ? `<div class="alert-icon">${alert.icon}</div>` : ''}
+                        <div class="alert-text">
+                            <strong class="alert-title">${alert.title}</strong>
+                            <div class="alert-message">${alert.message}</div>
                         </div>
                         ${alert.action ? `<a href="${alert.action.url}" class="btn btn-sm btn-primary">${alert.action.text}</a>` : ''}
                     </div>
@@ -943,13 +1093,12 @@
         const oldValue = element.textContent.trim();
         if (oldValue === String(newValue)) return; // No change
 
-        // Add highlight animation
-        element.style.transition = 'all 0.3s ease';
-        element.style.backgroundColor = 'rgba(66, 133, 244, 0.2)';
+        // Add highlight animation using classes instead of inline styles
+        element.classList.add('metric-value-animated', 'metric-value-highlight');
         element.textContent = newValue;
 
         setTimeout(() => {
-            element.style.backgroundColor = '';
+            element.classList.remove('metric-value-highlight');
         }, 500);
     }
 
@@ -986,9 +1135,9 @@
                     <div class="response-track">${response.track} Track - Response #${response.id}</div>
                     <div class="response-date">${response.created_at}</div>
                 </div>
-                <div style="display: flex; gap: 12px; align-items: center;">
-                    <span style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;">Completed</span>
-                    <a href="/admin/responses/${response.id}" class="btn btn-primary" style="padding: 10px 18px; font-size: 14px; text-decoration: none;">View Details</a>
+                <div class="response-actions">
+                    <span class="status-badge status-completed">Completed</span>
+                    <a href="/admin/responses/${response.id}" class="btn btn-primary btn-view-details">View Details</a>
                 </div>
             `;
             container.appendChild(responseItem);
@@ -1038,33 +1187,16 @@
         if (!notification) {
             notification = document.createElement('div');
             notification.id = 'dashboard-update-notification';
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, #4285F4, #2c6cd6);
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
-                z-index: 10000;
-                font-size: 14px;
-                font-weight: 500;
-                opacity: 0;
-                transform: translateY(-20px);
-                transition: all 0.3s ease;
-            `;
+            notification.className = 'dashboard-update-notification';
             document.body.appendChild(notification);
         }
 
         notification.textContent = message;
-        notification.style.opacity = '1';
-        notification.style.transform = 'translateY(0)';
+        notification.classList.add('show');
 
         // Auto-hide after 3 seconds
         setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transform = 'translateY(-20px)';
+            notification.classList.remove('show');
         }, 3000);
     }
 

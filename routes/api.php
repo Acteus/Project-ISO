@@ -68,33 +68,15 @@ Route::middleware('auth:sanctum')->group(function () {
         ->middleware(['cache.api:300', 'throttle:30,1']);
 
     // ==========================================
-    // OLD VISUALIZATION ROUTES (DEPRECATED)
+    // VISUALIZATION ROUTES REMOVED
     // ==========================================
-    // Keeping these for backward compatibility but they will be removed
-    // Please migrate to the new /api/analytics/* endpoints above
-    
-    // Basic Visualization Routes
-    Route::get('/visualizations/bar-chart', [VisualizationController::class, 'getBarChartData']);
-    Route::get('/visualizations/pie-chart', [VisualizationController::class, 'getPieChartData']);
-    Route::get('/visualizations/radar-chart', [VisualizationController::class, 'getRadarChartData']);
-    Route::get('/visualizations/word-cloud', [VisualizationController::class, 'getWordCloudData']);
-    Route::get('/visualizations/program-comparison', [VisualizationController::class, 'getProgramComparisonData']);
-    Route::get('/visualizations/year-trend', [VisualizationController::class, 'getYearLevelTrendData']);
-    Route::get('/visualizations/dashboard', [VisualizationController::class, 'getDashboardData']);
-
-    // Advanced Analytics Routes (DEPRECATED)
-    Route::get('/visualizations/time-series', [VisualizationController::class, 'getTimeSeriesData']);
-    Route::get('/visualizations/heat-map', [VisualizationController::class, 'getHeatMapData']);
-    Route::get('/visualizations/compliance-risk', [VisualizationController::class, 'getComplianceRiskData']);
-    Route::get('/visualizations/comparative-analysis', [VisualizationController::class, 'getComparativeAnalysis']);
-    Route::get('/visualizations/response-rate', [VisualizationController::class, 'getResponseRateAnalytics']);
-
-    // Weekly Progress Tracking Routes (DEPRECATED - unclear data source)
-    Route::get('/visualizations/weekly-progress', [VisualizationController::class, 'getWeeklyProgressData']);
-    Route::get('/visualizations/goal-progress', [VisualizationController::class, 'getGoalProgressData']);
-    Route::get('/visualizations/weekly-comparison', [VisualizationController::class, 'getWeeklyComparisonData']);
-    Route::get('/visualizations/monthly-report', [VisualizationController::class, 'getMonthlyReportData']);
-    Route::get('/visualizations/progress-alerts', [VisualizationController::class, 'getProgressAlerts']);
+    // These routes have been moved to routes/web.php with session-based authentication
+    // for use with the admin dashboard. They use 'auth' and 'admin' middleware instead
+    // of 'auth:sanctum' to work with web sessions.
+    // 
+    // For API access with tokens, use the new /api/analytics/* endpoints above.
+    // For web dashboard access, the routes are available in routes/web.php under
+    // /api prefix with session authentication (auth + admin middleware).
 
     // Export Routes
     Route::get('/export/excel', [ExportController::class, 'exportExcel']);

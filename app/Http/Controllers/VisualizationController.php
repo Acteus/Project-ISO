@@ -217,10 +217,22 @@ class VisualizationController extends Controller
      */
     public function getComplianceRiskData(Request $request)
     {
-        $dateFrom = $request->query('date_from');
-        $dateTo = $request->query('date_to');
+        $params = $this->validateAndSanitizeCommonParams($request);
+        if ($params === null) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => 'Invalid query parameters'
+            ], 422);
+        }
 
-        $data = $this->visualizationService->generateComplianceRiskData($dateFrom, $dateTo);
+        $data = $this->visualizationService->generateComplianceRiskData(
+            $params['date_from'],
+            $params['date_to'],
+            $params['track'],
+            $params['grade_level'],
+            $params['academic_year'],
+            $params['semester']
+        );
 
         return response()->json([
             'message' => 'Compliance risk data generated successfully',

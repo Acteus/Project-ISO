@@ -20,14 +20,34 @@ class QrCodeController extends Controller
     }
 
     /**
-     * Check if admin is authenticated
+     * Get admin from request (set by EnsureAdmin middleware) or session
+     * Converts to object format for view compatibility
      */
-    private function checkAdminAuth()
+    private function getAdmin(Request $request)
     {
-        $admin = session('admin');
+        // Admin is validated and set by EnsureAdmin middleware via $request->admin
+        // Fallback to session for backward compatibility
+        $admin = $request->get('admin') ?? session('admin');
+
         if (!$admin) {
-            return redirect()->route('student.login');
+            return null;
         }
+
+        // Handle both array and object formats
+        if (is_array($admin)) {
+            return (object)$admin;
+        }
+
+        // If it's already an Admin model, convert to array then object for consistency
+        if ($admin instanceof \App\Models\Admin) {
+            return (object)[
+                'id' => $admin->id,
+                'name' => $admin->name,
+                'username' => $admin->username ?? null,
+                'email' => $admin->email ?? null,
+            ];
+        }
+
         return $admin;
     }
 
@@ -36,8 +56,8 @@ class QrCodeController extends Controller
      */
     public function index(Request $request)
     {
-        $admin = $this->checkAdminAuth();
-        if (!$admin instanceof \App\Models\Admin) return $admin;
+        // Admin is validated by EnsureAdmin middleware
+        $admin = $this->getAdmin($request);
 
         // Get filter parameters
         $track = $request->get('track');
@@ -102,10 +122,10 @@ class QrCodeController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        $admin = $this->checkAdminAuth();
-        if (!$admin instanceof \App\Models\Admin) return $admin;
+        // Admin is validated by EnsureAdmin middleware
+        $admin = $this->getAdmin($request);
 
         $cssSections = $this->qrCodeService->getCssSections();
         $currentAcademicYear = date('Y') . '-' . (date('Y') + 1);
@@ -118,8 +138,15 @@ class QrCodeController extends Controller
      */
     public function store(Request $request)
     {
-        $admin = $this->checkAdminAuth();
-        if (!$admin instanceof \App\Models\Admin) return $admin;
+        // Admin is validated by EnsureAdmin middleware
+        $admin = $this->getAdmin($request);
+        if (!$admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Admin access required.',
+                'redirect' => route('student.login')
+            ], 403);
+        }
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -140,13 +167,13 @@ class QrCodeController extends Controller
 
         try {
             $qrCodeData = $request->all();
-            $qrCodeData['created_by'] = $admin->username;
+            $qrCodeData['created_by'] = $admin->username ?? ($admin->name ?? 'admin');
 
             $qrCode = $this->qrCodeService->generateQrCode($qrCodeData);
 
             // Log QR code creation
             \App\Models\AuditLog::create([
-                'admin_id' => $admin->id,
+                'admin_id' => $admin->id ?? null,
                 'action' => 'create_qr_code',
                 'description' => 'Created new QR code: ' . $qrCode->name,
                 'ip_address' => $request->ip(),
@@ -177,16 +204,16 @@ class QrCodeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
-        $admin = $this->checkAdminAuth();
-        if (!$admin instanceof \App\Models\Admin) return $admin;
+        // Admin is validated by EnsureAdmin middleware
+        $admin = $this->getAdmin($request);
 
         $qrCode = QrCode::findOrFail($id);
 
         // Log QR code viewing
         \App\Models\AuditLog::create([
-            'admin_id' => $admin->id,
+            'admin_id' => $admin->id ?? null,
             'action' => 'view_qr_code',
             'description' => 'Viewed QR code details: ' . $qrCode->name,
             'ip_address' => request()->ip(),
@@ -199,10 +226,10 @@ class QrCodeController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Request $request, string $id)
     {
-        $admin = $this->checkAdminAuth();
-        if (!$admin instanceof \App\Models\Admin) return $admin;
+        // Admin is validated by EnsureAdmin middleware
+        $admin = $this->getAdmin($request);
 
         $qrCode = QrCode::findOrFail($id);
         $cssSections = $this->qrCodeService->getCssSections();
@@ -215,8 +242,15 @@ class QrCodeController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $admin = $this->checkAdminAuth();
-        if (!$admin instanceof \App\Models\Admin) return $admin;
+        // Admin is validated by EnsureAdmin middleware
+        $admin = $this->getAdmin($request);
+        if (!$admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Admin access required.',
+                'redirect' => route('student.login')
+            ], 403);
+        }
 
         $qrCode = QrCode::findOrFail($id);
 
@@ -260,7 +294,7 @@ class QrCodeController extends Controller
 
             // Log QR code update
             \App\Models\AuditLog::create([
-                'admin_id' => $admin->id,
+                'admin_id' => $admin->id ?? null,
                 'action' => 'update_qr_code',
                 'description' => 'Updated QR code: ' . $qrCode->name,
                 'ip_address' => $request->ip(),
@@ -286,10 +320,17 @@ class QrCodeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
-        $admin = $this->checkAdminAuth();
-        if (!$admin instanceof \App\Models\Admin) return $admin;
+        // Admin is validated by EnsureAdmin middleware
+        $admin = $this->getAdmin($request);
+        if (!$admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Admin access required.',
+                'redirect' => route('student.login')
+            ], 403);
+        }
 
         try {
             $qrCode = QrCode::findOrFail($id);
@@ -301,7 +342,7 @@ class QrCodeController extends Controller
 
             // Log deletion
             \App\Models\AuditLog::create([
-                'admin_id' => $admin->id,
+                'admin_id' => $admin->id ?? null,
                 'action' => 'delete_qr_code',
                 'description' => 'Deleted QR code: ' . $qrCode->name,
                 'ip_address' => request()->ip(),
@@ -329,8 +370,15 @@ class QrCodeController extends Controller
      */
     public function batchGenerate(Request $request)
     {
-        $admin = $this->checkAdminAuth();
-        if (!$admin instanceof \App\Models\Admin) return $admin;
+        // Admin is validated by EnsureAdmin middleware
+        $admin = $this->getAdmin($request);
+        if (!$admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Admin access required.',
+                'redirect' => route('student.login')
+            ], 403);
+        }
 
         $request->validate([
             'target_url' => 'nullable|url', // Optional - each QR code will use its own public URL
@@ -350,13 +398,13 @@ class QrCodeController extends Controller
 
         try {
             $config = $request->all();
-            $config['created_by'] = $admin->username;
+            $config['created_by'] = $admin->username ?? ($admin->name ?? 'admin');
 
             $qrCodes = $this->qrCodeService->generateBatch($config);
 
             // Log batch generation
             \App\Models\AuditLog::create([
-                'admin_id' => $admin->id,
+                'admin_id' => $admin->id ?? null,
                 'action' => 'batch_generate_qr_codes',
                 'description' => 'Generated ' . count($qrCodes) . ' QR codes in batch',
                 'ip_address' => $request->ip(),
@@ -386,10 +434,17 @@ class QrCodeController extends Controller
     /**
      * Download QR code file.
      */
-    public function download(string $id)
+    public function download(Request $request, string $id)
     {
-        $admin = $this->checkAdminAuth();
-        if (!$admin instanceof \App\Models\Admin) return $admin;
+        // Admin is validated by EnsureAdmin middleware
+        $admin = $this->getAdmin($request);
+        if (!$admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Admin access required.',
+                'redirect' => route('student.login')
+            ], 403);
+        }
 
         try {
             $qrCode = QrCode::findOrFail($id);
@@ -407,7 +462,7 @@ class QrCodeController extends Controller
 
             // Log download
             \App\Models\AuditLog::create([
-                'admin_id' => $admin->id,
+                'admin_id' => $admin->id ?? null,
                 'action' => 'download_qr_code',
                 'description' => 'Downloaded QR code file: ' . $qrCode->name,
                 'ip_address' => request()->ip(),
@@ -460,8 +515,15 @@ class QrCodeController extends Controller
      */
     public function statistics(Request $request)
     {
-        $admin = $this->checkAdminAuth();
-        if (!$admin instanceof \App\Models\Admin) return $admin;
+        // Admin is validated by EnsureAdmin middleware
+        $admin = $this->getAdmin($request);
+        if (!$admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Admin access required.',
+                'redirect' => route('student.login')
+            ], 403);
+        }
 
         $filters = [
             'track' => $request->get('track'),
@@ -483,12 +545,14 @@ class QrCodeController extends Controller
      */
     public function export(Request $request)
     {
-        $admin = $this->checkAdminAuth();
-        if (!$admin instanceof \App\Models\Admin) {
+        // Admin is validated by EnsureAdmin middleware
+        $admin = $this->getAdmin($request);
+        if (!$admin) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized access. Please login again.'
-            ], 401);
+                'message' => 'Unauthorized access. Please login again.',
+                'redirect' => route('student.login')
+            ], 403);
         }
 
         try {
@@ -503,7 +567,7 @@ class QrCodeController extends Controller
 
             // Log export
             \App\Models\AuditLog::create([
-                'admin_id' => $admin->id,
+                'admin_id' => $admin->id ?? null,
                 'action' => 'export_qr_codes',
                 'description' => 'Exported QR codes data',
                 'ip_address' => $request->ip(),

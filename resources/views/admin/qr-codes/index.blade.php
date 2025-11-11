@@ -468,7 +468,7 @@
                     <a href="{{ route('admin.qr-codes.index') }}" class="nav-link active">QR Codes</a>
                     <a href="{{ route('admin.ai.insights') }}" class="nav-link">AI Insights</a>
                     <a href="{{ route('admin.reports') }}" class="nav-link">Reports</a>
-                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;" onsubmit="handleAdminLogout(event)">
+                    <form method="POST" action="{{ route('student.logout') }}" id="logoutFormDesktop" style="display: inline;">
                         @csrf
                         <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
                             <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -574,8 +574,8 @@
             <!-- Actions Bar -->
             <div style="margin-bottom: 30px; display: flex; gap: 15px; align-items: center;">
                 <a href="{{ route('admin.qr-codes.create') }}" class="btn btn-success">+ Create New QR Code</a>
-                <button type="button" onclick="showBatchGenerate()" class="btn btn-primary">Batch Generate</button>
-                <button type="button" onclick="exportData()" class="btn btn-warning">Export Data</button>
+                <button type="button" id="batch-generate-btn" class="btn btn-primary">Batch Generate</button>
+                <button type="button" id="export-data-btn" class="btn btn-warning">Export Data</button>
             </div>
 
             <!-- QR Codes Table -->
@@ -601,9 +601,8 @@
                                 <tr>
                                     <td>
                                         @if($qrCode->file_path && $qrCode->fileExists())
-                                            <img src="{{ $qrCode->file_url }}" alt="QR Code" class="qr-preview"
-                                                 onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                            <div style="width: 50px; height: 50px; background: #fff3cd; border-radius: 4px; display: none; align-items: center; justify-content: center; font-size: 20px; color: #856404;">⚠️</div>
+                                            <img src="{{ $qrCode->file_url }}" alt="QR Code" class="qr-preview qr-image-{{ $qrCode->id }}" data-qr-id="{{ $qrCode->id }}">
+                                            <div class="qr-error-{{ $qrCode->id }}" style="width: 50px; height: 50px; background: #fff3cd; border-radius: 4px; display: none; align-items: center; justify-content: center; font-size: 20px; color: #856404;">⚠️</div>
                                         @elseif($qrCode->file_path)
                                             <div style="width: 50px; height: 50px; background: #fff3cd; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #856404;" title="File not found in storage">⚠️</div>
                                         @else
@@ -636,7 +635,7 @@
                                             <a href="{{ route('admin.qr-codes.show', $qrCode->id) }}" class="action-btn btn-primary">View</a>
                                             <a href="{{ route('admin.qr-codes.edit', $qrCode->id) }}" class="action-btn btn-warning">Edit</a>
                                             <a href="{{ route('admin.qr-codes.download', $qrCode->id) }}" class="action-btn btn-success">Download</a>
-                                            <button onclick="deleteQrCode({{ $qrCode->id }})" class="action-btn btn-danger">Delete</button>
+                                            <button type="button" class="action-btn btn-danger delete-qr-btn" data-qr-id="{{ $qrCode->id }}">Delete</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -688,7 +687,8 @@
         </div>
     </footer>
 
-    <script>
+    <script src="{{ asset('js/admin.js') }}"></script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         // Set current year
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
@@ -746,9 +746,47 @@
             }
         }
 
-        function showBatchGenerate() {
-            window.location.href = '{{ route('admin.qr-codes.create') }}#batch';
-        }
+        // Attach event listeners for buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            // Batch generate button
+            const batchGenerateBtn = document.getElementById('batch-generate-btn');
+            if (batchGenerateBtn) {
+                batchGenerateBtn.addEventListener('click', function() {
+                    window.location.href = '{{ route('admin.qr-codes.create') }}#batch';
+                });
+            }
+
+            // Export data button
+            const exportDataBtn = document.getElementById('export-data-btn');
+            if (exportDataBtn) {
+                exportDataBtn.addEventListener('click', exportData);
+            }
+
+            // Delete buttons
+            document.querySelectorAll('.delete-qr-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const qrId = this.getAttribute('data-qr-id');
+                    deleteQrCode(qrId);
+                });
+            });
+
+            // Image error handlers
+            document.querySelectorAll('[class^="qr-image-"]').forEach(img => {
+                img.addEventListener('error', function() {
+                    this.style.display = 'none';
+                    const errorDiv = document.querySelector('.qr-error-' + this.getAttribute('data-qr-id'));
+                    if (errorDiv) {
+                        errorDiv.style.display = 'flex';
+                    }
+                });
+            });
+
+            // Logout form handler
+            const logoutForm = document.getElementById('logoutFormDesktop');
+            if (logoutForm && typeof handleAdminLogout === 'function') {
+                logoutForm.addEventListener('submit', handleAdminLogout);
+            }
+        });
 
         function exportData() {
             console.log('Export function called');

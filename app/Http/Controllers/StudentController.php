@@ -49,6 +49,12 @@ class StudentController extends Controller
         ]);
 
         if ($validator->fails()) {
+            if (!$request->ajax() && !$request->expectsJson() && !$request->wantsJson()) {
+                return redirect()->back()
+                    ->withErrors($validator)
+                    ->withInput()
+                    ->with('error', 'Please fix the validation errors and try again.');
+            }
             return response()->json([
                 'message' => 'Validation failed',
                 'errors' => $validator->errors()
@@ -118,6 +124,10 @@ class StudentController extends Controller
             $message = 'Registration successful! Please check your email to verify your account.';
         }
 
+        if (!$request->ajax() && !$request->expectsJson() && !$request->wantsJson()) {
+            return redirect()->to($redirect)->with('success', $message);
+        }
+
         return response()->json([
             'message' => $message,
             'redirect' => $redirect,
@@ -177,14 +187,27 @@ class StudentController extends Controller
                 'admin_id' => $admin->id,
             ]);
 
+            // Get the dashboard URL
+            $redirectUrl = route('admin.dashboard');
+
+            // If this is not an AJAX request, redirect directly
+            if (!$request->ajax() && !$request->expectsJson() && !$request->wantsJson()) {
+                return redirect()->to($redirectUrl)
+                    ->with('success', 'Admin login successful! Welcome back.');
+            }
+
+            // Return JSON response for AJAX requests
             return response()->json([
                 'message' => 'Admin login successful! Welcome back.',
-                'redirect' => route('admin.dashboard'),
+                'redirect' => $redirectUrl,
                 'user' => [
                     'name' => $admin->name,
                     'username' => $admin->username,
                     'role' => 'admin',
                 ]
+            ], 200, [
+                'Content-Type' => 'application/json',
+                'X-Redirect-URL' => $redirectUrl, // Additional header for debugging
             ]);
         }
 
@@ -200,7 +223,11 @@ class StudentController extends Controller
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
-
+            if (!$request->ajax() && !$request->expectsJson() && !$request->wantsJson()) {
+                return redirect()->back()
+                    ->withInput($request->only('student_id'))
+                    ->with('error', 'Invalid credentials. Please check your username and password.');
+            }
             return response()->json([
                 'message' => 'Invalid credentials. Please check your username and password.'
             ], 401);
@@ -270,15 +297,28 @@ class StudentController extends Controller
                 ]);
             }
 
+            // Determine redirect URL
+            $redirectUrl = route('survey.landing');
+
+            // If this is not an AJAX request, redirect directly (server-side redirect)
+            // This handles cases where JavaScript might fail or be disabled
+            if (!$request->ajax() && !$request->expectsJson() && !$request->wantsJson()) {
+                return redirect()->to($redirectUrl)
+                    ->with('success', 'Login successful! Welcome back.');
+            }
+
+            // For AJAX requests, return JSON with redirect URL
             return response()->json([
                 'message' => 'Login successful! Welcome back.',
-                'redirect' => route('survey.landing'),
+                'redirect' => $redirectUrl,
                 'user' => [
                     'name' => $user->name,
                     'student_id' => $user->student_id,
                     'year_level' => $user->year_level,
                     'section' => $user->section,
                 ]
+            ], 200, [
+                'Content-Type' => 'application/json',
             ]);
         }
 
@@ -294,6 +334,11 @@ class StudentController extends Controller
         ]);
 
         // Generic error message for security (don't reveal if username exists)
+        if (!$request->ajax() && !$request->expectsJson() && !$request->wantsJson()) {
+            return redirect()->back()
+                ->withInput($request->only('student_id'))
+                ->with('error', 'Invalid credentials. Please check your username and password.');
+        }
         return response()->json([
             'message' => 'Invalid credentials. Please check your username and password.'
         ], 401);
@@ -313,10 +358,14 @@ class StudentController extends Controller
             ]);
         }
         if ($admin) {
-            $auditService->logAuthentication('logout', true, $request, [
-                'user_type' => 'admin',
-                'user_id' => $admin->id,
-            ]);
+            // Admin is stored as an array in session, not an object
+            $adminId = is_array($admin) ? ($admin['id'] ?? null) : ($admin->id ?? null);
+            if ($adminId) {
+                $auditService->logAuthentication('logout', true, $request, [
+                    'user_type' => 'admin',
+                    'user_id' => $adminId,
+                ]);
+            }
         }
 
         // Clear both student and admin sessions
@@ -389,6 +438,132 @@ class StudentController extends Controller
         }
 
         return view('student.dashboard', compact('user'));
+    }
+
+    /**
+     * Update the authenticated student's profile details.
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'student') {
+            return redirect()->route('student.login');
+        }
+
+        // Validate inputs
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email:rfc,dns|max:255|unique:users,email,' . $user->id,
+            'section' => 'required|string|max:50',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('student.dashboard')
+                ->withErrors($validator)
+                ->withInput()
+                ->with('error', 'Please fix the validation errors and try again.');
+        }
+
+        $originalValues = [
+            'name' => $user->name,
+            'email' => $user->email,
+            'section' => $user->section,
+        ];
+
+        // Update allowed fields
+        $user->name = $request->input('name');
+        $user->email = $request->input('email');
+        $user->section = $request->input('section');
+        $user->save();
+
+        // Log the change for audit trail (minimal necessary info)
+        $auditService = app(\App\Services\AuditService::class);
+        $auditService->logDataModification(
+            'user',
+            $user->id,
+            'update',
+            [
+                'name' => $originalValues['name'],
+                'email' => $originalValues['email'],
+                'section' => $originalValues['section'],
+            ],
+            [
+                'name' => $user->name,
+                'email' => $user->email,
+                'section' => $user->section,
+            ],
+            $request
+        );
+
+        return redirect()->route('student.dashboard')->with('success', 'Profile updated successfully.');
+    }
+
+    /**
+     * Update the authenticated student's password.
+     */
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'student') {
+            return redirect()->route('student.login');
+        }
+
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'new_password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/[a-z]/', // lowercase
+                'regex:/[A-Z]/', // uppercase
+                'regex:/[0-9]/', // digit
+                'regex:/[@$!%*#?&]/', // special char
+            ],
+        ], [
+            'new_password.confirmed' => 'New password confirmation does not match.',
+            'new_password.regex' => 'New password must contain uppercase, lowercase, number, and special character.',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('student.dashboard')
+                ->withErrors($validator)
+                ->withInput()
+                ->with('error', 'Please fix the validation errors and try again.');
+        }
+
+        if (!Hash::check($request->input('current_password'), $user->password)) {
+            return redirect()->route('student.dashboard')
+                ->withErrors(['current_password' => 'The current password you entered is incorrect.'])
+                ->withInput()
+                ->with('error', 'Unable to update password.');
+        }
+
+        $user->password = Hash::make($request->input('new_password'));
+        $user->setRememberToken(\Illuminate\Support\Str::random(60));
+        $user->save();
+
+        // Log password update for audit purposes without storing sensitive data
+        $auditService = app(\App\Services\AuditService::class);
+        $auditService->log(
+            'password_change',
+            'Student updated account password',
+            $request,
+            [
+                'resource_type' => 'user',
+                'resource_id' => $user->id,
+                'metadata' => [
+                    'user_type' => 'student',
+                    'success' => true,
+                ],
+            ]
+        );
+
+        // Invalidate other sessions after password change
+        Auth::logoutOtherDevices($request->input('new_password'));
+
+        return redirect()->route('student.dashboard')
+            ->with('success', 'Password updated successfully.');
     }
 
     /**
@@ -1038,5 +1213,205 @@ class StudentController extends Controller
         // Ensure admin is passed as object for view compatibility
         $adminData = is_array($admin) ? (object)$admin : $admin;
         return view('admin.ai-insights', ['admin' => $adminData]);
+    }
+
+    /**
+     * Show analytics dashboard view
+     */
+    public function showAnalytics(Request $request)
+    {
+        // Admin is validated by EnsureAdmin middleware
+        $admin = request()->get('admin') ?? session('admin');
+
+        if (!$admin) {
+            return redirect()->route('student.login');
+        }
+
+        // Log viewing of analytics for audit trail using AuditService
+        $adminId = is_array($admin) ? ($admin['id'] ?? null) : ($admin->id ?? null);
+
+        if ($adminId) {
+            \App\Models\AuditLog::create([
+                'admin_id' => $adminId,
+                'action' => 'view_analytics',
+                'description' => 'Viewed analytics dashboard',
+                'ip_address' => request()->ip(),
+            ]);
+        }
+
+        // Get analytics data using SurveyController's logic
+        // We'll use the AnalyticsService or calculate directly
+        $analytics = $this->getAnalyticsData($request);
+
+        // Check if there's any survey data
+        $hasData = $analytics !== null && isset($analytics['total_responses']) && $analytics['total_responses'] > 0;
+
+        // Always provide analytics structure to view (either real data or empty structure)
+        // This ensures the view never has undefined $analytics variable
+        $analyticsData = $analytics ?? $this->getEmptyAnalyticsStructure();
+
+        // Ensure admin is passed as object for view compatibility
+        $adminData = is_array($admin) ? (object)$admin : $admin;
+
+        // Get CSP nonce from request attributes (set by SecurityHeaders middleware)
+        $cspNonce = $request->attributes->get('csp-nonce', '');
+
+        return view('analytics.index', [
+            'admin' => $adminData,
+            'analytics' => $analyticsData,
+            'noData' => !$hasData,
+            'cspNonce' => $cspNonce,
+        ]);
+    }
+
+    /**
+     * Get analytics data (similar to SurveyController::calculateAnalytics)
+     */
+    private function getAnalyticsData(Request $request)
+    {
+        $query = \App\Models\SurveyResponse::query();
+
+        // Apply filters from request
+        if ($request->has('track') && $request->track) {
+            $query->where('track', $request->track);
+        }
+
+        if ($request->has('grade_level') && $request->grade_level) {
+            $query->where('grade_level', $request->grade_level);
+        }
+
+        if ($request->has('academic_year') && $request->academic_year) {
+            $query->where('academic_year', $request->academic_year);
+        }
+
+        if ($request->has('semester') && $request->semester) {
+            $query->where('semester', $request->semester);
+        }
+
+        // Date range filtering
+        if ($request->has('date_from') && $request->date_from) {
+            $query->where('created_at', '>=', $request->date_from . ' 00:00:00');
+        }
+
+        if ($request->has('date_to') && $request->date_to) {
+            $query->where('created_at', '<=', $request->date_to . ' 23:59:59');
+        }
+
+        $responses = $query->get();
+
+        // Return null if no responses (will be handled by controller)
+        if ($responses->isEmpty()) {
+            return null;
+        }
+
+        // Calculate ISO 21001 Composite Scores
+        $learnerNeedsIndex = round(
+            ($responses->avg('curriculum_relevance_rating') +
+             $responses->avg('learning_pace_appropriateness') +
+             $responses->avg('individual_support_availability') +
+             $responses->avg('learning_style_accommodation')) / 4, 2
+        );
+
+        $satisfactionScore = round(
+            ($responses->avg('teaching_quality_rating') +
+             $responses->avg('learning_environment_rating') +
+             $responses->avg('peer_interaction_satisfaction') +
+             $responses->avg('extracurricular_satisfaction')) / 4, 2
+        );
+
+        $successIndex = round(
+            ($responses->avg('academic_progress_rating') +
+             $responses->avg('skill_development_rating') +
+             $responses->avg('critical_thinking_improvement') +
+             $responses->avg('problem_solving_confidence')) / 4, 2
+        );
+
+        $safetyIndex = round(
+            ($responses->avg('physical_safety_rating') +
+             $responses->avg('psychological_safety_rating') +
+             $responses->avg('bullying_prevention_effectiveness') +
+             $responses->avg('emergency_preparedness_rating')) / 4, 2
+        );
+
+        $wellbeingIndex = round(
+            ($responses->avg('mental_health_support_rating') +
+             $responses->avg('stress_management_support') +
+             $responses->avg('physical_health_support') +
+             $responses->avg('overall_wellbeing_rating')) / 4, 2
+        );
+
+        $avgSatisfaction = round($responses->avg('overall_satisfaction'), 2);
+        $avgGrade = $responses->avg('grade_average') ?? 0;
+        $avgAttendance = $responses->avg('attendance_rate') ?? 0;
+
+        return [
+            'total_responses' => $responses->count(),
+            'iso_21001_indices' => [
+                'learner_needs_index' => $learnerNeedsIndex,
+                'satisfaction_score' => $satisfactionScore,
+                'success_index' => $successIndex,
+                'safety_index' => $safetyIndex,
+                'wellbeing_index' => $wellbeingIndex,
+                'overall_satisfaction' => $avgSatisfaction,
+            ],
+            'indirect_metrics' => [
+                'average_grade' => round($avgGrade, 2),
+                'average_attendance_rate' => round($avgAttendance, 2),
+                'average_participation_score' => round($responses->avg('participation_score') ?? 0, 2),
+                'average_extracurricular_hours' => round($responses->avg('extracurricular_hours') ?? 0, 2),
+                'average_counseling_sessions' => round($responses->avg('counseling_sessions') ?? 0, 2),
+            ],
+            'correlation_analysis' => [
+                'satisfaction_vs_performance_correlation' => round($avgSatisfaction * $avgGrade, 2),
+                'satisfaction_vs_attendance_correlation' => round($avgSatisfaction * $avgAttendance, 2),
+                'safety_vs_attendance_correlation' => round($safetyIndex * $avgAttendance, 2),
+                'wellbeing_vs_counseling_correlation' => round($wellbeingIndex * ($responses->avg('counseling_sessions') ?? 0), 2),
+            ],
+            'distribution' => [
+                'track' => $responses->groupBy('track')->map->count()->toArray() ?: [],
+                'grade_level' => $responses->groupBy('grade_level')->map->count()->toArray() ?: [],
+                'academic_year' => $responses->groupBy('academic_year')->map->count()->toArray() ?: [],
+                'semester' => $responses->groupBy('semester')->map->count()->toArray() ?: [],
+            ],
+            'consent_rate' => round(($responses->where('consent_given', true)->count() / $responses->count()) * 100, 2),
+        ];
+    }
+
+    /**
+     * Get empty analytics structure for when there's no data
+     */
+    private function getEmptyAnalyticsStructure()
+    {
+        return [
+            'total_responses' => 0,
+            'iso_21001_indices' => [
+                'learner_needs_index' => 0.00,
+                'satisfaction_score' => 0.00,
+                'success_index' => 0.00,
+                'safety_index' => 0.00,
+                'wellbeing_index' => 0.00,
+                'overall_satisfaction' => 0.00,
+            ],
+            'indirect_metrics' => [
+                'average_grade' => 0.00,
+                'average_attendance_rate' => 0.00,
+                'average_participation_score' => 0.00,
+                'average_extracurricular_hours' => 0.00,
+                'average_counseling_sessions' => 0.00,
+            ],
+            'correlation_analysis' => [
+                'satisfaction_vs_performance_correlation' => 0.00,
+                'satisfaction_vs_attendance_correlation' => 0.00,
+                'safety_vs_attendance_correlation' => 0.00,
+                'wellbeing_vs_counseling_correlation' => 0.00,
+            ],
+            'distribution' => [
+                'track' => [],
+                'grade_level' => [],
+                'academic_year' => [],
+                'semester' => [],
+            ],
+            'consent_rate' => 0.00,
+        ];
     }
 }

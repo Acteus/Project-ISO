@@ -102,6 +102,41 @@
                 will-change: auto;
             }
         }
+        
+        /* Page enter transitions */
+        body:not(.loaded) .landing-header,
+        body:not(.loaded) .hero-content,
+        body:not(.loaded) .info-section,
+        body:not(.loaded) .footer {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        .landing-header,
+        .hero-content,
+        .info-section,
+        .footer {
+            transition: opacity 360ms ease, transform 360ms ease;
+        }
+        body.loaded .landing-header,
+        body.loaded .hero-content,
+        body.loaded .info-section,
+        body.loaded .footer {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* Stagger key elements for a subtle cascade */
+        body:not(.loaded) .hero-title { opacity: 0; transform: translateY(10px); }
+        body:not(.loaded) .hero-description { opacity: 0; transform: translateY(12px); }
+        body:not(.loaded) .hero-btn { opacity: 0; transform: translateY(14px); }
+        body.loaded .hero-title { transition-delay: 60ms; }
+        body.loaded .hero-description { transition-delay: 120ms; }
+        body.loaded .hero-btn { transition-delay: 180ms; }
+        /* Cards fade-in grid */
+        body:not(.loaded) .info-card { opacity: 0; transform: translateY(8px); }
+        body.loaded .info-card { opacity: 1; transform: translateY(0); transition: opacity 320ms ease, transform 320ms ease; }
+        body.loaded .info-card:nth-child(1) { transition-delay: 80ms; }
+        body.loaded .info-card:nth-child(2) { transition-delay: 140ms; }
+        body.loaded .info-card:nth-child(3) { transition-delay: 200ms; }
     </style>
 </head>
 <body>
@@ -164,7 +199,7 @@
 
                 <!-- Mobile menu button -->
                 <div class="mobile-menu-btn">
-                    <button id="mobileMenuButton" class="menu-toggle" onclick="toggleMobileMenu()" aria-controls="mobileNav" aria-expanded="false" aria-label="Toggle navigation menu">
+                    <button id="mobileMenuButton" class="menu-toggle" aria-controls="mobileNav" aria-expanded="false" aria-label="Toggle navigation menu">
                         <span class="hamburger"></span>
                         <span class="hamburger"></span>
                         <span class="hamburger"></span>
@@ -328,25 +363,33 @@
     </footer>
 
     <script src="{{ asset('js/main.js') }}" defer></script>
-    <script>
-        // Mobile menu toggle for landing page
-        function toggleMobileMenu() {
-            const mobileNav = document.getElementById('mobileNav');
-            const toggleBtn = document.getElementById('mobileMenuButton');
-            if (!mobileNav || !toggleBtn) return;
-
-            const isOpen = mobileNav.classList.toggle('show');
-            toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-            toggleBtn.classList.toggle('is-open', isOpen);
-        }
-
-        // Set current year
-        document.addEventListener('DOMContentLoaded', function() {
-            const yearElement = document.getElementById('currentYear');
-            if (yearElement) {
-                yearElement.textContent = new Date().getFullYear();
+    <script nonce="{{ $cspNonce ?? '' }}">
+        (function() {
+            // Respect reduced motion: apply loaded immediately without transitions
+            var prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var applyLoaded = function() {
+                if (!document.body.classList.contains('loaded')) {
+                    document.body.classList.add('loaded');
+                }
+            };
+            if (prefersReduced) {
+                applyLoaded();
+                return;
             }
-        });
+            // Ensure the transition triggers after first paint
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                requestAnimationFrame(function() {
+                    // slight delay to allow CSS to apply initial state
+                    setTimeout(applyLoaded, 40);
+                });
+            } else {
+                document.addEventListener('DOMContentLoaded', function() {
+                    requestAnimationFrame(function() {
+                        setTimeout(applyLoaded, 40);
+                    });
+                });
+            }
+        })();
     </script>
 
     <!-- Logout Modal Script -->

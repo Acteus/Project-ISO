@@ -357,7 +357,7 @@
                     <a href="{{ route('admin.qr-codes.index') }}" class="nav-link active">QR Codes</a>
                     <a href="{{ route('admin.ai.insights') }}" class="nav-link">AI Insights</a>
                     <a href="{{ route('admin.reports') }}" class="nav-link">Reports</a>
-                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;" onsubmit="handleAdminLogout(event)">
+                    <form method="POST" action="{{ route('student.logout') }}" id="logoutFormDesktop" style="display: inline;">
                         @csrf
                         <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
                             <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -513,7 +513,7 @@
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Update QR Code</button>
                         <a href="{{ route('admin.qr-codes.index') }}" class="btn btn-secondary">Cancel</a>
-                        <button type="button" onclick="deleteQRCode()" class="btn btn-danger">Delete</button>
+                        <button type="button" id="delete-qr-btn" class="btn btn-danger">Delete</button>
                     </div>
                 </form>
             </div>
@@ -539,12 +539,28 @@
         </div>
     </footer>
 
-    <script>
+    <script src="{{ asset('js/admin.js') }}"></script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         // Set current year
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
         // CSRF Token
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        // Attach event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Delete button
+            const deleteBtn = document.getElementById('delete-qr-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', deleteQRCode);
+            }
+
+            // Logout form handler
+            const logoutForm = document.getElementById('logoutFormDesktop');
+            if (logoutForm && typeof handleAdminLogout === 'function') {
+                logoutForm.addEventListener('submit', handleAdminLogout);
+            }
+        });
 
         function showAlert(type, message) {
             const container = document.getElementById('alert-container');

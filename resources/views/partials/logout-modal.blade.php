@@ -183,7 +183,7 @@
     }
 </style>
 
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
 // Global logout function with beautiful modal popup
 function handleLogout(event) {
     event.preventDefault();

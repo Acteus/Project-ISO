@@ -11,39 +11,66 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize mobile menu
     initMobileMenu();
+
+    // Consent revoke confirmation
+    const revokeConsentForm = document.getElementById('revokeConsentForm');
+    if (revokeConsentForm) {
+        revokeConsentForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const confirmText = 'Are you sure you want to revoke your consent?\n\nThis will:\n- Prevent you from submitting new surveys\n- Be logged for audit purposes\n- Not delete existing data immediately\n\nYou can contact the administrator to request data deletion.';
+            if (confirm(confirmText)) {
+                const button = revokeConsentForm.querySelector('button[type="submit"]');
+                if (button) {
+                    button.disabled = true;
+                    button.innerHTML = '<svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; animation: spin 1s linear infinite;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg> Revoking...';
+                }
+                revokeConsentForm.submit();
+            }
+        });
+    }
 });
 
 // Mobile menu functionality
 function toggleMobileMenu() {
     const mobileNav = document.getElementById('mobileNav');
-    const menuToggle = document.querySelector('.menu-toggle');
+    const menuToggle = document.getElementById('mobileMenuButton') || document.querySelector('.menu-toggle');
 
     // Only proceed if elements exist
     if (!mobileNav || !menuToggle) return;
 
-    if (mobileNav.classList.contains('show')) {
-        mobileNav.classList.remove('show');
-        menuToggle.classList.remove('active');
-    } else {
-        mobileNav.classList.add('show');
-        menuToggle.classList.add('active');
-    }
+    const isOpen = mobileNav.classList.toggle('show');
+    menuToggle.classList.toggle('active', isOpen);
+    menuToggle.classList.toggle('is-open', isOpen);
+    menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 }
 
 function initMobileMenu() {
     // Check if mobile nav exists on this page
     const mobileNav = document.getElementById('mobileNav');
+    const menuToggle = document.getElementById('mobileMenuButton') || document.querySelector('.menu-toggle');
+    
     if (!mobileNav) return;
 
+    // Attach click handler to mobile menu button
+    if (menuToggle) {
+        menuToggle.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            toggleMobileMenu();
+        });
+    }
+
     // Close mobile menu when clicking on a link
-    const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+    const mobileNavLinks = document.querySelectorAll('.mobile-nav a, .mobile-nav button');
     mobileNavLinks.forEach(link => {
         link.addEventListener('click', () => {
             const mobileNav = document.getElementById('mobileNav');
-            const menuToggle = document.querySelector('.menu-toggle');
+            const menuToggle = document.getElementById('mobileMenuButton') || document.querySelector('.menu-toggle');
             if (mobileNav && menuToggle) {
                 mobileNav.classList.remove('show');
                 menuToggle.classList.remove('active');
+                menuToggle.classList.remove('is-open');
+                menuToggle.setAttribute('aria-expanded', 'false');
             }
         });
     });
@@ -51,13 +78,28 @@ function initMobileMenu() {
     // Close mobile menu when clicking outside
     document.addEventListener('click', function(event) {
         const mobileNav = document.getElementById('mobileNav');
-        const menuToggle = document.querySelector('.menu-toggle');
-        const header = document.querySelector('.header');
+        const menuToggle = document.getElementById('mobileMenuButton') || document.querySelector('.menu-toggle');
+        const header = document.querySelector('.landing-header') || document.querySelector('.header');
+        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
 
         // Only proceed if all elements exist
-        if (mobileNav && menuToggle && header && !header.contains(event.target) && mobileNav.classList.contains('show')) {
-            mobileNav.classList.remove('show');
-            menuToggle.classList.remove('active');
+        // Don't close if clicking on the menu button or inside the mobile nav
+        if (mobileNav && menuToggle && header) {
+            const isClickInsideNav = mobileNav.contains(event.target);
+            const isClickOnButton = mobileMenuBtn && mobileMenuBtn.contains(event.target);
+            const isClickInsideHeader = header.contains(event.target);
+
+            if (!isClickInsideNav && !isClickOnButton && isClickInsideHeader && mobileNav.classList.contains('show')) {
+                mobileNav.classList.remove('show');
+                menuToggle.classList.remove('active');
+                menuToggle.classList.remove('is-open');
+                menuToggle.setAttribute('aria-expanded', 'false');
+            } else if (!isClickInsideHeader && mobileNav.classList.contains('show')) {
+                mobileNav.classList.remove('show');
+                menuToggle.classList.remove('active');
+                menuToggle.classList.remove('is-open');
+                menuToggle.setAttribute('aria-expanded', 'false');
+            }
         }
     });
 }
@@ -70,7 +112,7 @@ function showNotification(message, type = 'info') {
     notification.innerHTML = `
         <div class="notification-content">
             <span class="notification-message">${message}</span>
-            <button class="notification-close" onclick="closeNotification(this)">×</button>
+            <button class="notification-close" type="button" aria-label="Close">×</button>
         </div>
     `;
 
@@ -164,6 +206,14 @@ function showNotification(message, type = 'info') {
 
     // Add to page
     document.body.appendChild(notification);
+
+    // Wire close button without inline handlers (CSP-safe)
+    const closeBtn = notification.querySelector('.notification-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            closeNotification(closeBtn);
+        });
+    }
 
     // Auto remove after 5 seconds
     setTimeout(() => {

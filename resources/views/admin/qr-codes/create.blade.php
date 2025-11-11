@@ -490,7 +490,7 @@
                     <a href="{{ route('admin.qr-codes.index') }}" class="nav-link active">QR Codes</a>
                     <a href="{{ route('admin.ai.insights') }}" class="nav-link">AI Insights</a>
                     <a href="{{ route('admin.reports') }}" class="nav-link">Reports</a>
-                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;" onsubmit="handleAdminLogout(event)">
+                    <form method="POST" action="{{ route('student.logout') }}" id="logoutFormDesktop" style="display: inline;">
                         @csrf
                         <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(90deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 8px 20px; border-radius: 6px; font-weight: 600; transition: all 0.3s ease;">
                             <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -519,13 +519,13 @@
 
             <!-- Creation Method Selection -->
             <div class="creation-methods">
-                                <div class="method-card active" id="single-method" onclick="selectMethod('single')">
+                                <div class="method-card active" id="single-method" data-method="single">
                     <div class="method-icon">QR</div>
                     <h3>Single QR Code</h3>
                     <p>Create one QR code with custom settings</p>
                 </div>
 
-                <div class="method-card" id="batch-method" onclick="selectMethod('batch')">
+                <div class="method-card" id="batch-method" data-method="batch">
                     <div class="method-icon">BATCH</div>
                     <h3>Batch Generate</h3>
                     <p>Generate multiple QR codes for different CSS sections at once</p>
@@ -646,7 +646,7 @@
                     </div>
 
                     <div class="form-actions">
-                        <button type="button" onclick="previewSingle()" class="btn btn-warning">Preview</button>
+                        <button type="button" id="preview-single-btn" class="btn btn-warning">Preview</button>
                         <button type="submit" class="btn btn-primary">Generate QR Code</button>
                     </div>
                 </form>
@@ -756,7 +756,7 @@
                     </div>
 
                     <div class="form-actions">
-                        <button type="button" onclick="previewBatch()" class="btn btn-warning">Preview</button>
+                        <button type="button" id="preview-batch-btn" class="btn btn-warning">Preview</button>
                         <button type="submit" class="btn btn-success">Generate All QR Codes</button>
                     </div>
                 </form>
@@ -799,7 +799,8 @@
         </div>
     </footer>
 
-    <script>
+    <script src="{{ asset('js/admin.js') }}"></script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         // Set current year
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
@@ -807,6 +808,34 @@
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
         let currentMethod = 'single';
+
+        // Attach event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Method selection cards
+            document.querySelectorAll('.method-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const method = this.getAttribute('data-method');
+                    selectMethod(method);
+                });
+            });
+
+            // Preview buttons
+            const previewSingleBtn = document.getElementById('preview-single-btn');
+            if (previewSingleBtn) {
+                previewSingleBtn.addEventListener('click', previewSingle);
+            }
+
+            const previewBatchBtn = document.getElementById('preview-batch-btn');
+            if (previewBatchBtn) {
+                previewBatchBtn.addEventListener('click', previewBatch);
+            }
+
+            // Logout form handler
+            const logoutForm = document.getElementById('logoutFormDesktop');
+            if (logoutForm && typeof handleAdminLogout === 'function') {
+                logoutForm.addEventListener('submit', handleAdminLogout);
+            }
+        });
 
         function selectMethod(method) {
             currentMethod = method;

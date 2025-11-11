@@ -103,6 +103,33 @@
                 min-width: 46px;
             }
         }
+        
+        /* Page enter transitions (match landing) */
+        body:not(.loaded) .header,
+        body:not(.loaded) .survey-main,
+        body:not(.loaded) .footer {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        .header,
+        .survey-main,
+        .footer {
+            transition: opacity 360ms ease, transform 360ms ease;
+        }
+        body.loaded .header,
+        body.loaded .survey-main,
+        body.loaded .footer {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* Key element stagger */
+        body:not(.loaded) .survey-title { opacity: 0; transform: translateY(10px); }
+        body:not(.loaded) .survey-subtitle { opacity: 0; transform: translateY(12px); }
+        body.loaded .survey-title { transition-delay: 60ms; }
+        body.loaded .survey-subtitle { transition-delay: 120ms; }
+        /* Card gentle fade */
+        body:not(.loaded) .survey-card { opacity: 0; transform: translateY(8px); }
+        body.loaded .survey-card { opacity: 1; transform: translateY(0); transition: opacity 320ms ease, transform 320ms ease; transition-delay: 80ms; }
     </style>
 </head>
 <body>
@@ -226,7 +253,7 @@
                     </div>
                 </div>
 
-                <form id="surveyForm" onsubmit="submitSurvey(event)">
+                <form id="surveyForm">
                     @csrf
                     <!-- Hidden fields for student info -->
                     @auth
@@ -834,13 +861,13 @@
 
                     <!-- Navigation buttons -->
                     <div class="survey-navigation">
-                        <button type="button" id="prevBtn" onclick="previousStep()" class="btn btn-outline" disabled>
+                        <button type="button" id="prevBtn" class="btn btn-outline" disabled>
                             <svg class="btn-icon btn-icon-left" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                             </svg>
                             <span class="btn-text">Previous</span>
                         </button>
-                        <button type="button" id="nextBtn" onclick="nextStep()" class="btn btn-secondary">
+                        <button type="button" id="nextBtn" class="btn btn-secondary">
                             <span class="btn-text">Next</span>
                             <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -894,19 +921,29 @@
         </div>
     </footer>
 
-    <script src="{{ asset('js/main.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('js/survey.js') }}?v={{ time() }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var btn = document.getElementById('retakeConfirm');
-            var promptBox = document.getElementById('retakePrompt');
-            if (btn && promptBox) {
-                btn.addEventListener('click', function() {
-                    promptBox.style.display = 'none';
+    <script nonce="{{ $cspNonce ?? '' }}">
+        (function() {
+            var prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var applyLoaded = function() {
+                if (!document.body.classList.contains('loaded')) {
+                    document.body.classList.add('loaded');
+                }
+            };
+            if (prefersReduced) {
+                applyLoaded();
+                return;
+            }
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                requestAnimationFrame(function() { setTimeout(applyLoaded, 40); });
+            } else {
+                document.addEventListener('DOMContentLoaded', function() {
+                    requestAnimationFrame(function() { setTimeout(applyLoaded, 40); });
                 });
             }
-        });
+        })();
     </script>
+    <script src="{{ asset('js/main.js') }}?v={{ time() }}" @if(isset($cspNonce)) nonce="{{ $cspNonce }}" @endif></script>
+    <script src="{{ asset('js/survey.js') }}?v={{ time() }}" @if(isset($cspNonce)) nonce="{{ $cspNonce }}" @endif></script>
 
     <!-- Logout Modal Script -->
     @include('partials.logout-modal')

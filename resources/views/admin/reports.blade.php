@@ -819,7 +819,7 @@
                 <nav class="desktop-nav">
                     <a href="{{ route('admin.dashboard') }}" class="nav-link">Dashboard</a>
                     <a href="{{ route('admin.reports') }}" class="nav-link active">Reports</a>
-                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;" onsubmit="handleAdminLogout(event)">
+                    <form method="POST" action="{{ route('student.logout') }}" id="admin-logout-form" style="display: inline;">
                         @csrf
                         <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(135deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 700; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;">
                             <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 8px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -843,23 +843,23 @@
                 
                 <!-- Report Type Selector -->
                 <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;">
-                    <button type="button" onclick="switchReportType('compliance')" id="btn-compliance" class="report-type-btn active" style="padding: 14px 28px; font-size: 15px; font-weight: 700; border: 2px solid #4285F4; background: linear-gradient(135deg, #4285F4, #1e88e5); color: white; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);">
+                    <button type="button" data-report-type="compliance" id="btn-compliance" class="report-type-btn active" style="padding: 14px 28px; font-size: 15px; font-weight: 700; border: 2px solid #4285F4; background: linear-gradient(135deg, #4285F4, #1e88e5); color: white; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);">
                         📋 ISO Compliance Reports
                     </button>
-                    <button type="button" onclick="switchReportType('performance')" id="btn-performance" class="report-type-btn" style="padding: 14px 28px; font-size: 15px; font-weight: 700; border: 2px solid #4285F4; background: white; color: #4285F4; border-radius: 12px; cursor: pointer; transition: all 0.3s ease;">
+                    <button type="button" data-report-type="performance" id="btn-performance" class="report-type-btn" style="padding: 14px 28px; font-size: 15px; font-weight: 700; border: 2px solid #4285F4; background: white; color: #4285F4; border-radius: 12px; cursor: pointer; transition: all 0.3s ease;">
                         📊 Performance Monitoring
                     </button>
                 </div>
 
                 <!-- ISO Compliance Section Actions -->
                 <div id="compliance-actions" style="margin-top: 25px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                    <button type="button" onclick="showTestEmailModal()" class="btn btn-secondary" style="padding: 12px 20px; font-size: 14px;">
+                    <button type="button" id="btn-test-email" class="btn btn-secondary" style="padding: 12px 20px; font-size: 14px;">
                         <svg style="width: 18px; height: 18px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                             <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
                         </svg>
                         Test Email Configuration
                     </button>
-                    <button type="button" onclick="generateWeeklyMetrics()" class="btn btn-primary" style="padding: 12px 20px; font-size: 14px;">
+                    <button type="button" id="btn-generate-metrics" class="btn btn-primary" style="padding: 12px 20px; font-size: 14px;">
                         <svg style="width: 18px; height: 18px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                             <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
                         </svg>
@@ -942,7 +942,7 @@
                         </div>
 
                         <div style="display: flex; gap: 12px;">
-                            <button type="button" class="btn btn-secondary" onclick="previewWeeklyReport()">Preview Report</button>
+                            <button type="button" id="btn-preview-weekly" class="btn btn-secondary">Preview Report</button>
                             <button type="submit" class="btn btn-primary">Send Weekly Report</button>
                         </div>
                     </form>
@@ -998,7 +998,7 @@
                         </div>
 
                         <div style="display: flex; gap: 12px;">
-                            <button type="button" class="btn btn-secondary" onclick="previewMonthlyReport()">Preview Report</button>
+                            <button type="button" id="btn-preview-monthly" class="btn btn-secondary">Preview Report</button>
                             <button type="submit" class="btn btn-success">Send Monthly Report</button>
                         </div>
                     </form>
@@ -1023,15 +1023,22 @@
                             <p>{{ $performanceError }}</p>
                         </div>
                     </div>
+                @elseif(!isset($performanceData) || !is_array($performanceData))
+                    <div class="report-card">
+                        <div style="text-align: center; padding: 40px; color: #6c757d;">
+                            <h3>No Performance Data Available</h3>
+                            <p>Performance monitoring data is not available at this time. The system may need to collect more data before performance metrics can be displayed.</p>
+                        </div>
+                    </div>
                 @else
                     @php
                         // Get performance data if available, otherwise use defaults
                         $perfHours = request()->query('perf_hours', 24);
-                        $perfAiSummary = $performanceData['ai_service'] ?? null;
-                        $perfAnalyticsSummary = $performanceData['analytics_queries'] ?? null;
-                        $perfBottleneckAnalysis = $performanceData['bottlenecks'] ?? null;
-                        $perfAiTrends = $performanceData['trends']['ai_service'] ?? [];
-                        $perfAnalyticsTrends = $performanceData['trends']['analytics_queries'] ?? [];
+                        $perfAiSummary = isset($performanceData['ai_service']) ? $performanceData['ai_service'] : null;
+                        $perfAnalyticsSummary = isset($performanceData['analytics_queries']) ? $performanceData['analytics_queries'] : null;
+                        $perfBottleneckAnalysis = isset($performanceData['bottlenecks']) ? $performanceData['bottlenecks'] : null;
+                        $perfAiTrends = isset($performanceData['trends']['ai_service']) ? $performanceData['trends']['ai_service'] : [];
+                        $perfAnalyticsTrends = isset($performanceData['trends']['analytics_queries']) ? $performanceData['trends']['analytics_queries'] : [];
                     @endphp
 
                     <!-- Time Period Selector -->
@@ -1040,14 +1047,14 @@
                             <div>
                                 <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 20px; font-weight: 700;">Time Period</h3>
                                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                    <a href="javascript:void(0)" onclick="switchPerformanceTime(24)" class="perf-time-btn {{ $perfHours == 24 ? 'active' : '' }}" data-hours="24" style="padding: 10px 20px; border: 2px solid #4285F4; background: {{ $perfHours == 24 ? '#4285F4' : 'white' }}; color: {{ $perfHours == 24 ? 'white' : '#4285F4' }}; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">Last 24 Hours</a>
-                                    <a href="javascript:void(0)" onclick="switchPerformanceTime(48)" class="perf-time-btn {{ $perfHours == 48 ? 'active' : '' }}" data-hours="48" style="padding: 10px 20px; border: 2px solid #4285F4; background: {{ $perfHours == 48 ? '#4285F4' : 'white' }}; color: {{ $perfHours == 48 ? 'white' : '#4285F4' }}; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">Last 48 Hours</a>
-                                    <a href="javascript:void(0)" onclick="switchPerformanceTime(168)" class="perf-time-btn {{ $perfHours == 168 ? 'active' : '' }}" data-hours="168" style="padding: 10px 20px; border: 2px solid #4285F4; background: {{ $perfHours == 168 ? '#4285F4' : 'white' }}; color: {{ $perfHours == 168 ? 'white' : '#4285F4' }}; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">Last 7 Days</a>
-                                    <a href="javascript:void(0)" onclick="switchPerformanceTime(720)" class="perf-time-btn {{ $perfHours == 720 ? 'active' : '' }}" data-hours="720" style="padding: 10px 20px; border: 2px solid #4285F4; background: {{ $perfHours == 720 ? '#4285F4' : 'white' }}; color: {{ $perfHours == 720 ? 'white' : '#4285F4' }}; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">Last 30 Days</a>
+                                    <a href="#" class="perf-time-btn {{ $perfHours == 24 ? 'active' : '' }}" data-hours="24" style="padding: 10px 20px; border: 2px solid #4285F4; background: {{ $perfHours == 24 ? '#4285F4' : 'white' }}; color: {{ $perfHours == 24 ? 'white' : '#4285F4' }}; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">Last 24 Hours</a>
+                                    <a href="#" class="perf-time-btn {{ $perfHours == 48 ? 'active' : '' }}" data-hours="48" style="padding: 10px 20px; border: 2px solid #4285F4; background: {{ $perfHours == 48 ? '#4285F4' : 'white' }}; color: {{ $perfHours == 48 ? 'white' : '#4285F4' }}; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">Last 48 Hours</a>
+                                    <a href="#" class="perf-time-btn {{ $perfHours == 168 ? 'active' : '' }}" data-hours="168" style="padding: 10px 20px; border: 2px solid #4285F4; background: {{ $perfHours == 168 ? '#4285F4' : 'white' }}; color: {{ $perfHours == 168 ? 'white' : '#4285F4' }}; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">Last 7 Days</a>
+                                    <a href="#" class="perf-time-btn {{ $perfHours == 720 ? 'active' : '' }}" data-hours="720" style="padding: 10px 20px; border: 2px solid #4285F4; background: {{ $perfHours == 720 ? '#4285F4' : 'white' }}; color: {{ $perfHours == 720 ? 'white' : '#4285F4' }}; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">Last 30 Days</a>
                                 </div>
                             </div>
                             <div>
-                                <button onclick="exportPerformanceReport()" style="background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);">
+                                <button type="button" id="btn-export-performance" style="background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);">
                                     📊 Export Report
                                 </button>
                             </div>
@@ -1358,7 +1365,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>📧 Test Email Configuration</h3>
-                <button type="button" class="close-modal" onclick="closeTestEmailModal()">&times;</button>
+                <button type="button" class="close-modal" id="btn-close-test-email-modal">&times;</button>
             </div>
             <div class="modal-body">
                 <p>Send a test email to verify that your Google SMTP configuration is working correctly.</p>
@@ -1378,7 +1385,7 @@
 
                     <div style="margin-top: 25px; display: flex; gap: 12px;">
                         <button type="submit" class="btn btn-primary" style="flex: 1;">Send Test Email</button>
-                        <button type="button" class="btn btn-secondary" onclick="closeTestEmailModal()" style="flex: 1;">Cancel</button>
+                        <button type="button" class="btn btn-secondary" id="btn-cancel-test-email" style="flex: 1;">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -1404,7 +1411,7 @@
         </div>
     </footer>
 
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         // Set current year
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
@@ -1759,50 +1766,67 @@
 
         // Report Type Switching
         function switchReportType(type) {
-            const complianceSection = document.getElementById('compliance-reports-section');
-            const performanceSection = document.getElementById('performance-reports-section');
-            const complianceActions = document.getElementById('compliance-actions');
-            const performanceActions = document.getElementById('performance-actions');
-            const complianceInfo = document.getElementById('compliance-info');
-            const performanceInfo = document.getElementById('performance-info');
-            const qrSection = document.getElementById('qr-section');
-            const btnCompliance = document.getElementById('btn-compliance');
-            const btnPerformance = document.getElementById('btn-performance');
+            try {
+                const complianceSection = document.getElementById('compliance-reports-section');
+                const performanceSection = document.getElementById('performance-reports-section');
+                const complianceActions = document.getElementById('compliance-actions');
+                const performanceActions = document.getElementById('performance-actions');
+                const complianceInfo = document.getElementById('compliance-info');
+                const performanceInfo = document.getElementById('performance-info');
+                const qrSection = document.getElementById('qr-section');
+                const btnCompliance = document.getElementById('btn-compliance');
+                const btnPerformance = document.getElementById('btn-performance');
 
-            if (type === 'compliance') {
-                // Show compliance reports
-                complianceSection.style.display = 'block';
-                performanceSection.style.display = 'none';
-                complianceActions.style.display = 'flex';
-                performanceActions.style.display = 'none';
-                complianceInfo.style.display = 'block';
-                performanceInfo.style.display = 'none';
-                qrSection.style.display = 'block';
-                
-                // Update button styles
-                btnCompliance.style.background = 'linear-gradient(135deg, #4285F4, #1e88e5)';
-                btnCompliance.style.color = 'white';
-                btnCompliance.style.boxShadow = '0 5px 15px rgba(66, 133, 244, 0.3)';
-                btnPerformance.style.background = 'white';
-                btnPerformance.style.color = '#4285F4';
-                btnPerformance.style.boxShadow = 'none';
-            } else {
-                // Show performance reports
-                complianceSection.style.display = 'none';
-                performanceSection.style.display = 'block';
-                complianceActions.style.display = 'none';
-                performanceActions.style.display = 'none';
-                complianceInfo.style.display = 'none';
-                performanceInfo.style.display = 'block';
-                qrSection.style.display = 'none';
-                
-                // Update button styles
-                btnPerformance.style.background = 'linear-gradient(135deg, #4285F4, #1e88e5)';
-                btnPerformance.style.color = 'white';
-                btnPerformance.style.boxShadow = '0 5px 15px rgba(66, 133, 244, 0.3)';
-                btnCompliance.style.background = 'white';
-                btnCompliance.style.color = '#4285F4';
-                btnCompliance.style.boxShadow = 'none';
+                if (!complianceSection || !performanceSection) {
+                    console.error('Report sections not found');
+                    return;
+                }
+
+                if (type === 'compliance') {
+                    // Show compliance reports
+                    if (complianceSection) complianceSection.style.display = 'block';
+                    if (performanceSection) performanceSection.style.display = 'none';
+                    if (complianceActions) complianceActions.style.display = 'flex';
+                    if (performanceActions) performanceActions.style.display = 'none';
+                    if (complianceInfo) complianceInfo.style.display = 'block';
+                    if (performanceInfo) performanceInfo.style.display = 'none';
+                    if (qrSection) qrSection.style.display = 'block';
+                    
+                    // Update button styles
+                    if (btnCompliance) {
+                        btnCompliance.style.background = 'linear-gradient(135deg, #4285F4, #1e88e5)';
+                        btnCompliance.style.color = 'white';
+                        btnCompliance.style.boxShadow = '0 5px 15px rgba(66, 133, 244, 0.3)';
+                    }
+                    if (btnPerformance) {
+                        btnPerformance.style.background = 'white';
+                        btnPerformance.style.color = '#4285F4';
+                        btnPerformance.style.boxShadow = 'none';
+                    }
+                } else {
+                    // Show performance reports
+                    if (complianceSection) complianceSection.style.display = 'none';
+                    if (performanceSection) performanceSection.style.display = 'block';
+                    if (complianceActions) complianceActions.style.display = 'none';
+                    if (performanceActions) performanceActions.style.display = 'none';
+                    if (complianceInfo) complianceInfo.style.display = 'none';
+                    if (performanceInfo) performanceInfo.style.display = 'block';
+                    if (qrSection) qrSection.style.display = 'none';
+                    
+                    // Update button styles
+                    if (btnPerformance) {
+                        btnPerformance.style.background = 'linear-gradient(135deg, #4285F4, #1e88e5)';
+                        btnPerformance.style.color = 'white';
+                        btnPerformance.style.boxShadow = '0 5px 15px rgba(66, 133, 244, 0.3)';
+                    }
+                    if (btnCompliance) {
+                        btnCompliance.style.background = 'white';
+                        btnCompliance.style.color = '#4285F4';
+                        btnCompliance.style.boxShadow = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error switching report type:', error);
             }
         }
 
@@ -1841,8 +1865,97 @@
             window.URL.revokeObjectURL(url);
         }
 
-        // Auto-switch to performance tab if perf_hours parameter is present
+        // Event Listeners for buttons (replacing inline handlers for CSP compliance)
         document.addEventListener('DOMContentLoaded', function() {
+            // Report type switching buttons
+            const btnCompliance = document.getElementById('btn-compliance');
+            const btnPerformance = document.getElementById('btn-performance');
+            
+            if (btnCompliance) {
+                btnCompliance.addEventListener('click', function() {
+                    switchReportType('compliance');
+                });
+            }
+            
+            if (btnPerformance) {
+                btnPerformance.addEventListener('click', function() {
+                    switchReportType('performance');
+                });
+            }
+
+            // Test email modal button
+            const btnTestEmail = document.getElementById('btn-test-email');
+            if (btnTestEmail) {
+                btnTestEmail.addEventListener('click', function() {
+                    showTestEmailModal();
+                });
+            }
+
+            // Generate weekly metrics button
+            const btnGenerateMetrics = document.getElementById('btn-generate-metrics');
+            if (btnGenerateMetrics) {
+                btnGenerateMetrics.addEventListener('click', function() {
+                    generateWeeklyMetrics();
+                });
+            }
+
+            // Preview buttons
+            const btnPreviewWeekly = document.getElementById('btn-preview-weekly');
+            if (btnPreviewWeekly) {
+                btnPreviewWeekly.addEventListener('click', function() {
+                    previewWeeklyReport();
+                });
+            }
+
+            const btnPreviewMonthly = document.getElementById('btn-preview-monthly');
+            if (btnPreviewMonthly) {
+                btnPreviewMonthly.addEventListener('click', function() {
+                    previewMonthlyReport();
+                });
+            }
+
+            // Performance time period buttons
+            const perfTimeButtons = document.querySelectorAll('.perf-time-btn');
+            perfTimeButtons.forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const hours = parseInt(this.getAttribute('data-hours'));
+                    if (hours) {
+                        switchPerformanceTime(hours);
+                    }
+                });
+            });
+
+            // Export performance report button
+            const btnExportPerformance = document.getElementById('btn-export-performance');
+            if (btnExportPerformance) {
+                btnExportPerformance.addEventListener('click', function() {
+                    exportPerformanceReport();
+                });
+            }
+
+            // Test email modal close buttons
+            const btnCloseTestEmailModal = document.getElementById('btn-close-test-email-modal');
+            if (btnCloseTestEmailModal) {
+                btnCloseTestEmailModal.addEventListener('click', function() {
+                    closeTestEmailModal();
+                });
+            }
+
+            const btnCancelTestEmail = document.getElementById('btn-cancel-test-email');
+            if (btnCancelTestEmail) {
+                btnCancelTestEmail.addEventListener('click', function() {
+                    closeTestEmailModal();
+                });
+            }
+
+            // Admin logout form handler
+            const adminLogoutForm = document.getElementById('admin-logout-form');
+            if (adminLogoutForm && typeof handleAdminLogout === 'function') {
+                adminLogoutForm.addEventListener('submit', handleAdminLogout);
+            }
+
+            // Auto-switch to performance tab if perf_hours parameter is present
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('perf_hours')) {
                 switchReportType('performance');

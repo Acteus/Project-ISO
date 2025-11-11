@@ -747,7 +747,7 @@
                 <nav class="desktop-nav" aria-label="Main navigation">
                     <a href="{{ route('admin.dashboard') }}" class="nav-link" aria-label="Go to Admin Dashboard">Dashboard</a>
                     <a href="{{ route('admin.ai.insights') }}" class="nav-link active" aria-current="page" aria-label="AI Insights - Current page">AI Insights</a>
-                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;" aria-label="Logout form" onsubmit="handleAdminLogout(event)">
+                    <form method="POST" action="{{ route('student.logout') }}" id="admin-logout-form" style="display: inline;" aria-label="Logout form">
                         @csrf
                         <button type="submit" class="nav-link logout-btn" aria-label="Logout from admin account" style="background: linear-gradient(135deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 700; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;">
                             <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 8px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
@@ -821,7 +821,7 @@
                     <article class="insight-card">
                         <h3>Compliance Prediction</h3>
                         <p>AI-powered prediction of ISO 21001 compliance levels based on learner feedback and performance metrics.</p>
-                        <button type="button" class="btn btn-primary" onclick="runCompliancePrediction()" aria-describedby="compliance-desc">Run Compliance Prediction</button>
+                        <button type="button" class="btn btn-primary" data-action="compliance" aria-describedby="compliance-desc">Run Compliance Prediction</button>
                         <div id="compliance-desc" class="sr-only">Runs AI analysis to predict ISO 21001 compliance levels based on current survey data</div>
                     </article>
 
@@ -829,7 +829,7 @@
                     <article class="insight-card">
                         <h3>Sentiment Analysis</h3>
                         <p>Analyze student feedback sentiment using advanced NLP models to identify positive and negative trends.</p>
-                        <button type="button" class="btn btn-primary" onclick="runSentimentAnalysis()" aria-describedby="sentiment-desc">Analyze Feedback Sentiment</button>
+                        <button type="button" class="btn btn-primary" data-action="sentiment" aria-describedby="sentiment-desc">Analyze Feedback Sentiment</button>
                         <div id="sentiment-desc" class="sr-only">Analyzes sentiment in student feedback comments using natural language processing</div>
                     </article>
 
@@ -837,7 +837,7 @@
                     <article class="insight-card">
                         <h3>Student Clustering</h3>
                         <p>Group students based on survey responses for targeted interventions and personalized support. ISO 21001:7.1 compliant segmentation.</p>
-                        <button type="button" class="btn btn-primary" onclick="runStudentClustering()" aria-describedby="clustering-desc">Run Student Clustering</button>
+                        <button type="button" class="btn btn-primary" data-action="clustering" aria-describedby="clustering-desc">Run Student Clustering</button>
                         <div id="clustering-desc" class="sr-only">Groups students into clusters based on survey responses for targeted support</div>
                     </article>
 
@@ -845,7 +845,7 @@
                     <article class="insight-card">
                         <h3>Predictive Analytics <span style="color: #ffc107; font-size: 12px; font-weight: 600; background: rgba(255, 193, 7, 0.1); padding: 4px 8px; border-radius: 6px; margin-left: 8px;" title="This feature may be temporarily unavailable">⚠ Beta</span></h3>
                         <p>Advanced forecasting of student performance, satisfaction trends, and risk factors using time series analysis.</p>
-                        <button type="button" class="btn btn-primary" onclick="runPredictiveAnalytics()" aria-describedby="predictive-desc">Forecast Future Performance</button>
+                        <button type="button" class="btn btn-primary" data-action="predictive" aria-describedby="predictive-desc">Forecast Future Performance</button>
                         <div id="predictive-desc" class="sr-only">Forecasts future student performance and satisfaction trends. Note: This feature is in beta and may be temporarily unavailable.</div>
                     </article>
 
@@ -853,7 +853,7 @@
                     <article class="insight-card">
                         <h3>Comprehensive Risk Assessment <span style="color: #ffc107; font-size: 12px; font-weight: 600; background: rgba(255, 193, 7, 0.1); padding: 4px 8px; border-radius: 6px; margin-left: 8px;" title="This feature may be temporarily unavailable">⚠ Beta</span></h3>
                         <p>Complete ISO 21001 compliance risk evaluation across all learner-centric dimensions with intervention recommendations.</p>
-                        <button type="button" class="btn btn-primary" onclick="runComprehensiveRiskAssessment()" aria-describedby="risk-desc">Run Comprehensive Risk Assessment</button>
+                        <button type="button" class="btn btn-primary" data-action="risk_assessment" aria-describedby="risk-desc">Run Comprehensive Risk Assessment</button>
                         <div id="risk-desc" class="sr-only">Evaluates compliance risks across all ISO 21001 dimensions. Note: This feature is in beta and may be temporarily unavailable.</div>
                     </article>
 
@@ -861,7 +861,7 @@
                     <article class="insight-card">
                         <h3>Satisfaction Trend Analysis</h3>
                         <p>Analyze satisfaction trends over time with forecasting capabilities for proactive quality management.</p>
-                        <button type="button" class="btn btn-primary" onclick="runTrendAnalysis()" aria-describedby="trend-desc">Analyze Satisfaction Trends</button>
+                        <button type="button" class="btn btn-primary" data-action="trend_analysis" aria-describedby="trend-desc">Analyze Satisfaction Trends</button>
                         <div id="trend-desc" class="sr-only">Analyzes satisfaction trends over time with forecasting</div>
                     </article>
 
@@ -869,7 +869,7 @@
                     <article class="insight-card">
                         <h3>Performance Prediction <span style="color: #ffc107; font-size: 12px; font-weight: 600; background: rgba(255, 193, 7, 0.1); padding: 4px 8px; border-radius: 6px; margin-left: 8px;" title="This feature may be temporarily unavailable">⚠ Beta</span></h3>
                         <p>Predict student academic performance and identify at-risk students early.</p>
-                        <button type="button" class="btn btn-primary" onclick="runPerformancePrediction()" aria-describedby="performance-desc">Predict Student Performance</button>
+                        <button type="button" class="btn btn-primary" data-action="performance" aria-describedby="performance-desc">Predict Student Performance</button>
                         <div id="performance-desc" class="sr-only">Predicts academic performance and identifies at-risk students. Note: This feature is in beta and may be temporarily unavailable.</div>
                     </article>
 
@@ -877,7 +877,7 @@
                     <article class="insight-card">
                         <h3>Dropout Risk Assessment <span style="color: #ffc107; font-size: 12px; font-weight: 600; background: rgba(255, 193, 7, 0.1); padding: 4px 8px; border-radius: 6px; margin-left: 8px;" title="This feature may be temporarily unavailable">⚠ Beta</span></h3>
                         <p>Identify students at risk of dropping out using machine learning algorithms.</p>
-                        <button type="button" class="btn btn-primary" onclick="runDropoutRiskAssessment()" aria-describedby="dropout-desc">Assess Dropout Risk</button>
+                        <button type="button" class="btn btn-primary" data-action="dropout" aria-describedby="dropout-desc">Assess Dropout Risk</button>
                         <div id="dropout-desc" class="sr-only">Identifies students at risk of dropping out. Note: This feature is in beta and may be temporarily unavailable.</div>
                     </article>
 
@@ -885,7 +885,7 @@
                     <article class="insight-card">
                         <h3>Comprehensive Analytics</h3>
                         <p>Run all AI models simultaneously for complete insights into student satisfaction and compliance.</p>
-                        <button type="button" class="btn btn-success" onclick="runComprehensiveAnalytics()" aria-describedby="comprehensive-desc">Run All AI Analytics</button>
+                        <button type="button" class="btn btn-success" data-action="comprehensive" aria-describedby="comprehensive-desc">Run All AI Analytics</button>
                         <div id="comprehensive-desc" class="sr-only">Runs all AI analysis models simultaneously for comprehensive insights</div>
                     </article>
                 </section>
@@ -896,7 +896,7 @@
                 <div id="ai-results" class="ai-results" aria-live="polite" aria-atomic="true">
                     <h3>
                         <span>📊 AI Analysis Results</span>
-                        <button class="results-close-btn" onclick="clearResults()" title="Clear Results" aria-label="Clear all analysis results" aria-describedby="clear-results-desc">×</button>
+                        <button class="results-close-btn" id="clear-results-btn" title="Clear Results" aria-label="Clear all analysis results" aria-describedby="clear-results-desc">×</button>
                         <div id="clear-results-desc" class="sr-only">Clears all current analysis results from the display</div>
                     </h3>
                     <div id="results-container">
@@ -943,7 +943,7 @@
         </div>
     </footer>
 
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         // Set current year
         document.getElementById('currentYear').textContent = new Date().getFullYear();
 
@@ -1009,7 +1009,96 @@
                     card.style.transform = 'translateY(0)';
                 }, index * 100);
             });
+
+            // Attach event listeners to buttons (CSP-compliant)
+            setupEventListeners();
         });
+
+        /* ----------------------
+           Event Listeners Setup
+           ---------------------- */
+        function setupEventListeners() {
+            // Admin logout form
+            const logoutForm = document.getElementById('admin-logout-form');
+            if (logoutForm) {
+                logoutForm.addEventListener('submit', handleAdminLogout);
+            }
+
+            // Analysis action buttons
+            const actionButtons = document.querySelectorAll('[data-action]');
+            actionButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const action = this.getAttribute('data-action');
+                    const actionMap = {
+                        'compliance': () => runAIAnalysis('compliance', 'Predicting compliance levels...'),
+                        'sentiment': () => runAIAnalysis('sentiment', 'Analyzing sentiment...'),
+                        'clustering': () => runAIAnalysis('clustering', 'Clustering students...'),
+                        'predictive': () => runAIAnalysis('predictive', 'Running predictive analytics...'),
+                        'risk_assessment': () => runAIAnalysis('risk_assessment', 'Assessing comprehensive risks...'),
+                        'trend_analysis': () => runAIAnalysis('trend_analysis', 'Analyzing satisfaction trends...'),
+                        'performance': () => runAIAnalysis('performance', 'Predicting performance...'),
+                        'dropout': () => runAIAnalysis('dropout', 'Assessing dropout risk...'),
+                        'comprehensive': () => runAIAnalysis('comprehensive', 'Running comprehensive analytics...')
+                    };
+                    
+                    if (actionMap[action]) {
+                        actionMap[action]();
+                    }
+                });
+            });
+
+            // Clear results button
+            const clearResultsBtn = document.getElementById('clear-results-btn');
+            if (clearResultsBtn) {
+                clearResultsBtn.addEventListener('click', clearResults);
+            }
+        }
+
+        /* ----------------------
+           Admin Logout Handler
+           ---------------------- */
+        function handleAdminLogout(event) {
+            event.preventDefault();
+            
+            let form = event.target;
+            if (!form || form.tagName !== 'FORM') {
+                // If event.target is not the form, try to find it
+                const formElement = event.target.closest('form');
+                if (!formElement) return;
+                form = formElement;
+            }
+            
+            const formData = new FormData(form);
+            const csrfToken = document.querySelector('[name="_token"]')?.value || 
+                             document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(response => {
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                }
+                return {};
+            })
+            .then(data => {
+                // Redirect to login or show success message
+                window.location.href = '{{ route("student.login") }}';
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                // Redirect anyway
+                window.location.href = '{{ route("student.login") }}';
+            });
+        }
 
         /* ----------------------
            Service / Metrics
@@ -1140,18 +1229,6 @@
             }
         }
 
-        /* ----------------------
-           Action wrappers
-           ---------------------- */
-        function runCompliancePrediction(){ return runAIAnalysis('compliance', 'Predicting compliance levels...'); }
-        function runSentimentAnalysis(){ return runAIAnalysis('sentiment', 'Analyzing sentiment...'); }
-        function runStudentClustering(){ return runAIAnalysis('clustering', 'Clustering students...'); }
-        function runPredictiveAnalytics(){ return runAIAnalysis('predictive', 'Running predictive analytics...'); }
-        function runComprehensiveRiskAssessment(){ return runAIAnalysis('risk_assessment', 'Assessing comprehensive risks...'); }
-        function runTrendAnalysis(){ return runAIAnalysis('trend_analysis', 'Analyzing satisfaction trends...'); }
-        function runPerformancePrediction(){ return runAIAnalysis('performance', 'Predicting performance...'); }
-        function runDropoutRiskAssessment(){ return runAIAnalysis('dropout', 'Assessing dropout risk...'); }
-        function runComprehensiveAnalytics(){ return runAIAnalysis('comprehensive', 'Running comprehensive analytics...'); }
 
         async function runAIAnalysis(type, loadingMessage){
             showLoading(loadingMessage);

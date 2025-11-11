@@ -1247,7 +1247,7 @@
 
                 <!-- Mobile menu button -->
                 <div class="mobile-menu-btn">
-                    <button class="menu-toggle" onclick="toggleMobileMenu()">
+                    <button class="menu-toggle" id="mobileMenuButton" aria-expanded="false" aria-controls="mobileNav">
                         <span class="hamburger"></span>
                         <span class="hamburger"></span>
                         <span class="hamburger"></span>
@@ -1318,6 +1318,22 @@
                 </div>
             @endif
 
+            @if($errors->any())
+                <div class="alert alert-error">
+                    <svg style="width: 24px; height: 24px; fill: currentColor; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                    </svg>
+                    <div>
+                        <strong>There were some issues with your submission:</strong>
+                        <ul style="margin: 10px 0 0 20px; padding: 0; list-style: disc;">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            @endif
+
             <!-- Student Information Card (Read-only) -->
             <div class="student-info-card">
                 <h3>Student Information</h3>
@@ -1349,7 +1365,7 @@
                     </svg>
                     Update Profile Information
                 </h3>
-                <form action="#" method="POST" style="max-width: 600px;">
+                <form action="{{ route('student.profile.update') }}" method="POST" style="max-width: 600px;">
                     @csrf
                     <div class="form-group">
                         <label for="name" class="form-label">Full Name</label>
@@ -1366,7 +1382,7 @@
                         <input type="text" id="section" name="section" value="{{ Auth::user()->section }}" class="form-input" required>
                     </div>
 
-                    <button type="submit" class="btn btn-primary" onclick="event.preventDefault(); alert('Profile update feature coming soon!');">
+                    <button type="submit" class="btn btn-primary">
                         <svg style="width: 18px; height: 18px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                         </svg>
@@ -1477,7 +1493,7 @@
                                     This action will be logged for audit purposes.
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-danger" onclick="return confirmRevokeConsent(event)">
+                            <button type="submit" class="btn btn-danger" id="revokeConsentButton">
                                 <svg style="width: 18px; height: 18px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                     <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
                                 </svg>
@@ -1510,7 +1526,7 @@
                     </svg>
                     Change Password
                 </h3>
-                <form action="#" method="POST" style="max-width: 600px;">
+                <form action="{{ route('student.password.update') }}" method="POST" style="max-width: 600px;">
                     @csrf
                     <div class="form-group">
                         <label for="current_password" class="form-label">Current Password</label>
@@ -1527,7 +1543,7 @@
                         <input type="password" id="confirm_password" name="confirm_password" class="form-input" required>
                     </div>
 
-                    <button type="submit" class="btn btn-warning" onclick="event.preventDefault(); alert('Password change feature coming soon!');">
+                    <button type="submit" class="btn btn-warning">
                         <svg style="width: 18px; height: 18px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                         </svg>
@@ -1552,48 +1568,5 @@
     </footer>
 
     <script src="{{ asset('js/main.js') }}"></script>
-    <script>
-        // Set current year
-        document.getElementById('currentYear').textContent = new Date().getFullYear();
-
-        // Mobile menu toggle function
-        function toggleMobileMenu() {
-            const mobileNav = document.getElementById('mobileNav');
-            if (mobileNav) {
-                mobileNav.classList.toggle('show');
-            }
-        }
-
-        console.log('Student dashboard loaded');
-
-        // Confirm consent revocation
-        function confirmRevokeConsent(event) {
-            event.preventDefault();
-
-            if (confirm('Are you sure you want to revoke your consent?\n\nThis will:\n- Prevent you from submitting new surveys\n- Be logged for audit purposes\n- Not delete existing data immediately\n\nYou can contact the administrator to request data deletion.')) {
-                // Show loading state
-                const form = document.getElementById('revokeConsentForm');
-                const button = form.querySelector('button[type="submit"]');
-                const originalText = button.innerHTML;
-                button.disabled = true;
-                button.innerHTML = '<svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 5px; animation: spin 1s linear infinite;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg> Revoking...';
-
-                // Submit form
-                form.submit();
-            }
-
-            return false;
-        }
-
-        // Add spin animation for loading
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes spin {
-                from { transform: rotate(0deg); }
-                to { transform: rotate(360deg); }
-            }
-        `;
-        document.head.appendChild(style);
-    </script>
 </body>
 </html>

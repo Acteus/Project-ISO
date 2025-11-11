@@ -42,16 +42,24 @@ class ForgotPasswordController extends Controller
         );
 
         if ($status === Password::RESET_LINK_SENT) {
-            return response()->json([
-                'message' => 'We have emailed your password reset link!',
-                'status' => 'success'
-            ]);
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'message' => 'We have emailed your password reset link!',
+                    'status' => 'success'
+                ]);
+            }
+            return back()->with('status', __($status));
         }
 
-        return response()->json([
-            'message' => 'We could not find a user with that email address.',
-            'errors' => ['email' => [__($status)]]
-        ], 422);
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'message' => 'We could not find a user with that email address.',
+                'errors' => ['email' => [__($status)]]
+            ], 422);
+        }
+        return back()
+            ->withErrors(['email' => __($status)])
+            ->withInput();
     }
 
     /**
@@ -96,16 +104,25 @@ class ForgotPasswordController extends Controller
         );
 
         if ($status === Password::PASSWORD_RESET) {
-            return response()->json([
-                'message' => 'Your password has been reset successfully!',
-                'redirect' => route('student.login'),
-                'status' => 'success'
-            ]);
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Your password has been reset successfully!',
+                    'redirect' => route('student.login'),
+                    'status' => 'success'
+                ]);
+            }
+            return redirect()->route('student.login')
+                ->with('status', __('Your password has been reset successfully. Please log in.'));
         }
 
-        return response()->json([
-            'message' => 'Failed to reset password.',
-            'errors' => ['email' => [__($status)]]
-        ], 422);
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json([
+                'message' => 'Failed to reset password.',
+                'errors' => ['email' => [__($status)]]
+            ], 422);
+        }
+        return back()
+            ->withErrors(['email' => __($status)])
+            ->withInput();
     }
 }

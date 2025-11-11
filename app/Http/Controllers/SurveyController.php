@@ -399,17 +399,21 @@ class SurveyController extends Controller
         $dateTo = $sanitizationService->sanitizeQueryParameter($request->query('date_to'), 'date');
 
         // Log analytics access for audit (ISO 21001:8.2.4 - Data access traceability)
-        // Note: AuditMiddleware will also log this, but this provides more context
-        if (Auth::check() && Auth::user()->role === 'admin') {
-            $this->auditService->logDataAccess(
-                'analytics',
-                null,
-                'view_dashboard',
-                $request,
-                [
-                    'query_params' => $request->query(),
-                ]
-            );
+        // Check for admin session (session-based admin authentication)
+        $admin = session('admin');
+        if ($admin) {
+            $adminId = is_array($admin) ? ($admin['id'] ?? null) : ($admin->id ?? null);
+            if ($adminId) {
+                \App\Models\AuditLog::create([
+                    'admin_id' => $adminId,
+                    'action' => 'view_analytics',
+                    'description' => 'Accessed analytics API',
+                    'ip_address' => $request->ip(),
+                    'new_values' => [
+                        'query_params' => $request->query(),
+                    ],
+                ]);
+            }
         }
 
         // Generate cache key based on query parameters

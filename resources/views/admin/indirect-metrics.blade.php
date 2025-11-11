@@ -432,7 +432,7 @@
                     <a href="{{ route('api.survey.analytics') }}" class="nav-link" target="_blank">Analytics</a>
                     <a href="{{ route('admin.ai.insights') }}" class="nav-link">AI Insights</a>
                     <a href="{{ route('admin.reports') }}" class="nav-link">Reports</a>
-                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;" onsubmit="handleAdminLogout(event)">
+                    <form method="POST" action="{{ route('student.logout') }}" style="display: inline;" id="adminLogoutForm" data-admin-logout-form>
                         @csrf
                         <button type="submit" class="nav-link logout-btn" style="background: linear-gradient(135deg, #dc3545, #c82333); border: none; color: white; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 700; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;">
                             <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 8px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -609,34 +609,9 @@
         </div>
     </main>
 
-    <script>
-        // File input label update
-        document.getElementById('csv_file').addEventListener('change', function(e) {
-            const label = document.getElementById('fileLabel');
-            if (e.target.files.length > 0) {
-                label.classList.add('has-file');
-                label.innerHTML = `<span>📄 ${e.target.files[0].name}</span>`;
-            } else {
-                label.classList.remove('has-file');
-                label.innerHTML = `<span>📁 Click to select CSV file or drag and drop</span>`;
-            }
-        });
-
-        // Form submission loading states
-        document.getElementById('csvUploadForm').addEventListener('submit', function(e) {
-            const btn = this.querySelector('button[type="submit"]');
-            btn.disabled = true;
-            btn.textContent = 'Uploading...';
-        });
-
-        document.getElementById('manualForm').addEventListener('submit', function(e) {
-            const btn = this.querySelector('button[type="submit"]');
-            btn.disabled = true;
-            btn.textContent = 'Updating...';
-        });
-    </script>
-
-    @include('partials.admin-logout-modal')
+    <script src="{{ asset('js/main.js') }}" defer></script>
+    <script src="{{ asset('js/admin.js') }}" defer></script>
+    <script src="{{ asset('js/indirect-metrics.js') }}" defer></script>
 </body>
 </html>
 

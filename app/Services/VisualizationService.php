@@ -583,7 +583,7 @@ class VisualizationService
     /**
      * Generate compliance risk meter data
      */
-    public function generateComplianceRiskData($dateFrom = null, $dateTo = null)
+    public function generateComplianceRiskData($dateFrom = null, $dateTo = null, $track = null, $gradeLevel = null, $academicYear = null, $semester = null)
     {
         $query = SurveyResponse::query();
 
@@ -596,14 +596,30 @@ class VisualizationService
             $query->where('created_at', '<=', $dateTo . ' 23:59:59');
         }
 
+        // Apply additional filters
+        if ($track) {
+            $query->where('track', $track);
+        }
+        if ($gradeLevel) {
+            $query->where('grade_level', $gradeLevel);
+        }
+        if ($academicYear) {
+            $query->where('academic_year', $academicYear);
+        }
+        if ($semester) {
+            $query->where('semester', $semester);
+        }
+
         $responses = $query->get();
 
         if ($responses->isEmpty()) {
             return [
                 'risk_level' => 'Unknown',
                 'risk_score' => 0,
+                'compliance_score' => 0,
                 'compliance_percentage' => 0,
-                'recommendations' => []
+                'recommendations' => ['Collect more survey responses to generate compliance metrics.'],
+                'total_responses' => 0
             ];
         }
 
@@ -1150,10 +1166,10 @@ class VisualizationService
                     'icon' => '⚠️',
                     'title' => 'Satisfaction Target Not Met',
                     'message' => "Current satisfaction score: {$latestWeek->overall_satisfaction}/5.00. Target: 4.0+",
-                    'action' => [
-                        'text' => 'View Analytics',
-                        'url' => '/analytics'
-                    ]
+                        'action' => [
+                            'text' => 'View Analytics',
+                            'url' => route('admin.analytics')
+                        ]
                 ];
             }
 
@@ -1163,10 +1179,10 @@ class VisualizationService
                     'icon' => '🚨',
                     'title' => 'Compliance Target Not Met',
                     'message' => "Current compliance: {$latestWeek->compliance_percentage}%. Target: 80%+",
-                    'action' => [
-                        'text' => 'View Analytics',
-                        'url' => '/analytics'
-                    ]
+                        'action' => [
+                            'text' => 'View Analytics',
+                            'url' => route('admin.analytics')
+                        ]
                 ];
             }
 
@@ -1176,10 +1192,10 @@ class VisualizationService
                     'icon' => '📊',
                     'title' => 'Low Response Volume',
                     'message' => "Only {$latestWeek->new_responses} responses this week. Target: 50+",
-                    'action' => [
-                        'text' => 'View Analytics',
-                        'url' => '/analytics'
-                    ]
+                        'action' => [
+                            'text' => 'View Analytics',
+                            'url' => route('admin.analytics')
+                        ]
                 ];
             }
 
@@ -1197,7 +1213,7 @@ class VisualizationService
                         'message' => "Satisfaction dropped by {$latestWeek->satisfaction_trend}% from last week",
                         'action' => [
                             'text' => 'View Details',
-                            'url' => '/analytics'
+                            'url' => route('admin.analytics')
                         ]
                     ];
                 }
@@ -1210,7 +1226,7 @@ class VisualizationService
                         'message' => "Compliance dropped by {$latestWeek->compliance_trend}% from last week",
                         'action' => [
                             'text' => 'View Details',
-                            'url' => '/analytics'
+                            'url' => route('admin.analytics')
                         ]
                     ];
                 }
@@ -1238,10 +1254,10 @@ class VisualizationService
                     'icon' => '🎉',
                     'title' => 'All Targets Achieved!',
                     'message' => 'Congratulations! All weekly targets have been met.',
-                    'action' => [
-                        'text' => 'View Progress',
-                        'url' => '/analytics'
-                    ]
+                        'action' => [
+                            'text' => 'View Progress',
+                            'url' => route('admin.analytics')
+                        ]
                 ];
             }
         } else {
@@ -1251,10 +1267,10 @@ class VisualizationService
                 'icon' => '📈',
                 'title' => 'Weekly Progress Tracking Available',
                 'message' => 'Weekly metrics and progress tracking will appear here once data aggregation runs.',
-                'action' => [
-                    'text' => 'View Analytics',
-                    'url' => '/analytics'
-                ]
+                    'action' => [
+                        'text' => 'View Analytics',
+                        'url' => route('admin.analytics')
+                    ]
             ];
         }
 

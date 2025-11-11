@@ -1000,6 +1000,8 @@ function initializeEventListeners() {
     if (form) {
         form.addEventListener('input', handleFormInput);
         form.addEventListener('change', handleFormInput);
+        // Bind submit handler to avoid inline onsubmit (CSP-safe)
+        form.addEventListener('submit', submitSurveyLaravel);
     }
 
     // Keyboard navigation
@@ -1010,6 +1012,23 @@ function initializeEventListeners() {
     if (surveyCard) {
         surveyCard.addEventListener('touchstart', handleTouchStart, { passive: true });
         surveyCard.addEventListener('touchend', handleTouchEnd, { passive: true });
+    }
+
+    // Bind navigation buttons (CSP-safe)
+    const prevBtn = document.getElementById('prevBtn');
+    if (prevBtn) {
+        prevBtn.addEventListener('click', previousStep);
+    }
+    const nextBtn = document.getElementById('nextBtn');
+    if (nextBtn) {
+        nextBtn.addEventListener('click', nextStep);
+    }
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn && form) {
+        // Ensure requestSubmit is used for proper form submission
+        submitBtn.addEventListener('click', function () {
+            form.requestSubmit();
+        });
     }
 
     // Step indicator click handlers
@@ -1024,6 +1043,15 @@ function initializeEventListeners() {
 
     // Removed beforeunload warning - data is auto-saved, no need to warn user
     // isSubmitting flag will prevent warnings during submission
+
+    // Retake prompt handler (moved from inline script)
+    const retakeBtn = document.getElementById('retakeConfirm');
+    const promptBox = document.getElementById('retakePrompt');
+    if (retakeBtn && promptBox) {
+        retakeBtn.addEventListener('click', function () {
+            promptBox.style.display = 'none';
+        });
+    }
 }
 
 // Debounce utility

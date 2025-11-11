@@ -35,6 +35,8 @@ Route::prefix('student')->name('student.')->group(function () {
     Route::match(['get', 'post'], '/logout', [StudentController::class, 'logout'])->name('logout');
     Route::get('/clear-sessions', [StudentController::class, 'clearAllSessions'])->name('clear-sessions');
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
+    Route::post('/profile/update', [StudentController::class, 'updateProfile'])->name('profile.update')->middleware('auth');
+    Route::post('/password/update', [StudentController::class, 'updatePassword'])->name('password.update')->middleware('auth');
     // Consent management (GDPR & ISO 27001)
     Route::get('/consent/required', [StudentController::class, 'showConsentRequired'])->name('consent.required')->middleware('auth');
     Route::post('/consent/accept', [StudentController::class, 'acceptConsent'])->name('consent.accept')->middleware('auth');
@@ -64,6 +66,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::get('/responses', [StudentController::class, 'allResponses'])->name('responses');
     Route::get('/responses/{id}', [StudentController::class, 'viewResponse'])->name('response.view');
     Route::get('/audit-logs', [StudentController::class, 'auditLogs'])->name('audit.logs');
+    
+    // Analytics view route
+    Route::get('/analytics', [StudentController::class, 'showAnalytics'])->name('analytics');
 
     // Report Management Routes
     Route::get('/reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports');
@@ -121,6 +126,38 @@ Route::get('/thank-you', function () {
 
 // QR Code public access route
 Route::get('/qr/{id}', [QrCodeController::class, 'showPublic'])->name('qr.show');
+
+// Sitemap route (for SEO and security scanning)
+Route::get('/sitemap.xml', function () {
+    $appUrl = env('APP_URL', 'https://survey.kwadrateam.dev');
+    
+    $urls = [
+        route('welcome'),
+        route('home'),
+        route('survey.landing'),
+        route('survey.about'),
+        route('survey.privacy'),
+        route('survey.contact'),
+        route('student.login'),
+        route('student.register'),
+    ];
+    
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+    
+    foreach ($urls as $url) {
+        $xml .= "  <url>\n";
+        $xml .= "    <loc>" . htmlspecialchars($url) . "</loc>\n";
+        $xml .= "    <changefreq>weekly</changefreq>\n";
+        $xml .= "    <priority>0.8</priority>\n";
+        $xml .= "  </url>\n";
+    }
+    
+    $xml .= '</urlset>';
+    
+    return response($xml, 200)
+        ->header('Content-Type', 'application/xml; charset=utf-8');
+})->name('sitemap');
 
 // Serve static assets from public directory
 Route::get('/css/{filename}', function ($filename) {
@@ -264,61 +301,75 @@ if (!app()->environment('production')) {
 
 // API Routes for Survey functionality
 Route::prefix('api')->group(function () {
-    // Survey routes
+    // Public survey submission route (no auth required)
     Route::post('/survey/submit', [SurveyController::class, 'submitResponse'])->name('survey.submit');
-    Route::get('/survey/analytics', [SurveyController::class, 'getAnalytics'])->name('api.survey.analytics');
-    Route::get('/survey/responses', [SurveyController::class, 'getAllResponses'])->name('api.survey.responses');
-    Route::get('/survey/responses/{id}', [SurveyController::class, 'getResponse'])->name('api.survey.response');
-    Route::delete('/survey/responses/{id}', [SurveyController::class, 'deleteResponse'])->name('api.survey.delete');
-
-    // NEW SIMPLIFIED ANALYTICS API (v2) - Session-based auth for admin dashboard
-    Route::get('/analytics/summary', [App\Http\Controllers\AnalyticsController::class, 'getSummary'])->name('api.analytics.summary');
-    Route::get('/analytics/time-series', [App\Http\Controllers\AnalyticsController::class, 'getTimeSeries'])->name('api.analytics.time-series');
-    Route::get('/analytics/compliance', [App\Http\Controllers\AnalyticsController::class, 'getCompliance'])->name('api.analytics.compliance');
-
-    // Admin authentication routes
-    // SECURITY FIX: Add rate limiting to admin authentication endpoints
+    
+    // Admin authentication routes (no auth required for login)
     Route::post('/admin/login', [AdminAuthController::class, 'login'])->middleware('throttle:5,1'); // 5 attempts per minute
-    Route::post('/admin/logout', [AdminAuthController::class, 'logout']);
-    Route::get('/admin/me', [AdminAuthController::class, 'me']);
+    
+    // Protected Admin API Routes - Session-based auth for admin dashboard
+    // Note: Using only 'admin' middleware since admin auth uses session, not Auth::user()
+    Route::middleware(['admin'])->group(function () {
+        // Survey routes
+        Route::get('/survey/analytics', [SurveyController::class, 'getAnalytics'])->name('api.survey.analytics');
+        Route::get('/survey/responses', [SurveyController::class, 'getAllResponses'])->name('api.survey.responses');
+        Route::get('/survey/responses/{id}', [SurveyController::class, 'getResponse'])->name('api.survey.response');
+        Route::delete('/survey/responses/{id}', [SurveyController::class, 'deleteResponse'])->name('api.survey.delete');
 
-    // AI-powered analytics routes
-    // SECURITY FIX: Add rate limiting to AI service endpoints to prevent abuse
-    Route::post('/ai/predict-compliance', [AIController::class, 'predictCompliance'])->middleware('throttle:30,1');
-    Route::post('/ai/cluster-responses', [AIController::class, 'clusterResponses'])->middleware('throttle:30,1');
-    Route::post('/ai/analyze-sentiment', [AIController::class, 'analyzeSentiment'])->middleware('throttle:30,1');
-    Route::post('/ai/extract-keywords', [AIController::class, 'extractKeywords'])->middleware('throttle:30,1');
-    Route::get('/ai/compliance-risk-meter', [AIController::class, 'getComplianceRiskMeter'])->middleware('throttle:30,1');
+        // NEW SIMPLIFIED ANALYTICS API (v2) - Session-based auth for admin dashboard
+        Route::get('/analytics/summary', [App\Http\Controllers\AnalyticsController::class, 'getSummary'])->name('api.analytics.summary');
+        Route::get('/analytics/time-series', [App\Http\Controllers\AnalyticsController::class, 'getTimeSeries'])->name('api.analytics.time-series');
+        Route::get('/analytics/compliance', [App\Http\Controllers\AnalyticsController::class, 'getCompliance'])->name('api.analytics.compliance');
 
-    // AI Service Status and Analysis routes (session-based auth for admin dashboard)
-    // SECURITY FIX: Add rate limiting to prevent abuse
-    Route::get('/ai/service-status', [AIController::class, 'getServiceStatus'])->middleware('throttle:60,1'); // 60 requests per minute
-    Route::get('/ai/metrics', [AIController::class, 'getAIMetrics'])->middleware('throttle:60,1'); // 60 requests per minute
-    Route::post('/ai/analyze/{type}', [AIController::class, 'runAnalysis'])->middleware('throttle:30,1'); // 30 requests per minute
+        // Admin authentication routes (protected)
+        Route::post('/admin/logout', [AdminAuthController::class, 'logout']);
+        Route::get('/admin/me', [AdminAuthController::class, 'me']);
 
-    // Export routes
-    Route::get('/export/excel', [ExportController::class, 'exportExcel'])->name('api.export.excel');
-    Route::get('/export/csv', [ExportController::class, 'exportCsv'])->name('api.export.csv');
-    Route::get('/export/pdf', [ExportController::class, 'exportPdf'])->name('api.export.pdf');
-    Route::get('/export/analytics-report', [ExportController::class, 'exportAnalyticsReport'])->name('api.export.analytics-report');
+        // AI-powered analytics routes
+        // SECURITY FIX: Add rate limiting to AI service endpoints to prevent abuse
+        Route::post('/ai/predict-compliance', [AIController::class, 'predictCompliance'])->middleware('throttle:30,1');
+        Route::post('/ai/cluster-responses', [AIController::class, 'clusterResponses'])->middleware('throttle:30,1');
+        Route::post('/ai/analyze-sentiment', [AIController::class, 'analyzeSentiment'])->middleware('throttle:30,1');
+        Route::post('/ai/extract-keywords', [AIController::class, 'extractKeywords'])->middleware('throttle:30,1');
+        Route::get('/ai/compliance-risk-meter', [AIController::class, 'getComplianceRiskMeter'])->middleware('throttle:30,1');
 
-    // Visualization routes
-    Route::get('/visualization/bar-chart', [VisualizationController::class, 'getBarChartData']);
-    Route::get('/visualization/pie-chart', [VisualizationController::class, 'getPieChartData']);
-    Route::get('/visualization/radar-chart', [VisualizationController::class, 'getRadarChartData']);
-    Route::get('/visualization/word-cloud', [VisualizationController::class, 'getWordCloudData']);
-    Route::get('/visualization/track-comparison', [VisualizationController::class, 'getTrackComparisonData']);
-    Route::get('/visualization/grade-trend', [VisualizationController::class, 'getGradeLevelTrendData']);
-    Route::get('/visualization/dashboard', [VisualizationController::class, 'getDashboardData']);
+        // AI Service Status and Analysis routes (session-based auth for admin dashboard)
+        // SECURITY FIX: Add rate limiting to prevent abuse
+        Route::get('/ai/service-status', [AIController::class, 'getServiceStatus'])->middleware('throttle:60,1'); // 60 requests per minute
+        Route::get('/ai/metrics', [AIController::class, 'getAIMetrics'])->middleware('throttle:60,1'); // 60 requests per minute
+        Route::post('/ai/analyze/{type}', [AIController::class, 'runAnalysis'])->middleware('throttle:30,1'); // 30 requests per minute
 
-    // Advanced Analytics Visualization routes
-    Route::get('/visualizations/time-series', [VisualizationController::class, 'getTimeSeriesData']);
-    Route::get('/visualizations/heat-map', [VisualizationController::class, 'getHeatMapData']);
-    Route::get('/visualizations/compliance-risk', [VisualizationController::class, 'getComplianceRiskData']);
-    Route::get('/visualizations/comparative-analysis', [VisualizationController::class, 'getComparativeAnalysis']);
-    Route::get('/visualizations/response-rate', [VisualizationController::class, 'getResponseRateAnalytics']);
+        // Export routes
+        Route::get('/export/excel', [ExportController::class, 'exportExcel'])->name('api.export.excel');
+        Route::get('/export/csv', [ExportController::class, 'exportCsv'])->name('api.export.csv');
+        Route::get('/export/pdf', [ExportController::class, 'exportPdf'])->name('api.export.pdf');
+        Route::get('/export/analytics-report', [ExportController::class, 'exportAnalyticsReport'])->name('api.export.analytics-report');
 
-    // AI Analytics routes
-    // SECURITY FIX: Add rate limiting to prevent abuse
-    Route::get('/ai/sentiment-analysis', [AIController::class, 'analyzeSentiment'])->middleware('throttle:30,1'); // 30 requests per minute
+        // Visualization routes
+        Route::get('/visualization/bar-chart', [VisualizationController::class, 'getBarChartData']);
+        Route::get('/visualization/pie-chart', [VisualizationController::class, 'getPieChartData']);
+        Route::get('/visualization/radar-chart', [VisualizationController::class, 'getRadarChartData']);
+        Route::get('/visualization/word-cloud', [VisualizationController::class, 'getWordCloudData']);
+        Route::get('/visualization/track-comparison', [VisualizationController::class, 'getTrackComparisonData']);
+        Route::get('/visualization/grade-trend', [VisualizationController::class, 'getGradeLevelTrendData']);
+        Route::get('/visualization/dashboard', [VisualizationController::class, 'getDashboardData']);
+
+        // Advanced Analytics Visualization routes
+        Route::get('/visualizations/time-series', [VisualizationController::class, 'getTimeSeriesData']);
+        Route::get('/visualizations/heat-map', [VisualizationController::class, 'getHeatMapData']);
+        Route::get('/visualizations/compliance-risk', [VisualizationController::class, 'getComplianceRiskData']);
+        Route::get('/visualizations/comparative-analysis', [VisualizationController::class, 'getComparativeAnalysis']);
+        Route::get('/visualizations/response-rate', [VisualizationController::class, 'getResponseRateAnalytics']);
+
+        // Weekly Progress Tracking Routes (for admin dashboard)
+        Route::get('/visualizations/weekly-progress', [VisualizationController::class, 'getWeeklyProgressData']);
+        Route::get('/visualizations/goal-progress', [VisualizationController::class, 'getGoalProgressData']);
+        Route::get('/visualizations/weekly-comparison', [VisualizationController::class, 'getWeeklyComparisonData']);
+        Route::get('/visualizations/monthly-report', [VisualizationController::class, 'getMonthlyReportData']);
+        Route::get('/visualizations/progress-alerts', [VisualizationController::class, 'getProgressAlerts']);
+
+        // AI Analytics routes
+        // SECURITY FIX: Add rate limiting to prevent abuse
+        Route::get('/ai/sentiment-analysis', [AIController::class, 'analyzeSentiment'])->middleware('throttle:30,1'); // 30 requests per minute
+    });
 });

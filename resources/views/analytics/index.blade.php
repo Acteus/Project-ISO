@@ -703,32 +703,32 @@
                 <!-- Key Statistics -->
                 <div class="stats-grid" id="stats-container">
                     <div class="stat-card">
-                        <div class="stat-value">{{ $analytics['total_responses'] }}</div>
+                        <div class="stat-value">{{ $analytics['total_responses'] ?? 0 }}</div>
                         <div class="stat-label">Total Responses</div>
                         <div class="stat-sublabel">Survey Submissions</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">{{ $analytics['iso_21001_indices']['learner_needs_index'] }}</div>
+                        <div class="stat-value">{{ $analytics['iso_21001_indices']['learner_needs_index'] ?? '0.00' }}</div>
                         <div class="stat-label">Learner Needs</div>
                         <div class="stat-sublabel">Out of 5.00</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">{{ $analytics['iso_21001_indices']['satisfaction_score'] }}</div>
+                        <div class="stat-value">{{ $analytics['iso_21001_indices']['satisfaction_score'] ?? '0.00' }}</div>
                         <div class="stat-label">Satisfaction Score</div>
                         <div class="stat-sublabel">Out of 5.00</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">{{ $analytics['iso_21001_indices']['success_index'] }}</div>
+                        <div class="stat-value">{{ $analytics['iso_21001_indices']['success_index'] ?? '0.00' }}</div>
                         <div class="stat-label">Success Index</div>
                         <div class="stat-sublabel">Out of 5.00</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">{{ $analytics['iso_21001_indices']['safety_index'] }}</div>
+                        <div class="stat-value">{{ $analytics['iso_21001_indices']['safety_index'] ?? '0.00' }}</div>
                         <div class="stat-label">Safety Index</div>
                         <div class="stat-sublabel">Out of 5.00</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">{{ $analytics['iso_21001_indices']['wellbeing_index'] }}</div>
+                        <div class="stat-value">{{ $analytics['iso_21001_indices']['wellbeing_index'] ?? '0.00' }}</div>
                         <div class="stat-label">Wellbeing Index</div>
                         <div class="stat-sublabel">Out of 5.00</div>
                     </div>
@@ -856,7 +856,7 @@
         <div class="loading-spinner"></div>
     </div>
 
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         @if(!$noData)
         // Global chart instances
         let charts = {};
@@ -916,12 +916,12 @@
                     datasets: [{
                         label: 'ISO 21001 Quality Indices',
                         data: [
-                            {{ $analytics['iso_21001_indices']['learner_needs_index'] }},
-                            {{ $analytics['iso_21001_indices']['satisfaction_score'] }},
-                            {{ $analytics['iso_21001_indices']['success_index'] }},
-                            {{ $analytics['iso_21001_indices']['safety_index'] }},
-                            {{ $analytics['iso_21001_indices']['wellbeing_index'] }},
-                            {{ $analytics['iso_21001_indices']['overall_satisfaction'] }}
+                            {{ $analytics['iso_21001_indices']['learner_needs_index'] ?? 0 }},
+                            {{ $analytics['iso_21001_indices']['satisfaction_score'] ?? 0 }},
+                            {{ $analytics['iso_21001_indices']['success_index'] ?? 0 }},
+                            {{ $analytics['iso_21001_indices']['safety_index'] ?? 0 }},
+                            {{ $analytics['iso_21001_indices']['wellbeing_index'] ?? 0 }},
+                            {{ $analytics['iso_21001_indices']['overall_satisfaction'] ?? 0 }}
                         ],
                         backgroundColor: 'rgba(66, 133, 244, 0.2)',
                         borderColor: 'rgba(66, 133, 244, 1)',
@@ -973,15 +973,26 @@
                 type: 'doughnut',
                 data: {
                     labels: [
-                        @foreach($analytics['distribution']['grade_level'] as $grade => $count)
-                            'Grade {{ $grade }}',
-                        @endforeach
+                        @php
+                            $gradeLevelDist = $analytics['distribution']['grade_level'] ?? [];
+                        @endphp
+                        @if(!empty($gradeLevelDist))
+                            @foreach($gradeLevelDist as $grade => $count)
+                                'Grade {{ $grade }}',
+                            @endforeach
+                        @else
+                            'No Data'
+                        @endif
                     ],
                     datasets: [{
                         data: [
-                            @foreach($analytics['distribution']['grade_level'] as $count)
-                                {{ $count }},
-                            @endforeach
+                            @if(!empty($gradeLevelDist))
+                                @foreach($gradeLevelDist as $count)
+                                    {{ $count }},
+                                @endforeach
+                            @else
+                                0
+                            @endif
                         ],
                         backgroundColor: [
                             'rgba(66, 133, 244, 0.8)',
@@ -1035,12 +1046,12 @@
                     datasets: [{
                         label: 'Quality Index Score (out of 5)',
                         data: [
-                            {{ $analytics['iso_21001_indices']['learner_needs_index'] }},
-                            {{ $analytics['iso_21001_indices']['satisfaction_score'] }},
-                            {{ $analytics['iso_21001_indices']['success_index'] }},
-                            {{ $analytics['iso_21001_indices']['safety_index'] }},
-                            {{ $analytics['iso_21001_indices']['wellbeing_index'] }},
-                            {{ $analytics['iso_21001_indices']['overall_satisfaction'] }}
+                            {{ $analytics['iso_21001_indices']['learner_needs_index'] ?? 0 }},
+                            {{ $analytics['iso_21001_indices']['satisfaction_score'] ?? 0 }},
+                            {{ $analytics['iso_21001_indices']['success_index'] ?? 0 }},
+                            {{ $analytics['iso_21001_indices']['safety_index'] ?? 0 }},
+                            {{ $analytics['iso_21001_indices']['wellbeing_index'] ?? 0 }},
+                            {{ $analytics['iso_21001_indices']['overall_satisfaction'] ?? 0 }}
                         ],
                         backgroundColor: [
                             'rgba(66, 133, 244, 0.8)',
@@ -1109,11 +1120,11 @@
                     datasets: [{
                         label: 'Performance Metrics',
                         data: [
-                            {{ $analytics['indirect_metrics']['average_grade'] }},
-                            {{ $analytics['indirect_metrics']['average_attendance_rate'] }},
-                            {{ $analytics['indirect_metrics']['average_participation_score'] }},
-                            {{ $analytics['indirect_metrics']['average_extracurricular_hours'] }},
-                            {{ $analytics['indirect_metrics']['average_counseling_sessions'] }}
+                            {{ $analytics['indirect_metrics']['average_grade'] ?? 0 }},
+                            {{ $analytics['indirect_metrics']['average_attendance_rate'] ?? 0 }},
+                            {{ $analytics['indirect_metrics']['average_participation_score'] ?? 0 }},
+                            {{ $analytics['indirect_metrics']['average_extracurricular_hours'] ?? 0 }},
+                            {{ $analytics['indirect_metrics']['average_counseling_sessions'] ?? 0 }}
                         ],
                         backgroundColor: 'rgba(255, 215, 0, 0.6)',
                         borderColor: 'rgba(255, 215, 0, 1)',
@@ -1165,42 +1176,106 @@
                 }
 
                 const response = await fetch(url, {
+                    method: 'GET',
                     headers: {
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    // Try to get error message from response
+                    let errorMessage = `HTTP error! status: ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorMessage;
+                    } catch (e) {
+                        // Ignore JSON parse errors
+                    }
+                    throw new Error(errorMessage);
                 }
 
                 const result = await response.json();
-                const data = result.data;
+                const data = result.data || result;
 
                 // Check if elements exist before updating
                 const riskLevelText = document.getElementById('risk-level-text');
-                if (!riskLevelText) {
+                const riskDescription = document.getElementById('risk-description');
+                const recommendationsList = document.getElementById('risk-recommendations-list');
+                
+                if (!riskLevelText || !riskDescription || !recommendationsList) {
                     console.warn('Risk meter elements not found');
                     return;
                 }
 
+                // Handle case when no data is available
+                if (!data || data.risk_level === 'Unknown' || !data.compliance_score) {
+                    riskLevelText.textContent = 'No Data';
+                    riskLevelText.className = 'risk-level risk-medium';
+                    riskDescription.textContent = 'Insufficient data to calculate compliance metrics.';
+                    recommendationsList.innerHTML = '<li>Collect more survey responses to generate compliance metrics.</li>';
+                    
+                    // Create a default gauge showing 0%
+                    if (charts.gauge) {
+                        charts.gauge.destroy();
+                    }
+                    const gaugeCanvas = document.getElementById('riskGaugeChart');
+                    if (gaugeCanvas) {
+                        const gaugeCtx = gaugeCanvas.getContext('2d');
+                        charts.gauge = new Chart(gaugeCtx, {
+                            type: 'doughnut',
+                            data: {
+                                datasets: [{
+                                    data: [0, 100],
+                                    backgroundColor: ['#6c757d', '#e9ecef'],
+                                    borderWidth: 0
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                circumference: 180,
+                                rotation: 270,
+                                cutout: '75%',
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        enabled: false
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    return;
+                }
+
                 // Update risk level text
-                riskLevelText.textContent = data.risk_level + ' Risk';
-                riskLevelText.className = 'risk-level risk-' + data.risk_level.toLowerCase();
+                const riskLevel = data.risk_level || 'Unknown';
+                riskLevelText.textContent = riskLevel + ' Risk';
+                riskLevelText.className = 'risk-level risk-' + riskLevel.toLowerCase();
 
                 // Update description
-                document.getElementById('risk-description').textContent =
-                    `Compliance Score: ${data.compliance_score}/5.00 (${data.compliance_percentage}%)`;
+                const complianceScore = data.compliance_score || 0;
+                const compliancePercentage = data.compliance_percentage || 0;
+                riskDescription.textContent =
+                    `Compliance Score: ${complianceScore.toFixed(2)}/5.00 (${compliancePercentage.toFixed(1)}%)`;
 
                 // Update recommendations
-                const recommendationsList = document.getElementById('risk-recommendations-list');
                 recommendationsList.innerHTML = '';
-                data.recommendations.forEach(rec => {
-                    const li = document.createElement('li');
-                    li.textContent = rec;
-                    recommendationsList.appendChild(li);
-                });
+                const recommendations = data.recommendations || [];
+                if (recommendations.length === 0) {
+                    recommendationsList.innerHTML = '<li>No specific recommendations at this time. Continue monitoring.</li>';
+                } else {
+                    recommendations.forEach(rec => {
+                        const li = document.createElement('li');
+                        li.textContent = rec;
+                        recommendationsList.appendChild(li);
+                    });
+                }
 
                 // Destroy existing gauge chart if it exists
                 if (charts.gauge) {
@@ -1218,10 +1293,10 @@
                     type: 'doughnut',
                     data: {
                         datasets: [{
-                            data: [data.compliance_percentage, 100 - data.compliance_percentage],
+                            data: [compliancePercentage, 100 - compliancePercentage],
                             backgroundColor: [
-                                data.risk_level === 'Low' ? '#28a745' :
-                                data.risk_level === 'Medium' ? '#ffc107' : '#dc3545',
+                                riskLevel === 'Low' ? '#28a745' :
+                                riskLevel === 'Medium' ? '#ffc107' : '#dc3545',
                                 '#e9ecef'
                             ],
                             borderWidth: 0
@@ -1245,6 +1320,22 @@
                 });
             } catch (error) {
                 console.error('Error loading compliance risk data:', error);
+                
+                // Update UI to show error state
+                const riskLevelText = document.getElementById('risk-level-text');
+                const riskDescription = document.getElementById('risk-description');
+                const recommendationsList = document.getElementById('risk-recommendations-list');
+                
+                if (riskLevelText) {
+                    riskLevelText.textContent = 'Error';
+                    riskLevelText.className = 'risk-level risk-high';
+                }
+                if (riskDescription) {
+                    riskDescription.textContent = 'Unable to load compliance data. Please refresh the page or try again later.';
+                }
+                if (recommendationsList) {
+                    recommendationsList.innerHTML = '<li>If this problem persists, please contact support.</li>';
+                }
             }
         }
 
@@ -1265,10 +1356,13 @@
                 }
 
                 const response = await fetch('/api/visualizations/time-series?' + params, {
+                    method: 'GET',
                     headers: {
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
                 });
 
                 if (!response.ok) {
@@ -1383,10 +1477,13 @@
                 }
 
                 const response = await fetch(url, {
+                    method: 'GET',
                     headers: {
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
                 });
 
                 if (!response.ok) {
@@ -1457,10 +1554,13 @@
                 }
 
                 const response = await fetch(url, {
+                    method: 'GET',
                     headers: {
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
                 });
 
                 if (!response.ok) {
@@ -1528,10 +1628,13 @@
                 }
 
                 const response = await fetch(url, {
+                    method: 'GET',
                     headers: {
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
                 });
 
                 if (!response.ok) {
@@ -1597,11 +1700,21 @@
         // Load Weekly Progress Data
         async function loadWeeklyProgressData() {
             try {
+                // Check if chart element exists before making request
+                const chartElement = document.getElementById('weeklyProgressChart');
+                if (!chartElement) {
+                    // Chart element doesn't exist, skip loading
+                    return;
+                }
+
                 const response = await fetch('/api/visualizations/weekly-progress', {
+                    method: 'GET',
                     headers: {
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
                 });
 
                 if (!response.ok) {
@@ -1612,7 +1725,7 @@
                 const data = result.data;
 
                 // Initialize weekly progress chart
-                const progressCtx = document.getElementById('weeklyProgressChart').getContext('2d');
+                const progressCtx = chartElement.getContext('2d');
                 if (charts.weeklyProgress) {
                     charts.weeklyProgress.destroy();
                 }
@@ -1660,11 +1773,21 @@
         // Load Goal Progress Data
         async function loadGoalProgressData() {
             try {
+                // Check if chart element exists before making request
+                const chartElement = document.getElementById('goalProgressChart');
+                if (!chartElement) {
+                    // Chart element doesn't exist, skip loading
+                    return;
+                }
+
                 const response = await fetch('/api/visualizations/goal-progress', {
+                    method: 'GET',
                     headers: {
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
                 });
 
                 if (!response.ok) {
@@ -1674,8 +1797,13 @@
                 const result = await response.json();
                 const data = result.data;
 
+                if (!data || !data.labels || !data.targets || !data.datasets) {
+                    console.warn('Invalid goal progress data structure');
+                    return;
+                }
+
                 // Initialize goal progress chart
-                const goalCtx = document.getElementById('goalProgressChart').getContext('2d');
+                const goalCtx = chartElement.getContext('2d');
                 if (charts.goalProgress) {
                     charts.goalProgress.destroy();
                 }
@@ -1683,11 +1811,11 @@
                 charts.goalProgress = new Chart(goalCtx, {
                     type: 'line',
                     data: {
-                        labels: data.labels,
+                        labels: data.labels || [],
                         datasets: [
                             {
                                 label: 'Satisfaction Target (4.0)',
-                                data: data.labels.map(() => data.targets.satisfaction),
+                                data: (data.labels || []).map(() => data.targets?.satisfaction || 4.0),
                                 borderColor: 'rgba(255, 193, 7, 1)',
                                 borderWidth: 2,
                                 borderDash: [5, 5],
@@ -1696,14 +1824,14 @@
                             },
                             {
                                 label: 'Compliance Target (80%)',
-                                data: data.labels.map(() => data.targets.compliance),
+                                data: (data.labels || []).map(() => data.targets?.compliance || 80),
                                 borderColor: 'rgba(40, 167, 69, 1)',
                                 borderWidth: 2,
                                 borderDash: [5, 5],
                                 fill: false,
                                 pointRadius: 0
                             },
-                            ...data.datasets
+                            ...(data.datasets || [])
                         ]
                     },
                     options: {
@@ -1746,10 +1874,13 @@
         async function loadWeeklyComparisonData() {
             try {
                 const response = await fetch('/api/visualizations/weekly-comparison', {
+                    method: 'GET',
                     headers: {
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
                 });
 
                 if (!response.ok) {
@@ -1769,34 +1900,55 @@
         // Update Progress Overview Cards
         function updateProgressOverview(data) {
             const container = document.getElementById('progress-overview');
+            
+            // Check if container exists (it might not be in the HTML)
+            if (!container) {
+                console.warn('Progress overview container not found');
+                return;
+            }
 
-            if (!data.current) {
+            if (!data || !data.current) {
                 container.innerHTML = '<div class="no-data-message" style="grid-column: 1 / -1; text-align: center; padding: 40px; background: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);"><h3>No Weekly Progress Data Available</h3><p>Weekly metrics will appear here once data aggregation runs.</p></div>';
                 return;
             }
 
             const current = data.current;
             const previous = data.previous;
-            const comparison = data.comparison;
+            const comparison = data.comparison || {};
+
+            // Helper function to safely format numbers
+            const formatNumber = (value, decimals = 2) => {
+                if (value === null || value === undefined || value === '') return 'N/A';
+                const num = typeof value === 'string' ? parseFloat(value) : value;
+                if (isNaN(num)) return 'N/A';
+                return num.toFixed(decimals);
+            };
+
+            // Helper function to safely get change value
+            const getChange = (change) => {
+                if (change === null || change === undefined || change === '') return null;
+                const num = typeof change === 'string' ? parseFloat(change) : change;
+                return isNaN(num) ? null : num;
+            };
 
             container.innerHTML = `
                 <div class="stat-card">
-                    <div class="stat-value">${current.overall_satisfaction ? current.overall_satisfaction.toFixed(2) : 'N/A'}</div>
+                    <div class="stat-value">${formatNumber(current.overall_satisfaction, 2)}</div>
                     <div class="stat-label">Current Week Satisfaction</div>
                     <div class="stat-sublabel">Out of 5.00</div>
-                    ${comparison && comparison.overall_satisfaction ? `
-                        <div class="stat-trend trend-${comparison.overall_satisfaction.trend}">
-                            ${comparison.overall_satisfaction.change > 0 ? '+' : ''}${comparison.overall_satisfaction.change.toFixed(2)} vs last week
+                    ${comparison.overall_satisfaction && comparison.overall_satisfaction.change !== null && comparison.overall_satisfaction.change !== undefined ? `
+                        <div class="stat-trend trend-${comparison.overall_satisfaction.trend || 'stable'}">
+                            ${comparison.overall_satisfaction.change > 0 ? '+' : ''}${formatNumber(comparison.overall_satisfaction.change, 2)} vs last week
                         </div>
                     ` : ''}
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${current.compliance_percentage ? current.compliance_percentage.toFixed(1) + '%' : 'N/A'}</div>
+                    <div class="stat-value">${formatNumber(current.compliance_percentage, 1)}%</div>
                     <div class="stat-label">Compliance Score</div>
                     <div class="stat-sublabel">Target: 80%</div>
-                    ${comparison && comparison.compliance_score ? `
-                        <div class="stat-trend trend-${comparison.compliance_score.trend}">
-                            ${comparison.compliance_score.change > 0 ? '+' : ''}${comparison.compliance_score.change.toFixed(2)} vs last week
+                    ${comparison.compliance_score && comparison.compliance_score.change !== null && comparison.compliance_score.change !== undefined ? `
+                        <div class="stat-trend trend-${comparison.compliance_score.trend || 'stable'}">
+                            ${comparison.compliance_score.change > 0 ? '+' : ''}${formatNumber(comparison.compliance_score.change, 2)} vs last week
                         </div>
                     ` : ''}
                 </div>
@@ -1804,8 +1956,8 @@
                     <div class="stat-value">${current.new_responses || 0}</div>
                     <div class="stat-label">New Responses</div>
                     <div class="stat-sublabel">This Week</div>
-                    ${comparison && comparison.new_responses ? `
-                        <div class="stat-trend trend-${comparison.new_responses.trend}">
+                    ${comparison.new_responses && comparison.new_responses.change !== null && comparison.new_responses.change !== undefined ? `
+                        <div class="stat-trend trend-${comparison.new_responses.trend || 'stable'}">
                             ${comparison.new_responses.change > 0 ? '+' : ''}${comparison.new_responses.change} vs last week
                         </div>
                     ` : ''}
@@ -2085,10 +2237,13 @@
 
                 // Reload analytics with filters
                 const response = await fetch('/api/survey/analytics?' + paramsString, {
+                    method: 'GET',
                     headers: {
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
                 });
 
                 if (!response.ok) {

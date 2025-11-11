@@ -36,6 +36,7 @@
       opacity: 0;
       transform: translateY(20px) scale(0.98);
       animation: pageEnter 0.8s ease forwards;
+      position: relative;
     }
 
     @keyframes pageEnter {
@@ -86,6 +87,50 @@
       border-radius: 8px;
       margin-bottom: 20px;
       display: none;
+    }
+
+    .loading-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: rgba(0, 0, 0, 0.65);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 10;
+      transition: opacity 0.25s ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-overlay.active {
+      display: flex;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .loading-overlay .spinner {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 4px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #FFD700;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading-overlay span {
+      font-size: 15px;
+      color: #ffffff;
+      letter-spacing: 0.6px;
+      font-weight: 500;
     }
 
     .form-group {
@@ -190,6 +235,10 @@
 </head>
 <body>
   <div class="forgot-container">
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <span>Sending reset link...</span>
+    </div>
     <h2>Forgot Password</h2>
     <p>Enter your JRU email address and we'll send you a link to reset your password.</p>
 
@@ -211,23 +260,26 @@
     </div>
   </div>
 
-  <script>
+  <script nonce="{{ $cspNonce }}">
     document.getElementById('forgotPasswordForm').addEventListener('submit', function(e) {
       e.preventDefault();
 
       const submitBtn = document.getElementById('submitBtn');
       const successMessage = document.getElementById('successMessage');
+      const loadingOverlay = document.getElementById('loadingOverlay');
       const formGroup = this.querySelector('.form-group');
       const emailInput = this.querySelector('input[name="email"]');
 
       // Reset error states
       formGroup.classList.remove('error');
       successMessage.style.display = 'none';
+      loadingOverlay.classList.add('active');
 
       // Validate email format
       const emailRegex = /^[a-zA-Z0-9._%+-]+@my\.jru\.edu$/;
       if (!emailRegex.test(emailInput.value)) {
         formGroup.classList.add('error');
+        loadingOverlay.classList.remove('active');
         return;
       }
 
@@ -252,6 +304,7 @@
           successMessage.textContent = data.message;
           successMessage.style.display = 'block';
           emailInput.value = '';
+          formGroup.classList.remove('error');
         } else if (data.errors) {
           formGroup.classList.add('error');
           const errorDiv = formGroup.querySelector('.error-message');
@@ -273,6 +326,7 @@
       .finally(() => {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Send Reset Link';
+        loadingOverlay.classList.remove('active');
       });
     });
   </script>
