@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Consent Required - ISO Quality Education</title>
+    <!-- Google Fonts: Montserrat + Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -230,6 +232,76 @@
             color: #0c5460;
         }
 
+        /* Loading overlay shown on submit to transition while navigating */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: #fff;
+            text-align: center;
+            backdrop-filter: blur(4px);
+        }
+        .loading-overlay.show {
+            display: flex;
+            animation: fadeIn 0.25s ease forwards;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        .loading-box {
+            background: linear-gradient(135deg, rgba(66,133,244,0.25), rgba(255,215,0,0.25));
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 16px;
+            padding: 28px 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+            min-width: 260px;
+            max-width: 90vw;
+        }
+        .spinner {
+            width: 56px;
+            height: 56px;
+            border: 4px solid rgba(255,255,255,0.25);
+            border-top-color: #FFD700;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            animation: spin 0.9s linear infinite;
+        }
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
+        }
+        .loading-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            font-size: 18px;
+        }
+        .loading-message {
+            font-size: 14px;
+            color: rgba(255,255,255,0.85);
+        }
+        .loading-progress {
+            width: 100%;
+            max-width: 320px;
+            height: 10px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 999px;
+            overflow: hidden;
+            margin: 14px auto 0;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+        }
+        .loading-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #FFD700, #fff);
+            border-radius: 999px;
+            transition: width 0.1s linear;
+        }
+
         @media (max-width: 768px) {
             .consent-container {
                 padding: 1.5rem;
@@ -255,6 +327,17 @@
     </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" aria-hidden="true" aria-live="polite">
+        <div class="loading-box" role="status">
+            <div class="spinner" aria-hidden="true"></div>
+            <div class="loading-title">Processing your consent…</div>
+            <div class="loading-message">Redirecting to your dashboard.</div>
+            <div class="loading-progress" aria-hidden="true">
+                <div id="loadingProgressBar" class="loading-progress-bar"></div>
+            </div>
+        </div>
+    </div>
     <div class="consent-container">
         <div class="consent-header">
             <h1>
@@ -356,24 +439,70 @@
     </div>
 
     <script>
-        document.getElementById('consentForm').addEventListener('submit', function(e) {
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('consentForm');
             const checkbox = document.getElementById('consentGiven');
-            if (!checkbox.checked) {
-                e.preventDefault();
-                alert('Please check the consent box to continue.');
-                checkbox.focus();
-                return false;
-            }
-        });
-
-        // Enable/disable submit button based on checkbox
-        document.getElementById('consentGiven').addEventListener('change', function() {
             const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = !this.checked;
-        });
+            const overlay = document.getElementById('loadingOverlay');
+            let isAutoSubmitting = false;
 
-        // Initial state
-        document.getElementById('submitBtn').disabled = !document.getElementById('consentGiven').checked;
+            // Enable/disable submit button based on checkbox
+            checkbox.addEventListener('change', function() {
+                submitBtn.disabled = !this.checked;
+            });
+
+            // Initial state
+            submitBtn.disabled = !checkbox.checked;
+
+            // Form submission handler
+            form.addEventListener('submit', function(e) {
+                if (isAutoSubmitting) return;
+
+                // Validate checkbox
+                if (!checkbox.checked) {
+                    e.preventDefault();
+                    alert('Please check the consent box to continue.');
+                    checkbox.focus();
+                    return false;
+                }
+
+                // Show loading overlay
+                if (overlay) {
+                    overlay.classList.add('show');
+                    overlay.setAttribute('aria-hidden', 'false');
+                }
+
+                // Prevent default form submission temporarily to show animation
+                e.preventDefault();
+
+                // Animate progress bar
+                const bar = document.getElementById('loadingProgressBar');
+                let progress = 0;
+                const durationMs = 2000;
+                const stepMs = 50;
+                const increment = 100 / (durationMs / stepMs);
+                
+                const timer = setInterval(function() {
+                    progress = Math.min(100, progress + increment);
+                    if (bar) bar.style.width = progress + '%';
+                    
+                    if (progress >= 100) {
+                        clearInterval(timer);
+                        isAutoSubmitting = true;
+                        // Submit the form after animation completes
+                        form.submit();
+                    }
+                }, stepMs);
+            });
+
+            // Show loading overlay on page unload (if user navigates away)
+            window.addEventListener('beforeunload', function() {
+                if (overlay) {
+                    overlay.classList.add('show');
+                    overlay.setAttribute('aria-hidden', 'false');
+                }
+            });
+        });
     </script>
 </body>
 </html>

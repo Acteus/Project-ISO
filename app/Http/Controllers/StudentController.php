@@ -97,32 +97,28 @@ class StudentController extends Controller
         // Mark that we should regenerate on next request
         $request->session()->put('_should_regenerate', true);
 
-        // By default send verification email and redirect to verification notice.
-        // For local development or when explicitly configured, auto-verify to simplify testing.
-        $skipVerification = env('SKIP_EMAIL_VERIFICATION', false) || app()->environment('local');
-
-        if ($skipVerification) {
-            try {
-                // Mark user as verified for local/testing environments
-                $user->markEmailAsVerified();
-                Log::info('Auto-verified email for local/testing: ' . $user->email);
-            } catch (\Exception $e) {
-                Log::error('Failed to auto-verify email: ' . $e->getMessage());
-            }
-
-            $redirect = route('survey.landing');
-            $message = 'Registration successful! You have been auto-verified for local testing.';
-        } else {
-            try {
-                $user->sendEmailVerificationNotification();
-                Log::info('Email verification sent to: ' . $user->email);
-            } catch (\Exception $e) {
-                Log::error('Failed to send verification email: ' . $e->getMessage());
-            }
-
-            $redirect = route('verification.notice');
-            $message = 'Registration successful! Please check your email to verify your account.';
+        // Always send verification email and redirect to verification notice page first
+        // User must verify email before being asked for consent
+        try {
+            // Send email verification notification (now sends immediately, not queued)
+            $user->sendEmailVerificationNotification();
+            Log::info('Email verification sent immediately to: ' . $user->email, [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'mail_driver' => config('mail.default'),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send verification email: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            // Still redirect to verification page even if email fails, user can resend
         }
+
+        $redirect = route('verification.notice');
+        $message = 'Registration successful! Please check your email to verify your account.';
 
         if (!$request->ajax() && !$request->expectsJson() && !$request->wantsJson()) {
             return redirect()->to($redirect)->with('success', $message);
@@ -244,6 +240,44 @@ class StudentController extends Controller
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
 
+            // ENFORCE EMAIL VERIFICATION: Check if email is verified BEFORE allowing full access
+            if (!$user->hasVerifiedEmail()) {
+                // Mark that we should regenerate on next request
+                $request->session()->put('_should_regenerate', true);
+
+                // Log login attempt but note it's blocked due to unverified email
+                $auditService = app(\App\Services\AuditService::class);
+                $auditService->logAuthentication('login', false, $request, [
+                    'user_type' => 'student',
+                    'user_id' => $user->id,
+                    'reason' => 'email_not_verified',
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+
+                // Resend verification email if user is trying to login
+                try {
+                    $user->sendEmailVerificationNotification();
+                    Log::info('Verification email resent to unverified user during login: ' . $user->email);
+                } catch (\Exception $e) {
+                    Log::error('Failed to resend verification email during login: ' . $e->getMessage());
+                }
+
+                // For non-AJAX requests, redirect to verification page
+                // User is logged in but will be blocked from other routes by middleware
+                if (!$request->ajax() && !$request->expectsJson() && !$request->wantsJson()) {
+                    return redirect()->route('verification.notice')
+                        ->with('error', 'Please verify your email address before accessing the system. A verification email has been sent to your inbox.');
+                }
+
+                // For AJAX requests, return JSON response
+                return response()->json([
+                    'message' => 'Please verify your email address before accessing the system. A verification email has been sent to your inbox.',
+                    'redirect' => route('verification.notice'),
+                    'email_verified' => false,
+                ], 403);
+            }
+
             // DON'T regenerate session on AJAX login - it causes the browser to not pick up the new session ID
             // The session will be automatically regenerated on the next page load by Laravel
             // $request->session()->regenerate();
@@ -265,19 +299,6 @@ class StudentController extends Controller
                 'user_type' => 'student',
                 'user_id' => $user->id,
             ]);
-
-            // Check if email is verified
-            if (!$user->hasVerifiedEmail()) {
-                return response()->json([
-                    'message' => 'Please verify your email address before accessing the survey.',
-                    'redirect' => route('verification.notice'),
-                    'user' => [
-                        'name' => $user->name,
-                        'student_id' => $user->student_id,
-                        'email_verified' => false,
-                    ]
-                ]);
-            }
 
             // Check if user has valid consent (GDPR & ISO 27001 requirement)
             // Existing users who registered before consent feature need to provide consent
@@ -580,6 +601,12 @@ class StudentController extends Controller
             return redirect()->route('student.login');
         }
 
+        // ENFORCE EMAIL VERIFICATION: User must verify email before providing consent
+        if (!$user->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice')
+                ->with('error', 'Please verify your email address before providing consent.');
+        }
+
         $consentService = app(\App\Services\ConsentService::class);
         $studentId = $user->student_id ?? null;
 
@@ -729,12 +756,81 @@ class StudentController extends Controller
             return redirect()->route('student.login');
         }
 
-        // If already verified, redirect to survey landing
+        // If already verified, go to consent if missing, otherwise landing
         if ($user->hasVerifiedEmail()) {
+            $consentService = app(\App\Services\ConsentService::class);
+            $studentId = $user->student_id ?? null;
+            if ($studentId && !$consentService->hasValidConsent($studentId, 'survey_response')) {
+                return redirect()->route('student.consent.required');
+            }
             return redirect()->route('survey.landing');
         }
 
         return view('student.verify-email');
+    }
+
+    /**
+     * Check verification status and redirect accordingly
+     * Used by the "Continue" button on verify-email page
+     */
+    public function checkVerificationAndContinue(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'message' => 'User not authenticated.',
+                    'redirect' => route('student.login')
+                ], 401);
+            }
+            return redirect()->route('student.login');
+        }
+
+        // Check if email is verified
+        if ($user->hasVerifiedEmail()) {
+            // Email is verified - check for consent
+            $consentService = app(\App\Services\ConsentService::class);
+            $studentId = $user->student_id ?? null;
+
+            if ($studentId && !$consentService->hasValidConsent($studentId, 'survey_response')) {
+                // Verified but no consent - redirect to consent page
+                if ($request->ajax() || $request->expectsJson()) {
+                    return response()->json([
+                        'verified' => true,
+                        'hasConsent' => false,
+                        'message' => 'Email verified! Redirecting to consent page...',
+                        'redirect' => route('student.consent.required')
+                    ]);
+                }
+                return redirect()->route('student.consent.required')
+                    ->with('success', 'Email verified successfully! Please provide consent to continue.');
+            }
+
+            // Verified and has consent - redirect to dashboard
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json([
+                    'verified' => true,
+                    'hasConsent' => true,
+                    'message' => 'Welcome back! Redirecting to dashboard...',
+                    'redirect' => route('student.dashboard')
+                ]);
+            }
+            return redirect()->route('student.dashboard')
+                ->with('success', 'Welcome back!');
+        }
+
+        // Email not verified - show error message
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json([
+                'verified' => false,
+                'message' => 'Your email address has not been verified yet. Please check your inbox and click the verification link in the email we sent you.',
+                'redirect' => route('verification.notice')
+            ], 403);
+        }
+
+        return redirect()->route('verification.notice')
+            ->with('error', 'Your email address has not been verified yet. Please check your inbox and click the verification link in the email we sent you.');
     }
 
     /**
@@ -767,6 +863,14 @@ class StudentController extends Controller
             // Log the user in if not already logged in
             if (!Auth::check()) {
                 Auth::login($user);
+            }
+
+            // Enforce consent immediately after verification
+            $consentService = app(\App\Services\ConsentService::class);
+            $studentId = $user->student_id ?? null;
+            if ($studentId && !$consentService->hasValidConsent($studentId, 'survey_response')) {
+                return redirect()->route('student.consent.required')
+                    ->with('success', 'Email verified successfully! Please provide consent to continue.');
             }
 
             return redirect()->route('survey.landing')->with('success', 'Email verified successfully! You can now access the survey.');

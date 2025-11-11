@@ -34,13 +34,13 @@ Route::prefix('student')->name('student.')->group(function () {
     Route::post('/login', [StudentController::class, 'login'])->name('login.post')->middleware('throttle:5,1'); // 5 attempts per minute
     Route::match(['get', 'post'], '/logout', [StudentController::class, 'logout'])->name('logout');
     Route::get('/clear-sessions', [StudentController::class, 'clearAllSessions'])->name('clear-sessions');
-    Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
-    Route::post('/profile/update', [StudentController::class, 'updateProfile'])->name('profile.update')->middleware('auth');
-    Route::post('/password/update', [StudentController::class, 'updatePassword'])->name('password.update')->middleware('auth');
-    // Consent management (GDPR & ISO 27001)
-    Route::get('/consent/required', [StudentController::class, 'showConsentRequired'])->name('consent.required')->middleware('auth');
-    Route::post('/consent/accept', [StudentController::class, 'acceptConsent'])->name('consent.accept')->middleware('auth');
-    Route::post('/consent/revoke', [StudentController::class, 'revokeConsent'])->name('consent.revoke')->middleware('auth');
+    Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard')->middleware(['auth', 'verified']);
+    Route::post('/profile/update', [StudentController::class, 'updateProfile'])->name('profile.update')->middleware(['auth', 'verified']);
+    Route::post('/password/update', [StudentController::class, 'updatePassword'])->name('password.update')->middleware(['auth', 'verified']);
+    // Consent management (GDPR & ISO 27001) - requires email verification
+    Route::get('/consent/required', [StudentController::class, 'showConsentRequired'])->name('consent.required')->middleware(['auth', 'verified']);
+    Route::post('/consent/accept', [StudentController::class, 'acceptConsent'])->name('consent.accept')->middleware(['auth', 'verified']);
+    Route::post('/consent/revoke', [StudentController::class, 'revokeConsent'])->name('consent.revoke')->middleware(['auth', 'verified']);
 });
 
 // Email verification routes
@@ -48,6 +48,7 @@ Route::prefix('email')->name('verification.')->group(function () {
     Route::get('/verify', [StudentController::class, 'showVerificationNotice'])->middleware('auth')->name('notice');
     Route::get('/verify/{id}/{hash}', [StudentController::class, 'verifyEmail'])->middleware(['signed'])->name('verify');
     Route::post('/verification-notification', [StudentController::class, 'resendVerificationEmail'])->middleware(['auth', 'throttle:6,1'])->name('send');
+    Route::post('/check-and-continue', [StudentController::class, 'checkVerificationAndContinue'])->middleware('auth')->name('check');
 });
 
 // Password Reset Routes

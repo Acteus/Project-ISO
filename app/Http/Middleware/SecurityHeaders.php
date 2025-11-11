@@ -146,9 +146,9 @@ class SecurityHeaders
                     // 2. Configure Cloudflare to not add integrity attributes
                     // 3. Contact Cloudflare support to fix the hash
                     "script-src 'self' 'nonce-{$nonce}' https://cdn.jsdelivr.net https://static.cloudflareinsights.com",
-                    "style-src 'self' 'unsafe-inline'", // TEMPORARY: Allow unsafe-inline for styles
+                    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com", // Allow external CSS for Font Awesome
                     "img-src 'self' data: https:",
-                    "font-src 'self' data: https://cdn.jsdelivr.net",
+                    "font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
                     "connect-src 'self' {$appOrigin} https://cloudflareinsights.com", // Allow Cloudflare Insights beacon
                     "frame-ancestors 'self'",
                     "base-uri 'self'",
@@ -164,9 +164,9 @@ class SecurityHeaders
                 $directives = [
                     "default-src 'self'",
                     "script-src 'self' https://cdn.jsdelivr.net https://static.cloudflareinsights.com", // Allow Chart.js CDN and Cloudflare Insights
-                    "style-src 'self' 'unsafe-inline'", // TEMPORARY: Allow unsafe-inline for styles
+                    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com", // Allow external CSS for Font Awesome
                     "img-src 'self' data: https:",
-                    "font-src 'self' data: https://cdn.jsdelivr.net",
+                    "font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
                     "connect-src 'self' {$appOrigin} https://cloudflareinsights.com", // Allow Cloudflare Insights beacon
                     "frame-ancestors 'self'",
                     "base-uri 'self'",

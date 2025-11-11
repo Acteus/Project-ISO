@@ -15,6 +15,71 @@
       overflow-y: auto;
     }
 
+    /* Loading overlay shown on submit to transition while navigating */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      color: #fff;
+      text-align: center;
+      backdrop-filter: blur(4px);
+    }
+    .loading-overlay.show {
+      display: flex;
+      animation: fadeIn 0.25s ease forwards;
+    }
+    .loading-box {
+      background: linear-gradient(135deg, rgba(66,133,244,0.25), rgba(255,215,0,0.25));
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      padding: 28px 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      min-width: 260px;
+      max-width: 90vw;
+    }
+    .spinner {
+      width: 56px;
+      height: 56px;
+      border: 4px solid rgba(255,255,255,0.25);
+      border-top-color: #FFD700;
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+      font-size: 18px;
+    }
+    .loading-message {
+      font-size: 14px;
+      color: rgba(255,255,255,0.85);
+    }
+    .loading-progress {
+      width: 100%;
+      max-width: 320px;
+      height: 10px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 14px auto 0;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+    }
+    .loading-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #FFD700, #fff);
+      border-radius: 999px;
+      transition: width 0.1s linear;
+    }
+
     /* Page entrance animation */
     .page-entrance {
       animation: pageEnter 0.8s ease forwards;
@@ -285,6 +350,17 @@
   </style>
 </head>
 <body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay" aria-hidden="true" aria-live="polite">
+    <div class="loading-box" role="status">
+      <div class="spinner" aria-hidden="true"></div>
+      <div class="loading-title">Creating your account…</div>
+      <div class="loading-message">Please wait while we set up your account and send you a verification email.</div>
+      <div class="loading-progress" aria-hidden="true">
+        <div id="loadingProgressBar" class="loading-progress-bar"></div>
+      </div>
+    </div>
+  </div>
   <div class="container">
     <h2>Student Registration</h2>
     <p>Please fill in your information to access the ISO 21001 Survey System.</p>
@@ -402,6 +478,59 @@
     </div>
   </div>
 
+  <script nonce="{{ $cspNonce ?? '' }}">
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('studentForm');
+      if (!form) return;
+      let isAutoSubmitting = false;
+      form.addEventListener('submit', function(e) {
+        if (isAutoSubmitting) return;
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+          overlay.classList.add('show');
+          overlay.setAttribute('aria-hidden', 'false');
+        }
+        // simple client-side required check to avoid flashing overlay on empty form
+        const requiredFields = form.querySelectorAll('[required]');
+        let valid = true;
+        requiredFields.forEach(function(el) {
+          if (!el.value || (el.type === 'radio' && !form.querySelector('input[name="' + el.name + '"]:checked'))) {
+            valid = false;
+          }
+        });
+        if (!valid) {
+          e.preventDefault();
+          if (overlay) {
+            overlay.classList.remove('show');
+            overlay.setAttribute('aria-hidden', 'true');
+          }
+          return;
+        }
+        e.preventDefault();
+        const bar = document.getElementById('loadingProgressBar');
+        let progress = 0;
+        const durationMs = 2000;
+        const stepMs = 50;
+        const increment = 100 / (durationMs / stepMs);
+        const timer = setInterval(function() {
+          progress = Math.min(100, progress + increment);
+          if (bar) bar.style.width = progress + '%';
+          if (progress >= 100) {
+            clearInterval(timer);
+            isAutoSubmitting = true;
+            form.submit();
+          }
+        }, stepMs);
+      });
+      window.addEventListener('beforeunload', function() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+          overlay.classList.add('show');
+          overlay.setAttribute('aria-hidden', 'false');
+        }
+      });
+    });
+  </script>
   <script src="{{ asset('js/student-register.js') }}" defer></script>
 </body>
 </html>

@@ -66,7 +66,7 @@ function addFontAwesome() {
   if (!document.querySelector('link[href*="font-awesome"]') && !document.querySelector('link[href*="fontawesome"]')) {
     const fontAwesome = document.createElement('link');
     fontAwesome.rel = 'stylesheet';
-    fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+    fontAwesome.href = 'https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css';
     fontAwesome.crossOrigin = 'anonymous';
     document.head.appendChild(fontAwesome);
     console.log('Font Awesome loaded');
