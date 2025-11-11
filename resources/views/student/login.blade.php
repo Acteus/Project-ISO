@@ -555,23 +555,6 @@
         // Show overlay immediately to ensure visibility even on fast redirects
         const overlay = document.getElementById('loadingOverlay');
         const container = document.querySelector('.login-container');
-        // Adjust loading text for admin vs student (heuristic)
-        try {
-          const idInput = loginForm.querySelector('input[name="student_id"]');
-          const messageEl = document.querySelector('.loading-message');
-          if (idInput && messageEl) {
-            const idVal = (idInput.value || '').trim();
-            // Heuristic: admin usernames/emails often contain letters; student IDs are often numeric
-            const looksNumericOnly = /^\d+$/.test(idVal);
-            const looksLikeEmail = /@/.test(idVal);
-            const maybeAdmin = !looksNumericOnly; // treat non-pure-numeric as possibly admin
-            if (maybeAdmin) {
-              messageEl.textContent = 'Redirecting to Admin Dashboard…';
-            } else {
-              messageEl.textContent = 'Redirecting to Survey Landing…';
-            }
-          }
-        } catch (_) {}
         if (overlay) {
           overlay.classList.add('show');
           overlay.setAttribute('aria-hidden', 'false');
