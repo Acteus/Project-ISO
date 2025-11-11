@@ -667,6 +667,77 @@ class StudentController extends Controller
         ));
     }
 
+    /**
+     * Check for dashboard updates (for smart polling)
+     * Returns minimal response if no changes, full data if changes detected
+     */
+    public function checkDashboardUpdates(Request $request)
+    {
+        // Admin is validated by EnsureAdmin middleware
+        $admin = request()->get('admin') ?? session('admin');
+
+        if (!$admin) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $lastCheck = $request->query('last_check');
+        
+        // Get last update timestamp from cache
+        $lastUpdate = \Illuminate\Support\Facades\Cache::get('dashboard:last_update', 0);
+        
+        // If no last_check provided (first poll), always return data but don't mark as "updated"
+        // If last_check is provided and matches or is newer, return no changes
+        if ($lastCheck && $lastCheck > 0) {
+            // Convert to integer for comparison
+            $lastCheckInt = (int)$lastCheck;
+            
+            // If last update is 0 (never updated) or is older/equal to last check, no changes
+            if ($lastUpdate == 0 || $lastUpdate <= $lastCheckInt) {
+                return response()->json([
+                    'updated' => false,
+                    'timestamp' => $lastUpdate ?: now()->timestamp,
+                ]);
+            }
+        }
+        
+        // If we get here, either:
+        // 1. No last_check provided (first poll) - return data but it's initial load
+        // 2. lastUpdate > lastCheck (changes detected) - return updated data
+        
+        // Changes detected - fetch updated data
+        // Use same queries as adminDashboard for consistency
+        $dashboardData = [
+            'updated' => true,
+            'timestamp' => $lastUpdate ?: now()->timestamp,
+            'totalResponses' => \App\Models\SurveyResponse::count(),
+            'recentResponses' => \App\Models\SurveyResponse::select(['id', 'track', 'created_at'])
+                ->latest()
+                ->take(5)
+                ->get()
+                ->map(function ($response) {
+                    return [
+                        'id' => $response->id,
+                        'track' => $response->track,
+                        'created_at' => $response->created_at->format('M j, Y g:i A'),
+                        'created_at_timestamp' => $response->created_at->timestamp,
+                    ];
+                }),
+            'responsesByTrack' => \App\Models\SurveyResponse::selectRaw('track, COUNT(*) as count')
+                ->groupBy('track')
+                ->orderBy('count', 'desc')
+                ->get()
+                ->map(function ($track) {
+                    return [
+                        'track' => $track->track,
+                        'count' => $track->count,
+                    ];
+                }),
+            'auditEventsCount' => \App\Models\AuditLog::where('action', 'submit_survey_response')->count(),
+        ];
+        
+        return response()->json($dashboardData);
+    }
+
     public function viewResponse($id)
     {
         // Admin is validated by EnsureAdmin middleware

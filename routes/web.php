@@ -59,6 +59,7 @@ Route::prefix('password')->name('password.')->group(function () {
 // Admin routes - protected by EnsureAdmin middleware
 Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::get('/dashboard', [StudentController::class, 'adminDashboard'])->name('dashboard');
+    Route::get('/dashboard/updates', [StudentController::class, 'checkDashboardUpdates'])->name('dashboard.updates');
     Route::get('/responses', [StudentController::class, 'allResponses'])->name('responses');
     Route::get('/responses/{id}', [StudentController::class, 'viewResponse'])->name('response.view');
     Route::get('/audit-logs', [StudentController::class, 'auditLogs'])->name('audit.logs');

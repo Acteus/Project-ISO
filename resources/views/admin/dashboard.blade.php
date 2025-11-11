@@ -831,9 +831,287 @@
         container.innerHTML = alertsHtml;
     }
 
+    // Smart Polling for Real-Time Dashboard Updates
+    let lastCheckTimestamp = 0; // Start with 0 to get initial data on first poll
+    let pollingInterval = null;
+    let isPolling = false;
+    let pollErrorCount = 0;
+    let isFirstPoll = true; // Track if this is the first poll
+    const MAX_POLL_ERRORS = 5;
+    const POLL_INTERVAL = 15000; // 15 seconds
+    const POLL_INTERVAL_ERROR = 30000; // 30 seconds on error
+
+    /**
+     * Poll dashboard for updates
+     */
+    async function pollDashboardUpdates() {
+        if (isPolling) return; // Prevent concurrent polls
+        isPolling = true;
+
+        try {
+            const url = lastCheckTimestamp > 0 
+                ? `{{ route('admin.dashboard.updates') }}?last_check=${lastCheckTimestamp}`
+                : `{{ route('admin.dashboard.updates') }}`;
+            
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': AdminUtils.getCSRFToken()
+                },
+                credentials: 'same-origin'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            pollErrorCount = 0; // Reset error count on success
+
+            if (data.updated) {
+                // Update dashboard with new data
+                updateDashboardData(data);
+                
+                // Only show notification if this is NOT the first poll (to avoid false notifications)
+                if (!isFirstPoll) {
+                    showUpdateNotification('Dashboard updated with new data');
+                }
+                
+                // Mark that we've completed the first poll
+                isFirstPoll = false;
+                
+                // Update timestamp for next poll
+                if (data.timestamp) {
+                    lastCheckTimestamp = data.timestamp;
+                }
+            } else {
+                // No changes - just update timestamp
+                if (data.timestamp) {
+                    lastCheckTimestamp = data.timestamp;
+                }
+                // Mark that we've completed the first poll even if no updates
+                isFirstPoll = false;
+            }
+        } catch (error) {
+            console.error('Dashboard polling error:', error);
+            pollErrorCount++;
+            
+            if (pollErrorCount >= MAX_POLL_ERRORS) {
+                // Too many errors - stop polling and show notification
+                stopPolling();
+                AdminUtils.showError('Dashboard auto-update stopped due to connection issues. Please refresh the page.');
+            }
+        } finally {
+            isPolling = false;
+        }
+    }
+
+    /**
+     * Update dashboard UI with new data
+     */
+    function updateDashboardData(data) {
+        // Update total responses
+        const totalResponsesEl = document.querySelector('.metric-card .metric-value');
+        if (totalResponsesEl && data.totalResponses !== undefined) {
+            animateValueChange(totalResponsesEl, data.totalResponses);
+        }
+
+        // Update recent responses
+        if (data.recentResponses && data.recentResponses.length > 0) {
+            updateRecentResponses(data.recentResponses);
+        }
+
+        // Update track distribution
+        if (data.responsesByTrack && data.responsesByTrack.length > 0) {
+            updateTrackDistribution(data.responsesByTrack);
+        }
+
+        // Update audit events count
+        const auditEventsEl = document.querySelectorAll('.metric-card .metric-value')[3];
+        if (auditEventsEl && data.auditEventsCount !== undefined) {
+            animateValueChange(auditEventsEl, data.auditEventsCount);
+        }
+
+        // Reload progress alerts
+        loadProgressAlerts();
+    }
+
+    /**
+     * Animate value change with subtle highlight
+     */
+    function animateValueChange(element, newValue) {
+        const oldValue = element.textContent.trim();
+        if (oldValue === String(newValue)) return; // No change
+
+        // Add highlight animation
+        element.style.transition = 'all 0.3s ease';
+        element.style.backgroundColor = 'rgba(66, 133, 244, 0.2)';
+        element.textContent = newValue;
+
+        setTimeout(() => {
+            element.style.backgroundColor = '';
+        }, 500);
+    }
+
+    /**
+     * Update recent responses list
+     */
+    function updateRecentResponses(responses) {
+        const container = document.querySelector('.recent-responses');
+        if (!container) return;
+
+        // Find all response items (skip the header)
+        const existingItems = container.querySelectorAll('.response-item');
+        
+        // Clear existing items
+        existingItems.forEach(item => item.remove());
+
+        // Add new responses
+        if (responses.length === 0) {
+            const noDataDiv = document.createElement('div');
+            noDataDiv.className = 'no-data';
+            noDataDiv.innerHTML = `
+                <p>No survey responses yet.</p>
+                <p>Survey responses will appear here once students start submitting their feedback.</p>
+            `;
+            container.appendChild(noDataDiv);
+            return;
+        }
+
+        responses.forEach(response => {
+            const responseItem = document.createElement('div');
+            responseItem.className = 'response-item';
+            responseItem.innerHTML = `
+                <div class="response-info">
+                    <div class="response-track">${response.track} Track - Response #${response.id}</div>
+                    <div class="response-date">${response.created_at}</div>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <span style="background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;">Completed</span>
+                    <a href="/admin/responses/${response.id}" class="btn btn-primary" style="padding: 10px 18px; font-size: 14px; text-decoration: none;">View Details</a>
+                </div>
+            `;
+            container.appendChild(responseItem);
+        });
+    }
+
+    /**
+     * Update track distribution
+     */
+    function updateTrackDistribution(tracks) {
+        const container = document.querySelector('.track-distribution');
+        if (!container) return;
+
+        // Find all track items (skip the header)
+        const existingItems = container.querySelectorAll('.track-item');
+        
+        // Clear existing items
+        existingItems.forEach(item => item.remove());
+
+        if (tracks.length === 0) {
+            const noDataDiv = document.createElement('div');
+            noDataDiv.className = 'no-data';
+            noDataDiv.innerHTML = `
+                <p>No track distribution data available yet.</p>
+            `;
+            container.appendChild(noDataDiv);
+            return;
+        }
+
+        tracks.forEach(track => {
+            const trackItem = document.createElement('div');
+            trackItem.className = 'track-item';
+            trackItem.innerHTML = `
+                <div class="track-name">${track.track} Track</div>
+                <div class="track-count">${track.count}</div>
+            `;
+            container.appendChild(trackItem);
+        });
+    }
+
+    /**
+     * Show subtle update notification
+     */
+    function showUpdateNotification(message) {
+        // Create or get notification element
+        let notification = document.getElementById('dashboard-update-notification');
+        if (!notification) {
+            notification = document.createElement('div');
+            notification.id = 'dashboard-update-notification';
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #4285F4, #2c6cd6);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+                z-index: 10000;
+                font-size: 14px;
+                font-weight: 500;
+                opacity: 0;
+                transform: translateY(-20px);
+                transition: all 0.3s ease;
+            `;
+            document.body.appendChild(notification);
+        }
+
+        notification.textContent = message;
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateY(0)';
+
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateY(-20px)';
+        }, 3000);
+    }
+
+    /**
+     * Start polling
+     */
+    function startPolling() {
+        if (pollingInterval) return; // Already polling
+
+        // Initial poll after 5 seconds
+        setTimeout(() => {
+            pollDashboardUpdates();
+        }, 5000);
+
+        // Then poll at regular intervals
+        pollingInterval = setInterval(() => {
+            pollDashboardUpdates();
+        }, pollErrorCount > 0 ? POLL_INTERVAL_ERROR : POLL_INTERVAL);
+    }
+
+    /**
+     * Stop polling
+     */
+    function stopPolling() {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+        }
+    }
+
     // Load progress alerts on page load
     document.addEventListener('DOMContentLoaded', function() {
         loadProgressAlerts();
+
+        // Start smart polling for real-time updates
+        startPolling();
+
+        // Stop polling when page is hidden (save resources)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                stopPolling();
+            } else {
+                startPolling();
+                // Poll immediately when page becomes visible
+                pollDashboardUpdates();
+            }
+        });
 
         // Add smooth animations
         const cards = document.querySelectorAll('.metric-card, .action-card');
