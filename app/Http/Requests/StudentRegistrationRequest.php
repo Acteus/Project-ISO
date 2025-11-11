@@ -36,7 +36,17 @@ class StudentRegistrationRequest extends FormRequest
             'year' => ['required', 'in:11,12'],
             'section' => ['required', 'string', 'max:10'],
             'studentid' => ['required', 'string', 'unique:users,student_id'],
-            'password' => ['required', 'string', 'min:8', 'confirmed', Password::defaults()],
+            // SECURITY FIX: Enhanced password strength requirements
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/[a-z]/', // at least one lowercase letter
+                'regex:/[A-Z]/', // at least one uppercase letter
+                'regex:/[0-9]/', // at least one digit
+                'regex:/[@$!%*#?&]/', // at least one special character
+            ],
             'acknowledge' => ['required', 'accepted'],
         ];
     }
@@ -52,8 +62,9 @@ class StudentRegistrationRequest extends FormRequest
             'email.regex' => 'Email must be a valid @my.jru.edu address.',
             'email.unique' => 'This email is already registered.',
             'studentid.unique' => 'This student ID is already registered.',
-            'password.min' => 'Password must be at least 8 characters.',
+            'password.min' => 'Password must be at least 8 characters long.',
             'password.confirmed' => 'Password confirmation does not match.',
+            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*#?&).',
             'acknowledge.accepted' => 'You must acknowledge the terms to proceed.',
         ];
     }

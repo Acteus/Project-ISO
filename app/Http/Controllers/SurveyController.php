@@ -51,8 +51,19 @@ class SurveyController extends Controller
             }
             
             // Re-establish admin session if it existed and was lost
+            // SECURITY FIX: Ensure admin session is stored as array format
             if ($currentAdmin && !session('admin')) {
-                session(['admin' => $currentAdmin]);
+                // Convert to array format if it's an object
+                if (is_object($currentAdmin)) {
+                    session(['admin' => [
+                        'id' => $currentAdmin->id,
+                        'name' => $currentAdmin->name,
+                        'username' => $currentAdmin->username ?? null,
+                        'email' => $currentAdmin->email ?? null,
+                    ]]);
+                } else {
+                    session(['admin' => $currentAdmin]);
+                }
                 Log::warning('Admin session lost during regeneration, restored');
             }
         }
@@ -171,8 +182,12 @@ class SurveyController extends Controller
                 $studentId = Auth::user()->student_id;
             } elseif (Auth::guard('sanctum')->check() && Auth::guard('sanctum')->user()->student_id) {
                 $studentId = Auth::guard('sanctum')->user()->student_id;
-            } elseif (session()->has('admin') && session('admin')->student_id) {
-                $studentId = session('admin')->student_id;
+            } elseif (session()->has('admin')) {
+                // Admin doesn't have student_id - this check was incorrect
+                // Admins submitting surveys would need to provide student_id explicitly
+                $admin = session('admin');
+                // Handle both array and object formats, but admins don't have student_id
+                // This branch should not normally execute for admin users
             }
         }
         
@@ -310,8 +325,11 @@ class SurveyController extends Controller
                 $data['student_id'] = Auth::user()->student_id;
             } elseif (Auth::guard('sanctum')->check() && Auth::guard('sanctum')->user()->student_id) {
                 $data['student_id'] = Auth::guard('sanctum')->user()->student_id;
-            } elseif (session()->has('admin') && session('admin')->student_id) {
-                $data['student_id'] = session('admin')->student_id;
+            } elseif (session()->has('admin')) {
+                // Admin doesn't have student_id - admins should not submit surveys as students
+                // This is a security consideration: admins should use student accounts for survey submission
+                // For now, generate anonymous ID if admin is submitting
+                $data['student_id'] = 'ADMIN_' . uniqid() . '_' . substr(md5($request->ip() . time()), 0, 8);
             } else {
                 // Generate anonymous ID if no student_id provided
                 $data['student_id'] = 'ANON_' . uniqid() . '_' . substr(md5($request->ip() . time()), 0, 8);

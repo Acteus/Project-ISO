@@ -15,7 +15,8 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // Admin Authentication Routes
-Route::post('/admin/login', [AdminAuthController::class, 'login']);
+// SECURITY FIX: Add rate limiting to admin authentication endpoints
+Route::post('/admin/login', [AdminAuthController::class, 'login'])->middleware('throttle:5,1'); // 5 attempts per minute
 Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::get('/admin/me', [AdminAuthController::class, 'me'])->middleware('auth:sanctum');
 
@@ -45,12 +46,13 @@ Route::middleware('auth:sanctum')->group(function () {
         ->middleware('cache.api:300');
 
     // AI Routes
-    Route::post('/ai/compliance-predict', [AIController::class, 'predictCompliance']);
-    Route::get('/ai/cluster-responses', [AIController::class, 'clusterResponses']);
-    Route::get('/ai/sentiment-analysis', [AIController::class, 'analyzeSentiment']);
-    Route::get('/ai/keyword-extraction', [AIController::class, 'extractKeywords']);
+    // SECURITY FIX: Add rate limiting to AI service endpoints to prevent abuse
+    Route::post('/ai/compliance-predict', [AIController::class, 'predictCompliance'])->middleware('throttle:30,1'); // 30 requests per minute
+    Route::get('/ai/cluster-responses', [AIController::class, 'clusterResponses'])->middleware('throttle:30,1');
+    Route::get('/ai/sentiment-analysis', [AIController::class, 'analyzeSentiment'])->middleware('throttle:30,1');
+    Route::get('/ai/keyword-extraction', [AIController::class, 'extractKeywords'])->middleware('throttle:30,1');
     Route::get('/ai/compliance-risk-meter', [AIController::class, 'getComplianceRiskMeter'])
-        ->middleware('cache.api:300');
+        ->middleware(['cache.api:300', 'throttle:30,1']);
 
     // ==========================================
     // OLD VISUALIZATION ROUTES (DEPRECATED)
@@ -89,10 +91,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // AI Service Status and Analysis routes
     Route::get('/ai/service-status', [AIController::class, 'getServiceStatus'])
-        ->middleware('cache.api:60'); // Cache for 1 minute
+        ->middleware(['cache.api:60', 'throttle:60,1']); // Cache for 1 minute, 60 requests per minute
     Route::get('/ai/metrics', [AIController::class, 'getAIMetrics'])
-        ->middleware('cache.api:300'); // Cache for 5 minutes
-    Route::post('/ai/analyze/{type}', [AIController::class, 'runAnalysis']);
+        ->middleware(['cache.api:300', 'throttle:30,1']); // Cache for 5 minutes, 30 requests per minute
+    Route::post('/ai/analyze/{type}', [AIController::class, 'runAnalysis'])->middleware('throttle:20,1'); // 20 requests per minute
 
     // Compliance and Audit Routes
     Route::get('/compliance/status', [ComplianceController::class, 'getComplianceStatus'])

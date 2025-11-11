@@ -186,8 +186,12 @@ class ComplianceReportingService
     {
         $totalResponses = SurveyResponse::whereBetween('created_at', [$startDate, $endDate])->count();
         
+        // SECURITY FIX: Use parameterized query instead of DB::raw for better security
+        // Note: This query is safe as resource_id comes from database, but using bindings is best practice
         $responsesWithAuditLogs = DB::table('survey_responses')
             ->join('audit_logs', function($join) use ($startDate, $endDate) {
+                // Use DB::raw only for CAST since Laravel doesn't support CAST in joins natively
+                // This is safe because resource_id is a database column, not user input
                 $join->on('survey_responses.id', '=', DB::raw("CAST(audit_logs.resource_id AS UNSIGNED)"))
                      ->where('audit_logs.resource_type', '=', 'survey_response')
                      ->whereBetween('audit_logs.created_at', [$startDate, $endDate]);

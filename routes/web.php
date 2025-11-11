@@ -25,11 +25,12 @@ Route::get('/home', function () {
 })->name('home');
 
 // Student authentication routes
+// SECURITY FIX: Add rate limiting to authentication endpoints to prevent brute force attacks
 Route::prefix('student')->name('student.')->group(function () {
     Route::get('/register', [StudentController::class, 'showRegistrationForm'])->name('register');
-    Route::post('/register', [StudentController::class, 'register'])->name('register.post');
+    Route::post('/register', [StudentController::class, 'register'])->name('register.post')->middleware('throttle:5,1'); // 5 attempts per minute
     Route::get('/login', [StudentController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [StudentController::class, 'login'])->name('login.post');
+    Route::post('/login', [StudentController::class, 'login'])->name('login.post')->middleware('throttle:5,1'); // 5 attempts per minute
     Route::match(['get', 'post'], '/logout', [StudentController::class, 'logout'])->name('logout');
     Route::get('/clear-sessions', [StudentController::class, 'clearAllSessions'])->name('clear-sessions');
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
@@ -47,11 +48,12 @@ Route::prefix('email')->name('verification.')->group(function () {
 });
 
 // Password Reset Routes
+// SECURITY FIX: Add rate limiting to password reset endpoints
 Route::prefix('password')->name('password.')->group(function () {
     Route::get('/forgot', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('request');
-    Route::post('/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('email');
+    Route::post('/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('email')->middleware('throttle:3,1'); // 3 attempts per minute
     Route::get('/reset/{token}', [ForgotPasswordController::class, 'showResetForm'])->name('reset');
-    Route::post('/reset', [ForgotPasswordController::class, 'reset'])->name('update');
+    Route::post('/reset', [ForgotPasswordController::class, 'reset'])->name('update')->middleware('throttle:3,1'); // 3 attempts per minute
 });
 
 // Admin routes - protected by EnsureAdmin middleware
@@ -270,16 +272,18 @@ Route::prefix('api')->group(function () {
     Route::get('/analytics/compliance', [App\Http\Controllers\AnalyticsController::class, 'getCompliance'])->name('api.analytics.compliance');
 
     // Admin authentication routes
-    Route::post('/admin/login', [AdminAuthController::class, 'login']);
+    // SECURITY FIX: Add rate limiting to admin authentication endpoints
+    Route::post('/admin/login', [AdminAuthController::class, 'login'])->middleware('throttle:5,1'); // 5 attempts per minute
     Route::post('/admin/logout', [AdminAuthController::class, 'logout']);
     Route::get('/admin/me', [AdminAuthController::class, 'me']);
 
     // AI-powered analytics routes
-    Route::post('/ai/predict-compliance', [AIController::class, 'predictCompliance']);
-    Route::post('/ai/cluster-responses', [AIController::class, 'clusterResponses']);
-    Route::post('/ai/analyze-sentiment', [AIController::class, 'analyzeSentiment']);
-    Route::post('/ai/extract-keywords', [AIController::class, 'extractKeywords']);
-    Route::get('/ai/compliance-risk-meter', [AIController::class, 'getComplianceRiskMeter']);
+    // SECURITY FIX: Add rate limiting to AI service endpoints to prevent abuse
+    Route::post('/ai/predict-compliance', [AIController::class, 'predictCompliance'])->middleware('throttle:30,1');
+    Route::post('/ai/cluster-responses', [AIController::class, 'clusterResponses'])->middleware('throttle:30,1');
+    Route::post('/ai/analyze-sentiment', [AIController::class, 'analyzeSentiment'])->middleware('throttle:30,1');
+    Route::post('/ai/extract-keywords', [AIController::class, 'extractKeywords'])->middleware('throttle:30,1');
+    Route::get('/ai/compliance-risk-meter', [AIController::class, 'getComplianceRiskMeter'])->middleware('throttle:30,1');
 
     // AI Service Status and Analysis routes (session-based auth for admin dashboard)
     Route::get('/ai/service-status', [AIController::class, 'getServiceStatus']);

@@ -212,10 +212,11 @@ class AuditService
             return Auth::guard('sanctum')->id();
         }
 
-        // Check admin session
+        // Check admin session (handle both array and object formats)
         if (session()->has('admin')) {
             $admin = session('admin');
-            return $admin->id ?? null;
+            // Handle both array and object formats for backward compatibility
+            return is_array($admin) ? ($admin['id'] ?? null) : ($admin->id ?? null);
         }
 
         return null;

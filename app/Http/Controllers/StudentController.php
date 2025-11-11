@@ -20,6 +20,8 @@ class StudentController extends Controller
 
     public function register(Request $request)
     {
+        // SECURITY FIX: Enhanced password strength requirements
+        // Password must contain: uppercase, lowercase, number, and special character
         $validator = Validator::make($request->all(), [
             'firstname' => 'required|string|max:255',
             'lastname' => 'required|string|max:255',
@@ -27,13 +29,23 @@ class StudentController extends Controller
             'year' => 'required|in:11,12',
             'section' => 'required|string|max:10',
             'studentid' => 'required|string|unique:users,student_id',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/[a-z]/', // at least one lowercase letter
+                'regex:/[A-Z]/', // at least one uppercase letter
+                'regex:/[0-9]/', // at least one digit
+                'regex:/[@$!%*#?&]/', // at least one special character
+            ],
             'acknowledge' => 'required|accepted',
         ], [
             'email.unique' => 'This email is already registered.',
             'studentid.unique' => 'This student ID is already registered.',
-            'password.min' => 'Password must be at least 8 characters.',
+            'password.min' => 'Password must be at least 8 characters long.',
             'password.confirmed' => 'Password confirmation does not match.',
+            'password.regex' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*#?&).',
         ]);
 
         if ($validator->fails()) {
@@ -146,11 +158,17 @@ class StudentController extends Controller
         })->first();
 
         if ($admin && \Illuminate\Support\Facades\Hash::check($request->password, $admin->password)) {
-            // Store admin in session for web authentication
-            session(['admin' => $admin]);
+            // SECURITY FIX: Store minimal admin data in session as array (not full object)
+            // This reduces session size and improves security
+            session(['admin' => [
+                'id' => $admin->id,
+                'name' => $admin->name,
+                'username' => $admin->username,
+                'email' => $admin->email,
+            ]]);
 
-            // Mark that we should regenerate on next request
-            $request->session()->put('_should_regenerate', true);
+            // Regenerate session ID to prevent session fixation
+            $request->session()->regenerate();
 
             // Log admin login for audit trail using AuditService
             $auditService = app(\App\Services\AuditService::class);
@@ -600,16 +618,22 @@ class StudentController extends Controller
 
     public function adminDashboard()
     {
-        // For now, we'll use session to store admin info since we're not using Sanctum for web routes
-        // In a production app, you'd want proper session-based admin authentication
-        $admin = session('admin');
+        // Admin is now validated and refreshed by EnsureAdmin middleware
+        // The middleware passes the admin model via $request->admin
+        $admin = request()->get('admin') ?? session('admin');
 
         if (!$admin) {
             return redirect()->route('student.login');
         }
 
+        // Handle both array and object formats for backward compatibility
+        $adminId = is_array($admin) ? ($admin['id'] ?? null) : ($admin->id ?? null);
+        if (!$adminId) {
+            return redirect()->route('student.login');
+        }
+
         // Cache dashboard data using CacheService for consistent caching strategy
-        $cacheKey = 'dashboard:admin:' . $admin->id;
+        $cacheKey = 'dashboard:admin:' . $adminId;
         $dashboardData = \App\Services\CacheService::remember($cacheKey, function () {
             // Optimize queries to prevent N+1 problems
             // Use select() to only fetch needed columns
@@ -629,17 +653,32 @@ class StudentController extends Controller
             ];
         }, 'dashboard');
 
+        // Ensure admin is passed as array for view compatibility
+        $adminData = is_array($admin) ? $admin : [
+            'id' => $admin->id,
+            'name' => $admin->name,
+            'username' => $admin->username ?? null,
+            'email' => $admin->email ?? null,
+        ];
+
         return view('admin.dashboard', array_merge(
-            ['admin' => $admin],
+            ['admin' => (object)$adminData], // Convert to object for view compatibility
             $dashboardData
         ));
     }
 
     public function viewResponse($id)
     {
-        $admin = session('admin');
+        // Admin is validated by EnsureAdmin middleware
+        $admin = request()->get('admin') ?? session('admin');
 
         if (!$admin) {
+            return redirect()->route('student.login');
+        }
+
+        // Handle both array and object formats
+        $adminId = is_array($admin) ? ($admin['id'] ?? null) : ($admin->id ?? null);
+        if (!$adminId) {
             return redirect()->route('student.login');
         }
 
@@ -648,21 +687,30 @@ class StudentController extends Controller
 
         // Log viewing of response for audit trail
         AuditLog::create([
-            'admin_id' => $admin->id,
+            'admin_id' => $adminId,
             'action' => 'view_survey_response',
             'description' => 'Admin viewed detailed survey response',
             'ip_address' => request()->ip(),
             'new_values' => ['response_id' => $response->id],
         ]);
 
-        return view('admin.response-detail', compact('admin', 'response'));
+        // Ensure admin is passed as object for view compatibility
+        $adminData = is_array($admin) ? (object)$admin : $admin;
+        return view('admin.response-detail', ['admin' => $adminData, 'response' => $response]);
     }
 
     public function allResponses(Request $request)
     {
-        $admin = session('admin');
+        // Admin is validated by EnsureAdmin middleware
+        $admin = request()->get('admin') ?? session('admin');
 
         if (!$admin) {
+            return redirect()->route('student.login');
+        }
+
+        // Handle both array and object formats
+        $adminId = is_array($admin) ? ($admin['id'] ?? null) : ($admin->id ?? null);
+        if (!$adminId) {
             return redirect()->route('student.login');
         }
 
@@ -671,18 +719,21 @@ class StudentController extends Controller
 
         // Log viewing of all responses for audit trail
         AuditLog::create([
-            'admin_id' => $admin->id,
+            'admin_id' => $adminId,
             'action' => 'view_all_responses',
             'description' => 'Admin viewed all survey responses list',
             'ip_address' => request()->ip(),
         ]);
 
-        return view('admin.all-responses', compact('admin', 'responses'));
+        // Ensure admin is passed as object for view compatibility
+        $adminData = is_array($admin) ? (object)$admin : $admin;
+        return view('admin.all-responses', ['admin' => $adminData, 'responses' => $responses]);
     }
 
     public function auditLogs(Request $request)
     {
-        $admin = session('admin');
+        // Admin is validated by EnsureAdmin middleware
+        $admin = request()->get('admin') ?? session('admin');
 
         if (!$admin) {
             return redirect()->route('student.login');
@@ -823,12 +874,28 @@ class StudentController extends Controller
             ]
         );
 
-        return view('admin.audit-logs', compact('admin', 'auditLogs', 'actions', 'userTypes', 'resourceTypes', 'action', 'userType', 'dateFrom', 'dateTo', 'search', 'perPage', 'stats'));
+        // Ensure admin is passed as object for view compatibility
+        $adminData = is_array($admin) ? (object)$admin : $admin;
+        return view('admin.audit-logs', [
+            'admin' => $adminData,
+            'auditLogs' => $auditLogs,
+            'actions' => $actions,
+            'userTypes' => $userTypes,
+            'resourceTypes' => $resourceTypes,
+            'action' => $action,
+            'userType' => $userType,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'search' => $search,
+            'perPage' => $perPage,
+            'stats' => $stats,
+        ]);
     }
 
     public function aiInsights()
     {
-        $admin = session('admin');
+        // Admin is validated by EnsureAdmin middleware
+        $admin = request()->get('admin') ?? session('admin');
 
         if (!$admin) {
             return redirect()->route('student.login');
@@ -843,6 +910,8 @@ class StudentController extends Controller
             request()
         );
 
-        return view('admin.ai-insights', compact('admin'));
+        // Ensure admin is passed as object for view compatibility
+        $adminData = is_array($admin) ? (object)$admin : $admin;
+        return view('admin.ai-insights', ['admin' => $adminData]);
     }
 }
