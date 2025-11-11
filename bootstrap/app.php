@@ -25,6 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register cache response middleware
         $middleware->alias([
             'cache.response' => \App\Http\Middleware\CacheResponse::class,
+            'cache.api' => \App\Http\Middleware\CacheApiResponse::class,
+            'query.logging' => \App\Http\Middleware\QueryLoggingMiddleware::class,
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'audit' => \App\Http\Middleware\AuditMiddleware::class,
@@ -32,6 +34,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Apply audit middleware to API routes for automatic access logging
         $middleware->appendToGroup('api', \App\Http\Middleware\AuditMiddleware::class);
+        
+        // Apply query logging middleware only when explicitly enabled
+        // Disabled by default in production for Cloudways compatibility
+        if (env('QUERY_LOGGING_ENABLED', false) || in_array(env('APP_ENV', 'production'), ['local', 'testing'])) {
+            $middleware->appendToGroup('web', \App\Http\Middleware\QueryLoggingMiddleware::class);
+            $middleware->appendToGroup('api', \App\Http\Middleware\QueryLoggingMiddleware::class);
+        }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

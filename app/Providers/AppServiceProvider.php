@@ -25,6 +25,33 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Configure Redis for session storage if Redis is available (Cloudways compatible)
+        // Only configure if explicitly enabled and Redis credentials are provided
+        if (env('REDIS_HOST') && env('REDIS_PORT')) {
+            try {
+                // Test Redis connection using Laravel's Redis facade (more compatible)
+                // This works with both phpredis and predis clients
+                $redis = app('redis');
+                $redis->connection()->ping();
+                
+                // Only configure if connection successful
+                config(['session.driver' => 'redis']);
+                config(['session.store' => 'cache']);
+                config(['cache.default' => 'redis']);
+                
+                Log::info('Redis configured successfully for sessions and cache');
+            } catch (\Exception $e) {
+                // Gracefully fall back to database if Redis fails
+                Log::warning('Redis configuration failed: ' . $e->getMessage() . '. Falling back to database storage.');
+                config(['session.driver' => 'database']);
+                config(['cache.default' => 'database']);
+            }
+        } else {
+            // No Redis configured, use database
+            config(['session.driver' => 'database']);
+            config(['cache.default' => 'database']);
+        }
+
         // Register model observers for automatic cache clearing
         SurveyResponse::observe(SurveyResponseObserver::class);
 

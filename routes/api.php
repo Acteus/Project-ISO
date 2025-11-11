@@ -36,16 +36,21 @@ Route::middleware('auth:sanctum')->group(function () {
     // NEW SIMPLIFIED ANALYTICS API (v2)
     // ==========================================
     // These 3 endpoints replace all the complex visualization routes below
-    Route::get('/analytics/summary', [AnalyticsController::class, 'getSummary']);
-    Route::get('/analytics/time-series', [AnalyticsController::class, 'getTimeSeries']);
-    Route::get('/analytics/compliance', [AnalyticsController::class, 'getCompliance']);
+    // Cached for 5 minutes (300 seconds) to improve performance
+    Route::get('/analytics/summary', [AnalyticsController::class, 'getSummary'])
+        ->middleware('cache.api:300');
+    Route::get('/analytics/time-series', [AnalyticsController::class, 'getTimeSeries'])
+        ->middleware('cache.api:300');
+    Route::get('/analytics/compliance', [AnalyticsController::class, 'getCompliance'])
+        ->middleware('cache.api:300');
 
     // AI Routes
     Route::post('/ai/compliance-predict', [AIController::class, 'predictCompliance']);
     Route::get('/ai/cluster-responses', [AIController::class, 'clusterResponses']);
     Route::get('/ai/sentiment-analysis', [AIController::class, 'analyzeSentiment']);
     Route::get('/ai/keyword-extraction', [AIController::class, 'extractKeywords']);
-    Route::get('/ai/compliance-risk-meter', [AIController::class, 'getComplianceRiskMeter']);
+    Route::get('/ai/compliance-risk-meter', [AIController::class, 'getComplianceRiskMeter'])
+        ->middleware('cache.api:300');
 
     // ==========================================
     // OLD VISUALIZATION ROUTES (DEPRECATED)
@@ -83,13 +88,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/export/analytics-report', [ExportController::class, 'exportAnalyticsReport']);
 
     // AI Service Status and Analysis routes
-    Route::get('/ai/service-status', [AIController::class, 'getServiceStatus']);
-    Route::get('/ai/metrics', [AIController::class, 'getAIMetrics']);
+    Route::get('/ai/service-status', [AIController::class, 'getServiceStatus'])
+        ->middleware('cache.api:60'); // Cache for 1 minute
+    Route::get('/ai/metrics', [AIController::class, 'getAIMetrics'])
+        ->middleware('cache.api:300'); // Cache for 5 minutes
     Route::post('/ai/analyze/{type}', [AIController::class, 'runAnalysis']);
 
     // Compliance and Audit Routes
-    Route::get('/compliance/status', [ComplianceController::class, 'getComplianceStatus']);
-    Route::get('/compliance/metrics', [ComplianceController::class, 'getComplianceMetrics']);
+    Route::get('/compliance/status', [ComplianceController::class, 'getComplianceStatus'])
+        ->middleware('cache.api:300');
+    Route::get('/compliance/metrics', [ComplianceController::class, 'getComplianceMetrics'])
+        ->middleware('cache.api:300');
     Route::get('/compliance/audit-logs', [ComplianceController::class, 'getAuditLogs']);
     Route::get('/compliance/audit-trail/{resourceType}/{resourceId}', [ComplianceController::class, 'getResourceAuditTrail']);
 });

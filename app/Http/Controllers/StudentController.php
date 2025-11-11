@@ -611,11 +611,20 @@ class StudentController extends Controller
         // Cache dashboard data using CacheService for consistent caching strategy
         $cacheKey = 'dashboard:admin:' . $admin->id;
         $dashboardData = \App\Services\CacheService::remember($cacheKey, function () {
+            // Optimize queries to prevent N+1 problems
+            // Use select() to only fetch needed columns
+            // Use eager loading if relationships exist (none currently, but prepared for future)
             return [
                 'totalResponses' => \App\Models\SurveyResponse::count(),
-                'recentResponses' => \App\Models\SurveyResponse::latest()->take(5)->get(),
+                // Only select needed columns to reduce memory usage
+                'recentResponses' => \App\Models\SurveyResponse::select(['id', 'track', 'created_at'])
+                    ->latest()
+                    ->take(5)
+                    ->get(),
+                // Use database aggregation instead of loading all records
                 'responsesByTrack' => \App\Models\SurveyResponse::selectRaw('track, COUNT(*) as count')
                     ->groupBy('track')
+                    ->orderBy('count', 'desc')
                     ->get(),
             ];
         }, 'dashboard');
