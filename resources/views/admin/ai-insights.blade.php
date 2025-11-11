@@ -1626,13 +1626,182 @@
 
                 case 'predictive': {
                     const p = data.prediction || data || {};
+                    const trendDir = p.trend_direction || p.trend || 'Stable';
+                    const trendColor = trendDir.toLowerCase().includes('upward') || trendDir.toLowerCase().includes('improving') ? '#28a745'
+                                     : trendDir.toLowerCase().includes('downward') || trendDir.toLowerCase().includes('declining') ? '#dc3545'
+                                     : '#6c757d';
+                    const trendMagnitude = p.trend_magnitude || p.trend_strength || 'Moderate';
+                    const confidence = Number(p.confidence) || 0.5;
+                    const dataPoints = p.data_points_analyzed || 0;
+                    
+                    // Parse current performance if it's in format "X.X/5.0"
+                    let currentPerf = p.current_performance || 'Unknown';
+                    let currentPerfNum = null;
+                    if (typeof currentPerf === 'string' && currentPerf.includes('/')) {
+                        currentPerfNum = parseFloat(currentPerf.split('/')[0]);
+                    } else if (typeof currentPerf === 'number') {
+                        currentPerfNum = currentPerf;
+                        currentPerf = currentPerf.toFixed(2) + '/5.0';
+                    }
+                    
+                    // Parse current satisfaction
+                    let currentSat = p.current_satisfaction || 'Unknown';
+                    let currentSatNum = null;
+                    if (typeof currentSat === 'string' && currentSat.includes('/')) {
+                        currentSatNum = parseFloat(currentSat.split('/')[0]);
+                    } else if (typeof currentSat === 'number') {
+                        currentSatNum = currentSat;
+                        currentSat = currentSat.toFixed(2) + '/5.0';
+                    }
+                    
+                    // Parse historical average
+                    let histAvg = p.historical_average || 'Unknown';
+                    let histAvgNum = null;
+                    if (typeof histAvg === 'string' && histAvg.includes('/')) {
+                        histAvgNum = parseFloat(histAvg.split('/')[0]);
+                    } else if (typeof histAvg === 'number') {
+                        histAvgNum = histAvg;
+                        histAvg = histAvg.toFixed(2) + '/5.0';
+                    }
+                    
+                    // Create performance visualization
+                    let perfViz = '';
+                    if (currentPerfNum !== null) {
+                        const perfPercent = (currentPerfNum / 5.0) * 100;
+                        const perfColor = currentPerfNum >= 4.0 ? '#28a745' : currentPerfNum >= 3.0 ? '#17a2b8' : currentPerfNum >= 2.0 ? '#ffc107' : '#dc3545';
+                        perfViz = `
+                            <div style="margin: 10px 0;">
+                                <p style="margin-bottom: 5px;"><strong>Current Performance:</strong> <span style="color: ${perfColor}; font-weight: 700; font-size: 18px;">${currentPerf}</span></p>
+                                <div style="width: 100%; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
+                                    <div style="width: ${perfPercent}%; height: 100%; background: ${perfColor}; transition: width 0.5s ease;"></div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        perfViz = `<p><strong>Current Performance:</strong> ${currentPerf}</p>`;
+                    }
+                    
+                    // Create satisfaction visualization
+                    let satViz = '';
+                    if (currentSatNum !== null) {
+                        const satPercent = (currentSatNum / 5.0) * 100;
+                        const satColor = currentSatNum >= 4.0 ? '#28a745' : currentSatNum >= 3.0 ? '#17a2b8' : currentSatNum >= 2.0 ? '#ffc107' : '#dc3545';
+                        satViz = `
+                            <div style="margin: 10px 0;">
+                                <p style="margin-bottom: 5px;"><strong>Current Satisfaction:</strong> <span style="color: ${satColor}; font-weight: 700; font-size: 18px;">${currentSat}</span></p>
+                                <div style="width: 100%; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
+                                    <div style="width: ${satPercent}%; height: 100%; background: ${satColor}; transition: width 0.5s ease;"></div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        satViz = `<p><strong>Current Satisfaction:</strong> ${currentSat}</p>`;
+                    }
+                    
+                    // Forecast visualization
+                    let forecastViz = '';
+                    const forecasted = p.forecasted_satisfaction || p.forecasted || [];
+                    if (Array.isArray(forecasted) && forecasted.length > 0) {
+                        const forecastHtml = forecasted.map((val, idx) => {
+                            const month = idx + 1;
+                            const satVal = Number(val);
+                            const satColor = satVal >= 4.0 ? '#28a745' : satVal >= 3.0 ? '#17a2b8' : satVal >= 2.0 ? '#ffc107' : '#dc3545';
+                            return `
+                                <div style="margin-bottom: 12px;">
+                                    <p style="margin-bottom: 5px;"><strong>Month ${month}:</strong> <span style="color: ${satColor}; font-weight: 700;">${satVal.toFixed(2)}</span> / 5.0</p>
+                                    <div style="width: 100%; height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden;">
+                                        <div style="width: ${(satVal / 5.0) * 100}%; height: 100%; background: ${satColor}; transition: width 0.5s ease;"></div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                        forecastViz = `
+                            <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); border-radius: 12px; border-left: 4px solid #4285F4;">
+                                <h4 style="margin: 0 0 15px 0; color: #2c3e50; font-size: 16px;">3-Month Forecast</h4>
+                                ${forecastHtml}
+                            </div>
+                        `;
+                    }
+                    
+                    // Key insights section
+                    let insightsHtml = '';
+                    const factors = p.factors || {};
+                    const keyInsights = p.key_insights || p.insights || [];
+                    
+                    if (Object.keys(factors).length > 0 || keyInsights.length > 0) {
+                        let factorsHtml = '';
+                        if (Object.keys(factors).length > 0) {
+                            factorsHtml = Object.entries(factors).map(([key, value]) => {
+                                return `<li style="margin-bottom: 8px;"><strong>${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</strong> ${value}</li>`;
+                            }).join('');
+                        }
+                        
+                        let insightsList = '';
+                        if (keyInsights.length > 0) {
+                            insightsList = keyInsights.map(insight => `<li style="margin-bottom: 8px;">${insight}</li>`).join('');
+                        }
+                        
+                        insightsHtml = `
+                            <div style="margin-top: 20px; padding: 15px; background: rgba(255, 193, 7, 0.1); border-radius: 12px; border-left: 4px solid #ffc107;">
+                                <h4 style="margin: 0 0 12px 0; color: #2c3e50; font-size: 16px;">
+                                    <svg style="width: 18px; height: 18px; vertical-align: middle; margin-right: 6px; fill: #ffc107;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                    </svg>
+                                    Key Insights & Factors
+                                </h4>
+                                ${factorsHtml || insightsList ? `<ul style="margin: 0; padding-left: 20px; color: #333; font-size: 13px; line-height: 1.6;">${factorsHtml}${insightsList}</ul>` : '<p style="margin: 0; color: #666; font-style: italic;">No specific insights available</p>'}
+                            </div>
+                        `;
+                    }
+                    
                     const html = `
-                        <p><strong>Current Performance:</strong> ${p.current_performance ?? 'N/A'}</p>
-                        <p><strong>Predicted Trend:</strong> ${p.trend ?? 'N/A'}</p>
-                        <p><strong>Confidence Level:</strong> ${p.confidence ? safePct(p.confidence) : 'N/A'}</p>
-                        <p><strong>Forecast Period:</strong> Next 3 months</p>
+                        <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); padding: 20px; border-radius: 12px; margin-bottom: 15px;">
+                            <h4 style="margin: 0 0 15px 0; color: #2c3e50;">Performance Overview</h4>
+                            ${perfViz}
+                            ${satViz}
+                            ${histAvg !== 'Unknown' ? `<p style="margin-top: 10px;"><strong>Historical Average:</strong> ${histAvg}</p>` : ''}
+                        </div>
+                        
+                        <div style="margin: 15px 0; padding: 15px; background: rgba(255, 255, 255, 0.7); border-radius: 12px; border-left: 4px solid ${trendColor};">
+                            <h4 style="margin: 0 0 12px 0; color: #2c3e50; font-size: 16px;">Trend Analysis</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                                <div>
+                                    <p style="margin: 0; font-size: 12px; color: #666;">Trend Direction</p>
+                                    <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: 700; color: ${trendColor};">${trendDir}</p>
+                                </div>
+                                <div>
+                                    <p style="margin: 0; font-size: 12px; color: #666;">Trend Magnitude</p>
+                                    <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: 700; color: #2c3e50;">${trendMagnitude}</p>
+                                </div>
+                                <div>
+                                    <p style="margin: 0; font-size: 12px; color: #666;">Confidence</p>
+                                    <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: 700; color: #4285F4;">${(confidence * 100).toFixed(1)}%</p>
+                                </div>
+                                <div>
+                                    <p style="margin: 0; font-size: 12px; color: #666;">Data Points</p>
+                                    <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: 700; color: #2c3e50;">${dataPoints}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${forecastViz}
+                        ${insightsHtml}
+                        
+                        <div style="margin-top: 15px; padding: 12px; background: rgba(66, 133, 244, 0.1); border-radius: 8px; border-left: 3px solid #4285F4;">
+                            <p style="margin: 0; font-size: 13px; color: #333; font-weight: 600;">
+                                <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; fill: #4285F4;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                </svg>
+                                Forecast Period: ${p.forecast_period || 'Next 3 months'}
+                            </p>
+                            <p style="margin: 8px 0 0 22px; font-size: 12px; color: #666; line-height: 1.5;">
+                                Analysis based on ${dataPoints} historical data points using time series forecasting and machine learning models.
+                            </p>
+                        </div>
                     `;
-                    parts.push(renderItem('Predictive Analytics Results', 'Future Performance Forecast', html));
+                    parts.push(renderItem('Predictive Analytics Results', `${trendDir} Trend - ${(confidence * 100).toFixed(0)}% Confidence`, html, {
+                        style: 'background:linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05));border-left:4px solid #4285F4;'
+                    }));
                     break;
                 }
 

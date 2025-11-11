@@ -34,7 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Apply audit middleware to API routes for automatic access logging
         $middleware->appendToGroup('api', \App\Http\Middleware\AuditMiddleware::class);
-        
+
         // Apply query logging middleware only when explicitly enabled
         // Disabled by default in production for Cloudways compatibility
         if (env('QUERY_LOGGING_ENABLED', false) || in_array(env('APP_ENV', 'production'), ['local', 'testing'])) {

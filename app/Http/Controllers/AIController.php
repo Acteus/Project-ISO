@@ -629,32 +629,130 @@ class AIController extends Controller
                     break;
 
                 case 'predictive':
-                    // Get data for predictive analytics (performance forecasting)
-                    $recentResponse = \App\Models\SurveyResponse::latest()->first();
-                    if ($recentResponse) {
+                    // Get comprehensive historical data for predictive analytics (performance forecasting)
+                    $historicalResponses = \App\Models\SurveyResponse::latest()->take(30)->get();
+                    if ($historicalResponses->isNotEmpty()) {
                         try {
+                            // Calculate current metrics from recent responses
+                            $recentResponse = $historicalResponses->first();
+                            $recentAvg = $historicalResponses->take(5)->avg('overall_satisfaction');
+                            $historicalAvg = $historicalResponses->avg('overall_satisfaction');
+                            
+                            // Calculate trend direction
+                            $firstHalf = $historicalResponses->take(15)->avg('overall_satisfaction');
+                            $secondHalf = $historicalResponses->skip(15)->take(15)->avg('overall_satisfaction');
+                            $trendDirection = $secondHalf > $firstHalf ? 'Upward' : ($secondHalf < $firstHalf ? 'Downward' : 'Stable');
+                            
+                            // Calculate performance metrics
+                            $avgAcademicProgress = $historicalResponses->avg('academic_progress_rating');
+                            $avgTeachingQuality = $historicalResponses->avg('teaching_quality_rating');
+                            $avgSatisfaction = $historicalResponses->avg('overall_satisfaction');
+                            $avgAttendance = $historicalResponses->avg('attendance_rate') ?? 85;
+                            
+                            // Prepare comprehensive data for Flask
                             $data = [
+                                // Current metrics
+                                'current_satisfaction' => $recentAvg,
+                                'current_academic_progress' => $recentResponse->academic_progress_rating,
+                                'current_teaching_quality' => $recentResponse->teaching_quality_rating,
+                                
+                                // Historical trends
+                                'satisfaction_scores' => $historicalResponses->pluck('overall_satisfaction')->toArray(),
+                                'academic_progress_scores' => $historicalResponses->pluck('academic_progress_rating')->toArray(),
+                                'teaching_quality_scores' => $historicalResponses->pluck('teaching_quality_rating')->toArray(),
+                                
+                                // Averages
+                                'historical_avg_satisfaction' => $historicalAvg,
+                                'historical_avg_academic_progress' => $avgAcademicProgress,
+                                'historical_avg_teaching_quality' => $avgTeachingQuality,
+                                'historical_avg_attendance' => $avgAttendance,
+                                
+                                // Individual metrics for prediction
                                 'curriculum_relevance_rating' => $recentResponse->curriculum_relevance_rating,
                                 'learning_pace_appropriateness' => $recentResponse->learning_pace_appropriateness,
                                 'individual_support_availability' => $recentResponse->individual_support_availability,
-                                'teaching_quality_rating' => $recentResponse->teaching_quality_rating,
-                                'academic_progress_rating' => $recentResponse->academic_progress_rating,
                                 'skill_development_rating' => $recentResponse->skill_development_rating,
                                 'attendance_rate' => $recentResponse->attendance_rate ?? 85,
                                 'participation_score' => $recentResponse->participation_score ?? 80,
-                                'overall_satisfaction' => $recentResponse->overall_satisfaction
+                                'overall_satisfaction' => $recentResponse->overall_satisfaction,
+                                
+                                // Timestamps for time series analysis
+                                'timestamps' => $historicalResponses->pluck('created_at')->map(function($date) {
+                                    return $date->timestamp;
+                                })->toArray()
                             ];
-                            \Illuminate\Support\Facades\Log::info('Predictive: Sending data to Flask', ['data' => $data]);
-                            $result = $flaskClient->predictPerformance($data);
+                            
+                            \Illuminate\Support\Facades\Log::info('Predictive: Sending comprehensive data to Flask', ['data_count' => count($data['satisfaction_scores'])]);
+                            
+                            // Try to use satisfaction trend prediction which is more appropriate for forecasting
+                            $result = $flaskClient->predictSatisfactionTrend($data);
+                            
+                            // If that doesn't work, fall back to performance prediction
+                            if (!$result || !isset($result['success'])) {
+                                $result = $flaskClient->predictPerformance([
+                                    'curriculum_relevance_rating' => $recentResponse->curriculum_relevance_rating,
+                                    'learning_pace_appropriateness' => $recentResponse->learning_pace_appropriateness,
+                                    'individual_support_availability' => $recentResponse->individual_support_availability,
+                                    'teaching_quality_rating' => $recentResponse->teaching_quality_rating,
+                                    'academic_progress_rating' => $recentResponse->academic_progress_rating,
+                                    'skill_development_rating' => $recentResponse->skill_development_rating,
+                                    'attendance_rate' => $recentResponse->attendance_rate ?? 85,
+                                    'participation_score' => $recentResponse->participation_score ?? 80,
+                                    'overall_satisfaction' => $recentResponse->overall_satisfaction
+                                ]);
+                            }
+                            
+                            // Enhance result with calculated metrics
+                            if ($result && is_array($result)) {
+                                $predictionData = $result['trend_prediction'] ?? $result['prediction'] ?? $result;
+                                
+                                // Add calculated metrics
+                                $predictionData['current_performance'] = round($avgAcademicProgress, 2) . '/5.0';
+                                $predictionData['current_satisfaction'] = round($recentAvg, 2) . '/5.0';
+                                $predictionData['historical_average'] = round($historicalAvg, 2) . '/5.0';
+                                $predictionData['trend_direction'] = $trendDirection;
+                                $predictionData['trend_magnitude'] = abs($secondHalf - $firstHalf) > 0.3 ? 'Significant' : (abs($secondHalf - $firstHalf) > 0.1 ? 'Moderate' : 'Minimal');
+                                $predictionData['data_points_analyzed'] = $historicalResponses->count();
+                                $predictionData['forecast_period'] = 'Next 3 months';
+                                
+                                // Calculate forecasted values if not provided
+                                if (!isset($predictionData['forecasted_satisfaction']) || empty($predictionData['forecasted_satisfaction'])) {
+                                    $forecasted = [];
+                                    $baseValue = $recentAvg;
+                                    $trendFactor = ($secondHalf - $firstHalf) / 3; // Divide trend by 3 months
+                                    
+                                    for ($i = 1; $i <= 3; $i++) {
+                                        $forecasted[] = max(1, min(5, $baseValue + ($trendFactor * $i)));
+                                    }
+                                    $predictionData['forecasted_satisfaction'] = $forecasted;
+                                }
+                                
+                                // Update result structure
+                                if (isset($result['trend_prediction'])) {
+                                    $result['trend_prediction'] = $predictionData;
+                                } elseif (isset($result['prediction'])) {
+                                    $result['prediction'] = $predictionData;
+                                } else {
+                                    $result = ['prediction' => $predictionData];
+                                }
+                            }
+                            
                             \Illuminate\Support\Facades\Log::info('Predictive result from Flask:', ['result' => $result]);
                         } catch (\Exception $e) {
                             \Illuminate\Support\Facades\Log::error('Predictive analysis error: ' . $e->getMessage());
-                            // Return fallback data
+                            // Return comprehensive fallback data
                             $result = [
                                 'prediction' => [
-                                    'predicted_gpa' => 3.5,
-                                    'risk_level' => 'Low',
+                                    'current_performance' => '3.5/5.0',
+                                    'current_satisfaction' => '4.0/5.0',
+                                    'historical_average' => '3.8/5.0',
+                                    'trend' => 'Stable',
+                                    'trend_direction' => 'Stable',
+                                    'trend_magnitude' => 'Minimal',
                                     'confidence' => 0.75,
+                                    'forecast_period' => 'Next 3 months',
+                                    'forecasted_satisfaction' => [4.0, 4.1, 4.2],
+                                    'data_points_analyzed' => 0,
                                     'factors' => [
                                         'teaching_quality' => 'High positive impact',
                                         'satisfaction' => 'Moderate positive impact',
@@ -947,12 +1045,22 @@ class AIController extends Controller
 
             case 'predictive':
                 $r = is_array($result) ? $result : [];
-                $predData = $r['prediction'] ?? $r;
+                $predData = $r['trend_prediction'] ?? $r['prediction'] ?? $r;
                 return $wrap('prediction', [
-                    'current_performance' => $predData['current_performance'] ?? 'Unknown',
-                    'trend' => $predData['trend'] ?? 'Stable',
+                    'current_performance' => $predData['current_performance'] ?? $predData['current_academic_progress'] ?? 'Unknown',
+                    'current_satisfaction' => $predData['current_satisfaction'] ?? 'Unknown',
+                    'historical_average' => $predData['historical_average'] ?? 'Unknown',
+                    'trend' => $predData['trend'] ?? $predData['trend_direction'] ?? 'Stable',
+                    'trend_direction' => $predData['trend_direction'] ?? $predData['trend'] ?? 'Stable',
+                    'trend_magnitude' => $predData['trend_magnitude'] ?? $predData['trend_strength'] ?? 'Moderate',
+                    'trend_strength' => $predData['trend_strength'] ?? $predData['trend_magnitude'] ?? 'Moderate',
                     'confidence' => isset($predData['confidence']) ? (float)$predData['confidence'] : 0.5,
+                    'forecast_period' => $predData['forecast_period'] ?? 'Next 3 months',
                     'forecasted' => $predData['forecasted'] ?? $predData['forecasted_satisfaction'] ?? [],
+                    'forecasted_satisfaction' => $predData['forecasted_satisfaction'] ?? $predData['forecasted'] ?? [],
+                    'data_points_analyzed' => $predData['data_points_analyzed'] ?? 0,
+                    'factors' => $predData['factors'] ?? [],
+                    'key_insights' => $predData['key_insights'] ?? $predData['insights'] ?? [],
                 ]);
 
             case 'risk_assessment':
