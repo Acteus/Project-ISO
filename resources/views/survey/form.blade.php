@@ -173,14 +173,11 @@
                     Your feedback helps us improve the quality of education for CSS Strand students.
                 </p>
 
-                <!-- Progress bar -->
+                <!-- Progress percentage -->
                 <div class="progress-section">
                     <div class="progress-header">
                         <span class="progress-label">Progress</span>
                         <span class="progress-percentage" id="progressPercentage">0%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                     </div>
                     <!-- Auto-save indicator -->
                     <div class="auto-save-indicator" id="autoSaveIndicator">
