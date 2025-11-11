@@ -129,9 +129,12 @@ class FlaskAIClient
             return Cache::get($cacheKey);
         }
 
+        $startTime = microtime(true);
         $attempts = 0;
         $lastException = null;
         $timeout = $customTimeout ?? $this->timeout;
+        $success = false;
+        $error = null;
 
         while ($attempts < $this->retries) {
             try {
@@ -164,13 +167,18 @@ class FlaskAIClient
                         Cache::put($cacheKey, $result, 300);
                     }
 
+                    $success = true;
                     Log::info('Flask AI service request successful', [
                         'endpoint' => $endpoint,
                         'attempts' => $attempts + 1
                     ]);
 
+                    // Track performance
+                    $this->trackPerformance($endpoint, $startTime, $success, null, $attempts + 1);
+
                     return $result;
                 } else {
+                    $error = "HTTP {$response->status()}: {$response->body()}";
                     Log::warning('Flask AI service request failed', [
                         'endpoint' => $endpoint,
                         'status' => $response->status(),
@@ -181,6 +189,7 @@ class FlaskAIClient
 
             } catch (\Exception $e) {
                 $lastException = $e;
+                $error = $e->getMessage();
                 Log::warning('Flask AI service request exception', [
                     'endpoint' => $endpoint,
                     'error' => $e->getMessage(),
@@ -196,6 +205,9 @@ class FlaskAIClient
             }
         }
 
+        // Track performance for failed request
+        $this->trackPerformance($endpoint, $startTime, $success, $error, $attempts);
+
         Log::error('Flask AI service request failed after all retries', [
             'endpoint' => $endpoint,
             'final_error' => $lastException ? $lastException->getMessage() : 'Unknown error',
@@ -203,6 +215,34 @@ class FlaskAIClient
         ]);
 
         return null;
+    }
+
+    /**
+     * Track performance metrics for AI service calls
+     */
+    protected function trackPerformance(string $endpoint, float $startTime, bool $success, ?string $error, int $attempts): void
+    {
+        try {
+            $duration = microtime(true) - $startTime;
+            $monitoringService = app(\App\Services\PerformanceMonitoringService::class);
+            
+            $monitoringService->trackAIServiceCall(
+                'flask_ai',
+                $endpoint,
+                $duration,
+                $success,
+                $error,
+                [
+                    'attempts' => $attempts,
+                    'base_url' => $this->baseUrl,
+                ]
+            );
+        } catch (\Exception $e) {
+            // Don't let performance tracking break the main flow
+            Log::warning('Failed to track AI service performance', [
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

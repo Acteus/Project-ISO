@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AIController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\PerformanceController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\VisualizationController;
@@ -79,6 +80,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
 
     // AI Insights Routes
     Route::get('/ai-insights', [StudentController::class, 'aiInsights'])->name('ai.insights');
+
+    // Performance Monitoring Routes
+    Route::get('/performance', [PerformanceController::class, 'showDashboard'])->name('performance.dashboard');
 
     // QR Code Management Routes
     // Note: Specific routes must come BEFORE resource routes to avoid conflicts

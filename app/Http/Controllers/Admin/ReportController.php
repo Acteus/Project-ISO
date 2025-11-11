@@ -9,6 +9,7 @@ use App\Mail\TestEmail;
 use App\Models\Admin;
 use App\Models\WeeklyMetric;
 use App\Models\QrCode;
+use App\Services\PerformanceMonitoringService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -16,11 +17,36 @@ use Illuminate\Support\Facades\Artisan;
 
 class ReportController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $admins = Admin::all();
         $qrCodes = QrCode::orderBy('created_at', 'desc')->paginate(6);
-        return view('admin.reports', compact('admins', 'qrCodes'));
+        
+        // Load performance data if requested or if performance tab might be accessed
+        $performanceData = null;
+        $performanceError = null;
+        
+        try {
+            $perfHours = (int) $request->query('perf_hours', 24);
+            $monitoringService = app(PerformanceMonitoringService::class);
+            
+            $performanceData = [
+                'ai_service' => $monitoringService->getAIServiceSummary($perfHours),
+                'analytics_queries' => $monitoringService->getAnalyticsQuerySummary($perfHours),
+                'bottlenecks' => $monitoringService->getBottleneckAnalysis($perfHours),
+                'trends' => [
+                    'ai_service' => $monitoringService->getPerformanceTrends(7, 'ai_service'),
+                    'analytics_queries' => $monitoringService->getPerformanceTrends(7, 'analytics_query'),
+                ],
+            ];
+        } catch (\Exception $e) {
+            Log::error('Failed to load performance data in reports', [
+                'error' => $e->getMessage(),
+            ]);
+            $performanceError = $e->getMessage();
+        }
+        
+        return view('admin.reports', compact('admins', 'qrCodes', 'performanceData', 'performanceError'));
     }
 
     /**

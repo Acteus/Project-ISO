@@ -5,6 +5,7 @@ use App\Http\Controllers\AIController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\ComplianceController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\PerformanceController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\VisualizationController;
 use Illuminate\Http\Request;
@@ -51,6 +52,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ai/cluster-responses', [AIController::class, 'clusterResponses'])->middleware('throttle:30,1');
     Route::get('/ai/sentiment-analysis', [AIController::class, 'analyzeSentiment'])->middleware('throttle:30,1');
     Route::get('/ai/keyword-extraction', [AIController::class, 'extractKeywords'])->middleware('throttle:30,1');
+
+    // Performance Monitoring Routes
+    Route::prefix('performance')->group(function () {
+        Route::get('/ai-service', [PerformanceController::class, 'getAIServiceSummary']);
+        Route::get('/analytics-queries', [PerformanceController::class, 'getAnalyticsQuerySummary']);
+        Route::get('/bottlenecks', [PerformanceController::class, 'getBottleneckAnalysis']);
+        Route::get('/trends', [PerformanceController::class, 'getPerformanceTrends']);
+        Route::get('/dashboard', [PerformanceController::class, 'getDashboard']);
+    });
     Route::get('/ai/compliance-risk-meter', [AIController::class, 'getComplianceRiskMeter'])
         ->middleware(['cache.api:300', 'throttle:30,1']);
 

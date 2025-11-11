@@ -20,8 +20,14 @@ class AnalyticsService
      */
     public function getAnalyticsSummary($filters = [])
     {
+        $startTime = microtime(true);
         $query = $this->applyFilters(SurveyResponse::query(), $filters);
         $responses = $query->get();
+        
+        // Track query performance (after query execution)
+        $this->trackQueryPerformance('getAnalyticsSummary', $startTime, $responses->count(), null, [
+            'filters' => $filters,
+        ]);
 
         // Return empty structure if no data
         if ($responses->isEmpty()) {
@@ -416,6 +422,7 @@ class AnalyticsService
      */
     public function getTimeSeriesData($metric = 'overall_satisfaction', $groupBy = 'week', $filters = [])
     {
+        $startTime = microtime(true);
         $query = $this->applyFilters(SurveyResponse::query(), $filters);
         $driver = DB::connection()->getDriverName();
 
@@ -456,6 +463,13 @@ class AnalyticsService
                 ->orderBy('period')
                 ->get();
         }
+
+        // Track query performance (after query execution)
+        $this->trackQueryPerformance('getTimeSeriesData', $startTime, $data->count(), null, [
+            'metric' => $metric,
+            'group_by' => $groupBy,
+            'filters' => $filters,
+        ]);
 
         return [
             'labels' => $data->pluck('period')->map(function ($period) use ($groupBy) {
@@ -544,5 +558,29 @@ class AnalyticsService
         }
 
         return $applied;
+    }
+
+    /**
+     * Track analytics query performance
+     */
+    protected function trackQueryPerformance(string $queryType, float $startTime, int $rowsAffected, ?string $query = null, ?array $metadata = null): void
+    {
+        try {
+            $duration = microtime(true) - $startTime;
+            $monitoringService = app(\App\Services\PerformanceMonitoringService::class);
+            
+            $monitoringService->trackAnalyticsQuery(
+                $queryType,
+                $duration,
+                $rowsAffected,
+                $query,
+                $metadata
+            );
+        } catch (\Exception $e) {
+            // Don't let performance tracking break the main flow
+            \Illuminate\Support\Facades\Log::warning('Failed to track analytics query performance', [
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

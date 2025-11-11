@@ -739,6 +739,15 @@
             box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
         }
 
+        .report-type-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(66, 133, 244, 0.3);
+        }
+
+        .report-type-btn.active {
+            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);
+        }
+
         /* Header styling enhancement */
         .header {
             background: linear-gradient(135deg, #1e5a9e 0%, #0d3a6b 100%) !important;
@@ -830,8 +839,20 @@
 
             <div class="reports-header">
                 <h1>Report Management</h1>
-                <p>Send weekly progress reports and monthly compliance reports to administrators via Google SMTP</p>
-                <div style="margin-top: 25px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <p>Access and manage all system reports including ISO compliance and performance monitoring</p>
+                
+                <!-- Report Type Selector -->
+                <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;">
+                    <button type="button" onclick="switchReportType('compliance')" id="btn-compliance" class="report-type-btn active" style="padding: 14px 28px; font-size: 15px; font-weight: 700; border: 2px solid #4285F4; background: linear-gradient(135deg, #4285F4, #1e88e5); color: white; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);">
+                        📋 ISO Compliance Reports
+                    </button>
+                    <button type="button" onclick="switchReportType('performance')" id="btn-performance" class="report-type-btn" style="padding: 14px 28px; font-size: 15px; font-weight: 700; border: 2px solid #4285F4; background: white; color: #4285F4; border-radius: 12px; cursor: pointer; transition: all 0.3s ease;">
+                        📊 Performance Monitoring
+                    </button>
+                </div>
+
+                <!-- ISO Compliance Section Actions -->
+                <div id="compliance-actions" style="margin-top: 25px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                     <button type="button" onclick="showTestEmailModal()" class="btn btn-secondary" style="padding: 12px 20px; font-size: 14px;">
                         <svg style="width: 18px; height: 18px; fill: currentColor;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                             <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
@@ -845,14 +866,26 @@
                         Generate Weekly Metrics
                     </button>
                 </div>
-                <div style="margin-top: 20px; padding: 15px 25px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.08), rgba(255, 215, 0, 0.08)); border-radius: 12px; font-size: 14px; color: #5a6c7d; max-width: 800px; margin-left: auto; margin-right: auto;">
+
+                <!-- Performance Section Actions (removed - content is now inline) -->
+                <div id="performance-actions" style="display: none; margin-top: 25px; gap: 15px; justify-content: center; flex-wrap: wrap;"></div>
+
+                <!-- ISO Compliance Info -->
+                <div id="compliance-info" style="margin-top: 20px; padding: 15px 25px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.08), rgba(255, 215, 0, 0.08)); border-radius: 12px; font-size: 14px; color: #5a6c7d; max-width: 800px; margin-left: auto; margin-right: auto;">
                     <strong style="color: #2c3e50;">📊 Important:</strong> Weekly metrics must be generated before you can preview or send <strong>both weekly and monthly reports</strong>. Click "Generate Weekly Metrics" to aggregate survey data from the last 12 weeks. Monthly reports are calculated from weekly metrics.
+                </div>
+
+                <!-- Performance Info -->
+                <div id="performance-info" style="margin-top: 20px; padding: 15px 25px; background: linear-gradient(135deg, rgba(66, 133, 244, 0.08), rgba(255, 215, 0, 0.08)); border-radius: 12px; font-size: 14px; color: #5a6c7d; max-width: 800px; margin-left: auto; margin-right: auto; display: none;">
+                    <strong style="color: #2c3e50;">⚡ Performance Monitoring:</strong> View real-time performance metrics for AI services and analytics queries. Monitor system health, identify bottlenecks, and track performance trends over time.
                 </div>
             </div>
 
             <!-- Alert Messages -->
             <div id="alert-container"></div>
 
+            <!-- ISO Compliance Reports Section -->
+            <div id="compliance-reports-section">
             <!-- Reports Grid -->
             <div class="reports-grid">
                 <!-- Weekly Progress Report -->
@@ -979,9 +1012,283 @@
                     </div>
                 </div>
             </div>
+            </div>
 
-            <!-- QR Codes Section -->
-            <div class="qr-section">
+            <!-- Performance Monitoring Section -->
+            <div id="performance-reports-section" style="display: none;">
+                @if(isset($performanceError))
+                    <div class="report-card">
+                        <div style="text-align: center; padding: 40px; color: #6c757d;">
+                            <h3>Error Loading Performance Data</h3>
+                            <p>{{ $performanceError }}</p>
+                        </div>
+                    </div>
+                @else
+                    @php
+                        // Get performance data if available, otherwise use defaults
+                        $perfHours = request()->query('perf_hours', 24);
+                        $perfAiSummary = $performanceData['ai_service'] ?? null;
+                        $perfAnalyticsSummary = $performanceData['analytics_queries'] ?? null;
+                        $perfBottleneckAnalysis = $performanceData['bottlenecks'] ?? null;
+                        $perfAiTrends = $performanceData['trends']['ai_service'] ?? [];
+                        $perfAnalyticsTrends = $performanceData['trends']['analytics_queries'] ?? [];
+                    @endphp
+
+                    <!-- Time Period Selector -->
+                    <div class="report-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+                            <div>
+                                <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 20px; font-weight: 700;">Time Period</h3>
+                                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                    <a href="javascript:void(0)" onclick="switchPerformanceTime(24)" class="perf-time-btn {{ $perfHours == 24 ? 'active' : '' }}" data-hours="24" style="padding: 10px 20px; border: 2px solid #4285F4; background: {{ $perfHours == 24 ? '#4285F4' : 'white' }}; color: {{ $perfHours == 24 ? 'white' : '#4285F4' }}; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">Last 24 Hours</a>
+                                    <a href="javascript:void(0)" onclick="switchPerformanceTime(48)" class="perf-time-btn {{ $perfHours == 48 ? 'active' : '' }}" data-hours="48" style="padding: 10px 20px; border: 2px solid #4285F4; background: {{ $perfHours == 48 ? '#4285F4' : 'white' }}; color: {{ $perfHours == 48 ? 'white' : '#4285F4' }}; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">Last 48 Hours</a>
+                                    <a href="javascript:void(0)" onclick="switchPerformanceTime(168)" class="perf-time-btn {{ $perfHours == 168 ? 'active' : '' }}" data-hours="168" style="padding: 10px 20px; border: 2px solid #4285F4; background: {{ $perfHours == 168 ? '#4285F4' : 'white' }}; color: {{ $perfHours == 168 ? 'white' : '#4285F4' }}; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">Last 7 Days</a>
+                                    <a href="javascript:void(0)" onclick="switchPerformanceTime(720)" class="perf-time-btn {{ $perfHours == 720 ? 'active' : '' }}" data-hours="720" style="padding: 10px 20px; border: 2px solid #4285F4; background: {{ $perfHours == 720 ? '#4285F4' : 'white' }}; color: {{ $perfHours == 720 ? 'white' : '#4285F4' }}; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">Last 30 Days</a>
+                                </div>
+                            </div>
+                            <div>
+                                <button onclick="exportPerformanceReport()" style="background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);">
+                                    📊 Export Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Overall Health Status -->
+                    @if(isset($perfBottleneckAnalysis))
+                    <div class="report-card">
+                        <h3 style="display: flex; align-items: center; gap: 10px;">
+                            <span>Overall System Health</span>
+                            <span style="display: inline-block; padding: 8px 20px; border-radius: 20px; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; background: linear-gradient(135deg, {{ $perfBottleneckAnalysis['overall_health'] == 'healthy' ? '#28a745, #20c997' : ($perfBottleneckAnalysis['overall_health'] == 'degraded' ? '#ffc107, #ff9800' : '#dc3545, #c82333') }}); color: white;">
+                                {{ ucfirst($perfBottleneckAnalysis['overall_health']) }}
+                            </span>
+                        </h3>
+                        <p style="color: #6c757d; margin: 0;">
+                            Based on analysis of the last {{ $perfHours }} hours
+                        </p>
+                    </div>
+                    @endif
+
+                    <!-- AI Service Performance -->
+                    @if(isset($perfAiSummary) && $perfAiSummary['total_calls'] > 0)
+                    <div class="report-card">
+                        <h3>🤖 AI Service Performance</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                            <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.3);">
+                                <div style="font-weight: 700; color: #4285F4; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Total Calls</div>
+                                <div style="font-size: 24px; color: #2c3e50; font-weight: 700;">{{ number_format($perfAiSummary['total_calls']) }}</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.3);">
+                                <div style="font-weight: 700; color: #4285F4; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Success Rate</div>
+                                <div style="font-size: 24px; color: #2c3e50; font-weight: 700;">{{ number_format($perfAiSummary['success_rate'], 2) }}%</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.3);">
+                                <div style="font-weight: 700; color: #4285F4; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Avg Duration</div>
+                                <div style="font-size: 24px; color: #2c3e50; font-weight: 700;">{{ number_format($perfAiSummary['average_duration_ms'], 0) }}ms</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.3);">
+                                <div style="font-weight: 700; color: #4285F4; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">P95 Duration</div>
+                                <div style="font-size: 24px; color: #2c3e50; font-weight: 700;">{{ number_format($perfAiSummary['p95_duration_ms'], 0) }}ms</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.3);">
+                                <div style="font-weight: 700; color: #4285F4; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">P99 Duration</div>
+                                <div style="font-size: 24px; color: #2c3e50; font-weight: 700;">{{ number_format($perfAiSummary['p99_duration_ms'], 0) }}ms</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.3);">
+                                <div style="font-weight: 700; color: #4285F4; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Error Count</div>
+                                <div style="font-size: 24px; color: {{ $perfAiSummary['error_count'] > 0 ? '#dc3545' : '#28a745' }}; font-weight: 700;">{{ $perfAiSummary['error_count'] }}</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.3);">
+                                <div style="font-weight: 700; color: #4285F4; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Slow Calls (>2s)</div>
+                                <div style="font-size: 24px; color: {{ $perfAiSummary['slow_call_rate'] > 10 ? '#ffc107' : '#28a745' }}; font-weight: 700;">{{ $perfAiSummary['slow_calls'] }} ({{ number_format($perfAiSummary['slow_call_rate'], 1) }}%)</div>
+                            </div>
+                        </div>
+
+                        @if(!empty($perfAiSummary['by_endpoint']))
+                        <div style="margin-top: 25px;">
+                            <h4 style="color: #2c3e50; margin-bottom: 15px; font-size: 18px; font-weight: 700;">Top Endpoints</h4>
+                            <div style="display: grid; gap: 10px;">
+                                @foreach(array_slice($perfAiSummary['by_endpoint'], 0, 5, true) as $endpoint => $stats)
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(66, 133, 244, 0.05); border-radius: 8px;">
+                                    <div>
+                                        <strong>{{ $endpoint }}</strong>
+                                        <div style="font-size: 12px; color: #6c757d;">
+                                            {{ $stats['count'] }} calls • {{ number_format($stats['average_duration_ms'], 0) }}ms avg • {{ number_format($stats['success_rate'], 1) }}% success
+                                        </div>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                    @else
+                    <div class="report-card">
+                        <div style="text-align: center; padding: 40px; color: #6c757d;">
+                            <h3>No AI Service Data</h3>
+                            <p>No AI service calls recorded in the selected time period.</p>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Analytics Query Performance -->
+                    @if(isset($perfAnalyticsSummary) && $perfAnalyticsSummary['total_queries'] > 0)
+                    <div class="report-card">
+                        <h3>📊 Analytics Query Performance</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                            <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.3);">
+                                <div style="font-weight: 700; color: #4285F4; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Total Queries</div>
+                                <div style="font-size: 24px; color: #2c3e50; font-weight: 700;">{{ number_format($perfAnalyticsSummary['total_queries']) }}</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.3);">
+                                <div style="font-weight: 700; color: #4285F4; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Avg Duration</div>
+                                <div style="font-size: 24px; color: #2c3e50; font-weight: 700;">{{ number_format($perfAnalyticsSummary['average_duration_ms'], 0) }}ms</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.3);">
+                                <div style="font-weight: 700; color: #4285F4; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">P95 Duration</div>
+                                <div style="font-size: 24px; color: #2c3e50; font-weight: 700;">{{ number_format($perfAnalyticsSummary['p95_duration_ms'], 0) }}ms</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.3);">
+                                <div style="font-weight: 700; color: #4285F4; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">P99 Duration</div>
+                                <div style="font-size: 24px; color: #2c3e50; font-weight: 700;">{{ number_format($perfAnalyticsSummary['p99_duration_ms'], 0) }}ms</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.3);">
+                                <div style="font-weight: 700; color: #4285F4; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Slow Queries (>1s)</div>
+                                <div style="font-size: 24px; color: {{ $perfAnalyticsSummary['slow_query_rate'] > 20 ? '#ffc107' : '#28a745' }}; font-weight: 700;">{{ $perfAnalyticsSummary['slow_queries'] }} ({{ number_format($perfAnalyticsSummary['slow_query_rate'], 1) }}%)</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.3);">
+                                <div style="font-weight: 700; color: #4285F4; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Total Rows</div>
+                                <div style="font-size: 24px; color: #2c3e50; font-weight: 700;">{{ number_format($perfAnalyticsSummary['total_rows_processed']) }}</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(255, 140, 0, 0.05)); padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); border: 1px solid rgba(255, 255, 255, 0.3);">
+                                <div style="font-weight: 700; color: #4285F4; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Avg Rows/Query</div>
+                                <div style="font-size: 24px; color: #2c3e50; font-weight: 700;">{{ number_format($perfAnalyticsSummary['average_rows_per_query'], 0) }}</div>
+                            </div>
+                        </div>
+
+                        @if(!empty($perfAnalyticsSummary['by_query_type']))
+                        <div style="margin-top: 25px;">
+                            <h4 style="color: #2c3e50; margin-bottom: 15px; font-size: 18px; font-weight: 700;">Query Types</h4>
+                            <div style="display: grid; gap: 10px;">
+                                @foreach(array_slice($perfAnalyticsSummary['by_query_type'], 0, 5, true) as $type => $stats)
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(66, 133, 244, 0.05); border-radius: 8px;">
+                                    <div>
+                                        <strong>{{ $type }}</strong>
+                                        <div style="font-size: 12px; color: #6c757d;">
+                                            {{ $stats['count'] }} queries • {{ number_format($stats['average_duration_ms'], 0) }}ms avg • {{ number_format($stats['total_rows']) }} rows
+                                        </div>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                    @else
+                    <div class="report-card">
+                        <div style="text-align: center; padding: 40px; color: #6c757d;">
+                            <h3>No Analytics Query Data</h3>
+                            <p>No analytics queries recorded in the selected time period.</p>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Bottleneck Analysis -->
+                    @if(isset($perfBottleneckAnalysis) && !empty($perfBottleneckAnalysis['bottlenecks']))
+                    <div class="report-card">
+                        <h3>⚠️ Identified Bottlenecks</h3>
+                        @foreach($perfBottleneckAnalysis['bottlenecks'] as $bottleneck)
+                        <div style="background: rgba(255, 255, 255, 0.9); padding: 20px; border-radius: 12px; margin-bottom: 15px; border-left: 4px solid {{ $bottleneck['severity'] == 'critical' ? '#dc3545' : ($bottleneck['severity'] == 'high' ? '#ffc107' : '#17a2b8') }}; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <span style="display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-right: 10px; background: {{ $bottleneck['severity'] == 'critical' ? '#dc3545' : ($bottleneck['severity'] == 'high' ? '#ffc107' : '#17a2b8') }}; color: white;">{{ $bottleneck['severity'] }}</span>
+                                <strong style="color: #2c3e50;">{{ $bottleneck['issue'] }}</strong>
+                            </div>
+                            <p style="margin: 0; color: #6c757d; font-size: 14px;">
+                                <strong>Recommendation:</strong> {{ $bottleneck['recommendation'] }}
+                            </p>
+                        </div>
+                        @endforeach
+                    </div>
+                    @elseif(isset($perfBottleneckAnalysis))
+                    <div class="report-card">
+                        <div style="text-align: center; padding: 20px;">
+                            <h3 style="color: #28a745; margin: 0;">✅ No Bottlenecks Identified</h3>
+                            <p style="color: #6c757d; margin: 10px 0 0 0;">System is performing well!</p>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Performance Trends -->
+                    @if(isset($perfAiTrends) && !empty($perfAiTrends))
+                    <div class="report-card">
+                        <h3>📈 AI Service Trends (Last 7 Days)</h3>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: rgba(66, 133, 244, 0.1);">
+                                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #4285F4;">Date</th>
+                                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #4285F4;">Calls</th>
+                                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #4285F4;">Avg Duration</th>
+                                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #4285F4;">P95</th>
+                                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #4285F4;">Success Rate</th>
+                                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #4285F4;">Errors</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($perfAiTrends as $trend)
+                                    <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+                                        <td style="padding: 10px;">{{ $trend['date'] }}</td>
+                                        <td style="padding: 10px; text-align: right;">{{ $trend['count'] }}</td>
+                                        <td style="padding: 10px; text-align: right;">{{ number_format($trend['average_duration_ms'], 0) }}ms</td>
+                                        <td style="padding: 10px; text-align: right;">{{ number_format($trend['p95_duration_ms'], 0) }}ms</td>
+                                        <td style="padding: 10px; text-align: right; color: {{ $trend['success_rate'] < 95 ? '#ffc107' : '#28a745' }};">
+                                            {{ number_format($trend['success_rate'], 1) }}%
+                                        </td>
+                                        <td style="padding: 10px; text-align: right; color: {{ $trend['error_count'] > 0 ? '#dc3545' : '#28a745' }};">
+                                            {{ $trend['error_count'] }}
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @endif
+
+                    @if(isset($perfAnalyticsTrends) && !empty($perfAnalyticsTrends))
+                    <div class="report-card">
+                        <h3>📈 Analytics Query Trends (Last 7 Days)</h3>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: rgba(66, 133, 244, 0.1);">
+                                        <th style="padding: 12px; text-align: left; border-bottom: 2px solid #4285F4;">Date</th>
+                                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #4285F4;">Queries</th>
+                                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #4285F4;">Avg Duration</th>
+                                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #4285F4;">P95</th>
+                                        <th style="padding: 12px; text-align: right; border-bottom: 2px solid #4285F4;">P99</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($perfAnalyticsTrends as $trend)
+                                    <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+                                        <td style="padding: 10px;">{{ $trend['date'] }}</td>
+                                        <td style="padding: 10px; text-align: right;">{{ $trend['count'] }}</td>
+                                        <td style="padding: 10px; text-align: right;">{{ number_format($trend['average_duration_ms'], 0) }}ms</td>
+                                        <td style="padding: 10px; text-align: right;">{{ number_format($trend['p95_duration_ms'], 0) }}ms</td>
+                                        <td style="padding: 10px; text-align: right;">{{ number_format($trend['p99_duration_ms'], 0) }}ms</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @endif
+                @endif
+            </div>
+
+            <!-- QR Codes Section (shown for both report types) -->
+            <div class="qr-section" id="qr-section">
                 <div class="section-header">
                     <h2>QR Code Integration</h2>
                     <p>Include QR codes in reports for easy survey access</p>
@@ -1449,6 +1756,98 @@
                 hideLoading();
             }
         }
+
+        // Report Type Switching
+        function switchReportType(type) {
+            const complianceSection = document.getElementById('compliance-reports-section');
+            const performanceSection = document.getElementById('performance-reports-section');
+            const complianceActions = document.getElementById('compliance-actions');
+            const performanceActions = document.getElementById('performance-actions');
+            const complianceInfo = document.getElementById('compliance-info');
+            const performanceInfo = document.getElementById('performance-info');
+            const qrSection = document.getElementById('qr-section');
+            const btnCompliance = document.getElementById('btn-compliance');
+            const btnPerformance = document.getElementById('btn-performance');
+
+            if (type === 'compliance') {
+                // Show compliance reports
+                complianceSection.style.display = 'block';
+                performanceSection.style.display = 'none';
+                complianceActions.style.display = 'flex';
+                performanceActions.style.display = 'none';
+                complianceInfo.style.display = 'block';
+                performanceInfo.style.display = 'none';
+                qrSection.style.display = 'block';
+                
+                // Update button styles
+                btnCompliance.style.background = 'linear-gradient(135deg, #4285F4, #1e88e5)';
+                btnCompliance.style.color = 'white';
+                btnCompliance.style.boxShadow = '0 5px 15px rgba(66, 133, 244, 0.3)';
+                btnPerformance.style.background = 'white';
+                btnPerformance.style.color = '#4285F4';
+                btnPerformance.style.boxShadow = 'none';
+            } else {
+                // Show performance reports
+                complianceSection.style.display = 'none';
+                performanceSection.style.display = 'block';
+                complianceActions.style.display = 'none';
+                performanceActions.style.display = 'none';
+                complianceInfo.style.display = 'none';
+                performanceInfo.style.display = 'block';
+                qrSection.style.display = 'none';
+                
+                // Update button styles
+                btnPerformance.style.background = 'linear-gradient(135deg, #4285F4, #1e88e5)';
+                btnPerformance.style.color = 'white';
+                btnPerformance.style.boxShadow = '0 5px 15px rgba(66, 133, 244, 0.3)';
+                btnCompliance.style.background = 'white';
+                btnCompliance.style.color = '#4285F4';
+                btnCompliance.style.boxShadow = 'none';
+            }
+        }
+
+        // Switch Performance Time Period
+        function switchPerformanceTime(hours) {
+            // Update URL with new time period while preserving report type
+            const url = new URL(window.location);
+            url.searchParams.set('perf_hours', hours);
+            // Reload page to fetch new data
+            window.location.href = url.toString();
+        }
+
+        // Export Performance Report
+        function exportPerformanceReport() {
+            const perfHours = new URLSearchParams(window.location.search).get('perf_hours') || 24;
+            
+            // Create a simple text report
+            let report = `Performance Monitoring Report\n`;
+            report += `Generated: ${new Date().toLocaleString()}\n`;
+            report += `Time Period: Last ${perfHours} hours\n`;
+            report += `\n${'='.repeat(60)}\n\n`;
+            report += `Report data is available via:\n`;
+            report += `- Web Dashboard: /admin/reports (Performance Monitoring tab)\n`;
+            report += `- API Endpoint: /api/performance/dashboard?hours=${perfHours}\n`;
+            report += `- Command Line: php artisan performance:report --hours=${perfHours}\n`;
+            
+            // Create blob and download
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `performance-report-${perfHours}h-${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Auto-switch to performance tab if perf_hours parameter is present
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('perf_hours')) {
+                switchReportType('performance');
+            }
+        });
 
         console.log('Enhanced Report management page loaded');
     </script>

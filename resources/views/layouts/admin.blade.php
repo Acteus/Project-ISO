@@ -32,6 +32,7 @@
                     <a href="{{ route('admin.audit.logs') }}" class="nav-link {{ request()->routeIs('admin.audit.logs') ? 'active' : '' }}">Audit Logs</a>
                     <a href="{{ route('admin.reports') }}" class="nav-link {{ request()->routeIs('admin.reports') ? 'active' : '' }}">Reports</a>
                     <a href="{{ route('admin.ai.insights') }}" class="nav-link {{ request()->routeIs('admin.ai.insights') ? 'active' : '' }}">AI Insights</a>
+                    <a href="{{ route('admin.performance.dashboard') }}" class="nav-link {{ request()->routeIs('admin.performance.*') ? 'active' : '' }}">Performance</a>
                     <a href="{{ route('admin.indirect-metrics.index') }}" class="nav-link {{ request()->routeIs('admin.indirect-metrics.*') ? 'active' : '' }}">Metrics</a>
                     <a href="{{ route('admin.qr-codes.index') }}" class="nav-link {{ request()->routeIs('admin.qr-codes.*') ? 'active' : '' }}">QR Codes</a>
                     <form method="POST" action="{{ route('student.logout') }}" style="display: inline;" onsubmit="handleAdminLogout(event)">
@@ -54,6 +55,7 @@
             <a href="{{ route('admin.audit.logs') }}" class="mobile-nav-link {{ request()->routeIs('admin.audit.logs') ? 'active' : '' }}">Audit Logs</a>
             <a href="{{ route('admin.reports') }}" class="mobile-nav-link {{ request()->routeIs('admin.reports') ? 'active' : '' }}">Reports</a>
             <a href="{{ route('admin.ai.insights') }}" class="mobile-nav-link {{ request()->routeIs('admin.ai.insights') ? 'active' : '' }}">AI Insights</a>
+            <a href="{{ route('admin.performance.dashboard') }}" class="mobile-nav-link {{ request()->routeIs('admin.performance.*') ? 'active' : '' }}">Performance</a>
             <a href="{{ route('admin.indirect-metrics.index') }}" class="mobile-nav-link {{ request()->routeIs('admin.indirect-metrics.*') ? 'active' : '' }}">Metrics</a>
             <a href="{{ route('admin.qr-codes.index') }}" class="mobile-nav-link {{ request()->routeIs('admin.qr-codes.*') ? 'active' : '' }}">QR Codes</a>
             <form method="POST" action="{{ route('student.logout') }}" style="display: block; margin-top: 10px;" onsubmit="handleAdminLogout(event)">

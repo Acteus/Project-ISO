@@ -596,8 +596,8 @@
                     <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
                 </svg>
             </div>
-            <h3>Send Reports</h3>
-            <p>Send weekly progress reports and monthly compliance reports to administrators via email.</p>
+            <h3>Report Management</h3>
+            <p>Generate weekly metrics, preview and send ISO compliance reports, monitor system performance, test email configuration, and manage QR code integration for reports.</p>
             <a href="{{ route('admin.reports') }}" class="btn btn-primary">Manage Reports</a>
         </div>
 
