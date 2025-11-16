@@ -132,5 +132,20 @@ class AppServiceProvider extends ServiceProvider
             ->at('08:00')
             ->timezone('Asia/Manila')
             ->description('Generate weekly ISO 21001 compliance report');
+
+        // Schedule weekly metrics aggregation (for progress alerts and dashboard)
+        Schedule::command('app:aggregate-weekly-metrics')
+            ->weekly()
+            ->sundays()
+            ->at('23:00')
+            ->timezone('Asia/Manila')
+            ->description('Aggregate weekly metrics for progress tracking');
+
+        // Also aggregate daily to keep data current (for current week only)
+        Schedule::command('app:aggregate-weekly-metrics')
+            ->daily()
+            ->at('01:00')
+            ->timezone('Asia/Manila')
+            ->description('Update current week metrics daily');
     }
 }

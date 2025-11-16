@@ -745,6 +745,11 @@
                 `;
             }
 
+            // Calculate target status (80% = 4.0/5.0)
+            const complianceTarget = 80.0;
+            const targetMet = compliance.percentage >= complianceTarget;
+            const gap = compliance.percentage - complianceTarget;
+            
             const html = `
                 <div class="compliance-header">
                     <div>
@@ -754,6 +759,14 @@
                     <div style="text-align: center;">
                         <div class="compliance-score ${riskClass}">${compliance.score}/5.0</div>
                         <div style="font-size: 14px; color: #666;">${compliance.percentage}%</div>
+                        <div style="margin-top: 8px; padding: 8px 12px; background: ${targetMet ? 'rgba(40, 167, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)'}; border-radius: 6px; border-left: 3px solid ${targetMet ? '#28a745' : '#dc3545'};">
+                            <div style="font-size: 13px; font-weight: 600; color: ${targetMet ? '#28a745' : '#dc3545'};">
+                                ${targetMet ? '✅ Target Met' : '⚠️ Target Not Met'}
+                            </div>
+                            <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                                Target: ${complianceTarget}%+ ${gap < 0 ? `<span style="color: #dc3545;">(Gap: ${Math.abs(gap).toFixed(1)}%)</span>` : gap > 0 ? `<span style="color: #28a745;">(+${gap.toFixed(1)}%)</span>` : ''}
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div style="padding: 20px; background: rgba(102, 126, 234, 0.1); border-radius: 10px; margin-bottom: 15px;">

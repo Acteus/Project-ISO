@@ -199,6 +199,219 @@
 
     .progress-alerts {
         margin-bottom: 40px;
+        display: grid;
+        gap: 20px;
+    }
+
+    .progress-alert-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(15px);
+        border-radius: 18px;
+        padding: 24px 28px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .progress-alert-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 5px;
+        height: 100%;
+        transition: width 0.3s ease;
+    }
+
+    .progress-alert-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .progress-alert-card:hover::before {
+        width: 6px;
+    }
+
+    .progress-alert-card.warning {
+        border-left: 5px solid #ffc107;
+    }
+
+    .progress-alert-card.warning::before {
+        background: linear-gradient(180deg, #ffc107, #ff9800);
+    }
+
+    .progress-alert-card.danger {
+        border-left: 5px solid #dc3545;
+    }
+
+    .progress-alert-card.danger::before {
+        background: linear-gradient(180deg, #dc3545, #c82333);
+    }
+
+    .progress-alert-card.info {
+        border-left: 5px solid #17a2b8;
+    }
+
+    .progress-alert-card.info::before {
+        background: linear-gradient(180deg, #17a2b8, #138496);
+    }
+
+    .progress-alert-card.success {
+        border-left: 5px solid #28a745;
+    }
+
+    .progress-alert-card.success::before {
+        background: linear-gradient(180deg, #28a745, #20c997);
+    }
+
+    .alert-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .alert-icon-large {
+        font-size: 36px;
+        flex-shrink: 0;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    .alert-header-content {
+        flex: 1;
+    }
+
+    .alert-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0 0 4px 0;
+        line-height: 1.3;
+    }
+
+    .alert-message {
+        font-size: 15px;
+        color: #5a6c7d;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .alert-progress-section {
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .progress-stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .progress-current {
+        color: #4285F4;
+    }
+
+    .progress-target {
+        color: #6c757d;
+    }
+
+    .progress-bar-container {
+        background: rgba(0, 0, 0, 0.08);
+        border-radius: 10px;
+        height: 10px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 8px;
+    }
+
+    .progress-bar {
+        height: 100%;
+        border-radius: 10px;
+        background: linear-gradient(90deg, #4285F4, #2c6cd6);
+        transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .progress-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+        0% {
+            transform: translateX(-100%);
+        }
+        100% {
+            transform: translateX(100%);
+        }
+    }
+
+    .progress-bar.warning {
+        background: linear-gradient(90deg, #ffc107, #ff9800);
+    }
+
+    .progress-bar.danger {
+        background: linear-gradient(90deg, #dc3545, #c82333);
+    }
+
+    .progress-bar.info {
+        background: linear-gradient(90deg, #17a2b8, #138496);
+    }
+
+    .progress-bar.success {
+        background: linear-gradient(90deg, #28a745, #20c997);
+    }
+
+    .alert-action {
+        margin-top: 18px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .alert-action-btn {
+        padding: 10px 24px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .alert-action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .progress-gap {
+        font-size: 13px;
+        color: #dc3545;
+        font-weight: 600;
+        margin-top: 6px;
+    }
+
+    .progress-gap.positive {
+        color: #28a745;
     }
 
     .recent-responses-header {
@@ -298,35 +511,6 @@
         text-decoration: none;
     }
 
-    .alert-content {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-
-    .alert-icon {
-        font-size: 24px;
-        flex-shrink: 0;
-    }
-
-    .alert-text {
-        flex: 1;
-    }
-
-    .alert-title {
-        color: #2c3e50;
-        font-size: 16px;
-        font-weight: 700;
-        display: block;
-        margin-bottom: 8px;
-    }
-
-    .alert-message {
-        margin-top: 8px;
-        color: #5a6c7d;
-        font-size: 15px;
-        line-height: 1.5;
-    }
 
     .dashboard-update-notification {
         position: fixed;
@@ -960,25 +1144,68 @@
 
         let alertsHtml = '';
         alerts.forEach(alert => {
-            const alertClass = alert.type === 'success' ? 'alert-success' :
-                             alert.type === 'warning' ? 'alert-warning' :
-                             alert.type === 'danger' ? 'alert-danger' : 'alert-info';
+            const alertTypeClass = alert.type || 'info';
+            let progressBarHtml = '';
+            
+            // Generate progress bar if value and target are available
+            if (alert.value !== undefined && alert.target !== undefined) {
+                const max = alert.max || alert.target * 1.2; // Default max to 120% of target if not specified
+                const percentage = Math.min((alert.value / max) * 100, 100);
+                const targetPercentage = (alert.target / max) * 100;
+                const gap = alert.value - alert.target;
+                const gapDisplay = gap < 0 ? Math.abs(gap).toFixed(2) : gap.toFixed(2);
+                const gapClass = gap >= 0 ? 'positive' : '';
+                const gapUnit = alert.max && alert.max <= 10 ? '' : alert.max === 100 ? '%' : '';
+                
+                progressBarHtml = `
+                    <div class="alert-progress-section">
+                        <div class="progress-stats">
+                            <span class="progress-current">Current: ${alert.value.toFixed(alert.max === 100.0 ? 1 : 2)}${gapUnit || ''}</span>
+                            <span class="progress-target">Target: ${alert.target.toFixed(1)}${gapUnit || '+'}</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar ${alertTypeClass}" style="width: ${percentage}%"></div>
+                        </div>
+                        ${gap < 0 ? `<div class="progress-gap ${gapClass}">Gap: ${Math.abs(gap).toFixed(2)}${gapUnit || ''} below target</div>` : 
+                          gap > 0 ? `<div class="progress-gap ${gapClass}">Above target by ${gap.toFixed(2)}${gapUnit || ''}</div>` : ''}
+                    </div>
+                `;
+            }
 
             alertsHtml += `
-                <div class="alert ${alertClass}">
-                    <div class="alert-content">
-                        ${alert.icon ? `<div class="alert-icon">${alert.icon}</div>` : ''}
-                        <div class="alert-text">
-                            <strong class="alert-title">${alert.title}</strong>
-                            <div class="alert-message">${alert.message}</div>
+                <div class="progress-alert-card ${alertTypeClass}">
+                    <div class="alert-header">
+                        ${alert.icon ? `<div class="alert-icon-large">${alert.icon}</div>` : ''}
+                        <div class="alert-header-content">
+                            <h3 class="alert-title">${escapeHtml(alert.title)}</h3>
+                            <p class="alert-message">${escapeHtml(alert.message)}</p>
                         </div>
-                        ${alert.action ? `<a href="${alert.action.url}" class="btn btn-sm btn-primary">${alert.action.text}</a>` : ''}
                     </div>
+                    ${progressBarHtml}
+                    ${alert.action ? `
+                        <div class="alert-action">
+                            <a href="${alert.action.url}" class="btn btn-primary alert-action-btn">${escapeHtml(alert.action.text)}</a>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         });
 
         container.innerHTML = alertsHtml;
+        
+        // Animate progress bars
+        setTimeout(() => {
+            const progressBars = container.querySelectorAll('.progress-bar');
+            progressBars.forEach(bar => {
+                bar.style.width = bar.style.width; // Trigger reflow to restart animation
+            });
+        }, 100);
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     // Smart Polling for Real-Time Dashboard Updates

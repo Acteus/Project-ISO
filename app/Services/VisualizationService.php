@@ -1150,86 +1150,174 @@ class VisualizationService
 
     /**
      * Generate progress alerts for admin dashboard
+     * Uses the SAME data source and calculation methods as the analytics dashboard
+     * to ensure consistency between both views
      */
     public function generateProgressAlerts()
     {
         $alerts = [];
 
-        // Get latest weekly metrics
-        $latestWeek = \App\Models\WeeklyMetric::orderBy('week_start_date', 'desc')->first();
+        // Use AnalyticsService to get the SAME data as the analytics dashboard
+        $analyticsService = app(\App\Services\AnalyticsService::class);
+        $summary = $analyticsService->getAnalyticsSummary([]); // No filters = all data
+
+        // If no data, show info alert
+        if (!$summary['has_data']) {
+            $alerts[] = [
+                'type' => 'info',
+                'title' => 'Weekly Progress Tracking Available',
+                'message' => 'Weekly metrics and progress tracking will appear here once data aggregation runs.',
+                'action' => [
+                    'text' => 'View Analytics',
+                    'url' => route('admin.analytics')
+                ]
+            ];
+            return $alerts;
+        }
+
+        // Extract values using SAME structure as analytics dashboard
+        $overallSatisfaction = $summary['overall']['satisfaction'] ?? 0;
+        $complianceScore = $summary['overall']['compliance_score'] ?? 0;
+        // Use SAME calculation and rounding as analytics dashboard (1 decimal place)
+        $compliancePercentage = round(($complianceScore / 5.0) * 100, 1);
+
+        // Get current week response count
+        $now = \Carbon\Carbon::now();
+        $currentWeekStart = $now->copy()->startOfWeek();
+        $currentWeekEnd = $currentWeekStart->copy()->endOfWeek();
+        $weekResponses = \App\Models\SurveyResponse::whereBetween('created_at', [$currentWeekStart, $currentWeekEnd])->count();
+
+        // Calculate previous week for trend comparison
+        $previousWeekStart = $currentWeekStart->copy()->subWeek();
+        $previousWeekEnd = $previousWeekStart->copy()->endOfWeek();
+        $previousWeekResponses = \App\Models\SurveyResponse::whereBetween('created_at', [$previousWeekStart, $previousWeekEnd])->get();
+        
+        $previousSatisfaction = $previousWeekResponses->count() > 0 
+            ? round($previousWeekResponses->avg('overall_satisfaction'), 2) 
+            : null;
+        
+        $previousCompliance = null;
+        if ($previousWeekResponses->count() > 0) {
+            $analyticsService = app(\App\Services\AnalyticsService::class);
+            $previousSummary = $analyticsService->getAnalyticsSummary([
+                'date_from' => $previousWeekStart->format('Y-m-d'),
+                'date_to' => $previousWeekEnd->format('Y-m-d'),
+            ]);
+            $previousCompliance = $previousSummary['has_data'] ? $previousSummary['overall']['compliance_score'] : null;
+        }
+
+        // Calculate trends (using same percentage calculation as WeeklyMetric)
+        $satisfactionTrend = null;
+        $complianceTrend = null;
+        
+        if ($previousSatisfaction && $previousSatisfaction > 0) {
+            $satisfactionTrend = round((($overallSatisfaction - $previousSatisfaction) / $previousSatisfaction) * 100, 2);
+        }
+        
+        if ($previousCompliance && $previousCompliance > 0) {
+            $complianceTrend = round((($complianceScore - $previousCompliance) / $previousCompliance) * 100, 2);
+        }
+
+        // Use same target thresholds as analytics dashboard
+        $satisfactionTarget = 4.0;
+        $complianceTarget = 80.0; // 80% = 4.0/5.0
+        $responseTarget = 50;
+
+        // Prepare metrics object for compatibility with existing alert logic
+        $latestWeek = (object)[
+            'overall_satisfaction' => $overallSatisfaction,
+            'compliance_percentage' => $compliancePercentage,
+            'compliance_score' => $complianceScore,
+            'new_responses' => $weekResponses,
+            'satisfaction_target_met' => $overallSatisfaction >= $satisfactionTarget,
+            'compliance_target_met' => $compliancePercentage >= $complianceTarget,
+            'response_target_met' => $weekResponses >= $responseTarget,
+            'all_targets_met' => ($overallSatisfaction >= $satisfactionTarget && $compliancePercentage >= $complianceTarget && $weekResponses >= $responseTarget),
+            'satisfaction_trend' => $satisfactionTrend,
+            'compliance_trend' => $complianceTrend,
+            'year' => (int) $currentWeekStart->format('Y'),
+            'week_number' => (int) $currentWeekStart->format('W'),
+        ];
 
         if ($latestWeek) {
             // Check if targets are being met
             if (!$latestWeek->satisfaction_target_met) {
+                $currentValue = round($latestWeek->overall_satisfaction, 2);
                 $alerts[] = [
                     'type' => 'warning',
-                    'icon' => '⚠️',
                     'title' => 'Satisfaction Target Not Met',
-                    'message' => "Current satisfaction score: {$latestWeek->overall_satisfaction}/5.00. Target: 4.0+",
-                        'action' => [
-                            'text' => 'View Analytics',
-                            'url' => route('admin.analytics')
-                        ]
+                    'message' => "Current satisfaction score: {$currentValue}/5.00. Target: 4.0+",
+                    'value' => $currentValue,
+                    'target' => 4.0,
+                    'max' => 5.0,
+                    'action' => [
+                        'text' => 'View Analytics',
+                        'url' => route('admin.analytics')
+                    ]
                 ];
             }
 
             if (!$latestWeek->compliance_target_met) {
+                $currentValue = round($latestWeek->compliance_percentage, 1); // Match analytics dashboard (1 decimal)
                 $alerts[] = [
                     'type' => 'danger',
-                    'icon' => '🚨',
                     'title' => 'Compliance Target Not Met',
-                    'message' => "Current compliance: {$latestWeek->compliance_percentage}%. Target: 80%+",
-                        'action' => [
-                            'text' => 'View Analytics',
-                            'url' => route('admin.analytics')
-                        ]
+                    'message' => "Current compliance: {$currentValue}%. Target: 80%+",
+                    'value' => $currentValue,
+                    'target' => 80.0,
+                    'max' => 100.0,
+                    'action' => [
+                        'text' => 'View Analytics',
+                        'url' => route('admin.analytics')
+                    ]
                 ];
             }
 
             if (!$latestWeek->response_target_met) {
                 $alerts[] = [
                     'type' => 'info',
-                    'icon' => '📊',
                     'title' => 'Low Response Volume',
                     'message' => "Only {$latestWeek->new_responses} responses this week. Target: 50+",
-                        'action' => [
-                            'text' => 'View Analytics',
-                            'url' => route('admin.analytics')
-                        ]
+                    'value' => $latestWeek->new_responses,
+                    'target' => 50,
+                    'action' => [
+                        'text' => 'View Analytics',
+                        'url' => route('admin.analytics')
+                    ]
                 ];
             }
 
-            // Check for significant changes
-            $previousWeek = \App\Models\WeeklyMetric::where('year', $latestWeek->year)
-                ->where('week_number', $latestWeek->week_number - 1)
-                ->first();
+            // Check for significant changes (trends already calculated above)
+            if ($latestWeek->satisfaction_trend !== null && $latestWeek->satisfaction_trend < -10) {
+                $trendValue = abs(round($latestWeek->satisfaction_trend, 1));
+                $alerts[] = [
+                    'type' => 'danger',
+                    'title' => 'Satisfaction Declining',
+                    'message' => "Satisfaction dropped by {$trendValue}% from last week",
+                    'value' => $latestWeek->overall_satisfaction,
+                    'target' => 4.0,
+                    'max' => 5.0,
+                    'action' => [
+                        'text' => 'View Details',
+                        'url' => route('admin.analytics')
+                    ]
+                ];
+            }
 
-            if ($previousWeek) {
-                if ($latestWeek->satisfaction_trend < -10) {
-                    $alerts[] = [
-                        'type' => 'danger',
-                        'icon' => '📉',
-                        'title' => 'Satisfaction Declining',
-                        'message' => "Satisfaction dropped by {$latestWeek->satisfaction_trend}% from last week",
-                        'action' => [
-                            'text' => 'View Details',
-                            'url' => route('admin.analytics')
-                        ]
-                    ];
-                }
-
-                if ($latestWeek->compliance_trend < -5) {
-                    $alerts[] = [
-                        'type' => 'warning',
-                        'icon' => '⚠️',
-                        'title' => 'Compliance Declining',
-                        'message' => "Compliance dropped by {$latestWeek->compliance_trend}% from last week",
-                        'action' => [
-                            'text' => 'View Details',
-                            'url' => route('admin.analytics')
-                        ]
-                    ];
-                }
+            if ($latestWeek->compliance_trend !== null && $latestWeek->compliance_trend < -5) {
+                $trendValue = abs(round($latestWeek->compliance_trend, 1));
+                $alerts[] = [
+                    'type' => 'warning',
+                    'title' => 'Compliance Declining',
+                    'message' => "Compliance dropped by {$trendValue}% from last week",
+                    'value' => $latestWeek->compliance_percentage,
+                    'target' => 80.0,
+                    'max' => 100.0,
+                    'action' => [
+                        'text' => 'View Details',
+                        'url' => route('admin.analytics')
+                    ]
+                ];
             }
 
             // Check for overdue goals
@@ -1237,7 +1325,6 @@ class VisualizationService
             if ($overdueGoals > 0) {
                 $alerts[] = [
                     'type' => 'warning',
-                    'icon' => '⏰',
                     'title' => 'Overdue Goals',
                     'message' => "You have {$overdueGoals} goal(s) past their target date",
                     'action' => [
@@ -1251,7 +1338,6 @@ class VisualizationService
             if ($latestWeek->all_targets_met) {
                 $alerts[] = [
                     'type' => 'success',
-                    'icon' => '🎉',
                     'title' => 'All Targets Achieved!',
                     'message' => 'Congratulations! All weekly targets have been met.',
                         'action' => [
@@ -1264,7 +1350,6 @@ class VisualizationService
             // No weekly data yet
             $alerts[] = [
                 'type' => 'info',
-                'icon' => '📈',
                 'title' => 'Weekly Progress Tracking Available',
                 'message' => 'Weekly metrics and progress tracking will appear here once data aggregation runs.',
                     'action' => [

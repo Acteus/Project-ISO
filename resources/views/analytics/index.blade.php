@@ -837,10 +837,10 @@
                     </div>
                     <div style="margin-top: 20px; padding: 15px; background: rgba(66,133,244,0.1); border-radius: 10px; border-left: 4px solid rgba(66,133,244,1);">
                         <p style="margin: 0; color: #555; font-size: 14px; line-height: 1.6;">
-                            <strong>📊 Score Calculation:</strong> The overall sentiment score is calculated as:
+                            <strong>Score Calculation:</strong> The overall sentiment score is calculated as:
                             <code style="background: white; padding: 2px 6px; border-radius: 4px;">(Positive × 100 + Neutral × 50 + Negative × 0) / Total Comments</code>
                             <br><br>
-                            <strong>💡 Interpretation:</strong>
+                            <strong>Interpretation:</strong>
                             • <span style="color: #28a745; font-weight: 600;">70-100%</span> = Highly Positive |
                             • <span style="color: #ffc107; font-weight: 600;">40-69%</span> = Moderately Positive/Neutral |
                             • <span style="color: #dc3545; font-weight: 600;">0-39%</span> = Needs Attention
@@ -1258,11 +1258,29 @@
                 riskLevelText.textContent = riskLevel + ' Risk';
                 riskLevelText.className = 'risk-level risk-' + riskLevel.toLowerCase();
 
-                // Update description
+                // Update description with target information
                 const complianceScore = data.compliance_score || 0;
                 const compliancePercentage = data.compliance_percentage || 0;
-                riskDescription.textContent =
-                    `Compliance Score: ${complianceScore.toFixed(2)}/5.00 (${compliancePercentage.toFixed(1)}%)`;
+                const complianceTarget = 80.0; // Target is 80% (4.0/5.0)
+                const targetMet = compliancePercentage >= complianceTarget;
+                const gap = compliancePercentage - complianceTarget;
+                
+                riskDescription.innerHTML = `
+                    <div style="margin-bottom: 10px;">
+                        <strong>Compliance Score:</strong> ${complianceScore.toFixed(2)}/5.00 (${compliancePercentage.toFixed(1)}%)
+                    </div>
+                    <div style="padding: 10px; background: ${targetMet ? 'rgba(40, 167, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)'}; border-radius: 6px; border-left: 3px solid ${targetMet ? '#28a745' : '#dc3545'};">
+                        <div style="font-weight: 600; color: ${targetMet ? '#28a745' : '#dc3545'}; margin-bottom: 4px;">
+                            ${targetMet ? 'Target Met' : 'Target Not Met'}
+                        </div>
+                        <div style="font-size: 14px; color: #666;">
+                            <strong>Target:</strong> ${complianceTarget}%+ 
+                            ${gap < 0 ? `<span style="color: #dc3545;">(Gap: ${Math.abs(gap).toFixed(2)}% below target)</span>` : 
+                              gap > 0 ? `<span style="color: #28a745;">(+${gap.toFixed(2)}% above target)</span>` : 
+                              '<span style="color: #28a745;">(Target met exactly)</span>'}
+                        </div>
+                    </div>
+                `;
 
                 // Update recommendations
                 recommendationsList.innerHTML = '';
